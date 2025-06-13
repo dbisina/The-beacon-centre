@@ -2,7 +2,13 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
-import { ServiceResponse, AdminLoginRequest, AdminLoginResponse, JWTPayload } from '../types';
+import { ServiceResponse, AdminLoginRequest, AdminLoginResponse, JWTPayload, AdminRole } from '../types';
+
+// Environment variables with fallbacks for development
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-in-production';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
 export class AuthService {
   static async login(loginData: AdminLoginRequest): Promise<ServiceResponse<AdminLoginResponse>> {
@@ -20,6 +26,8 @@ export class AuthService {
           permissions: true,
           createdAt: true,
           updatedAt: true,
+          lastLogin: true,
+          loginCount: true,
         },
       });
 
@@ -56,20 +64,24 @@ export class AuthService {
 
       const accessToken = jwt.sign(
         payload,
-        process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
       );
 
       const refreshToken = jwt.sign(
         { adminId: admin.id },
-        process.env.JWT_REFRESH_SECRET!,
-        { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+        JWT_REFRESH_SECRET,
+        { expiresIn: JWT_REFRESH_EXPIRES_IN }
       );
 
-      // Update last login
+      // Update last login and login count
       await prisma.admin.update({
         where: { id: admin.id },
-        data: { updatedAt: new Date() },
+        data: { 
+          lastLogin: new Date(),
+          loginCount: { increment: 1 },
+          updatedAt: new Date() 
+        },
       });
 
       // Remove password from response
@@ -94,7 +106,7 @@ export class AuthService {
 
   static async refreshToken(refreshToken: string): Promise<ServiceResponse<{ accessToken: string }>> {
     try {
-      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as { adminId: number };
+      const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { adminId: number };
       
       // Find admin
       const admin = await prisma.admin.findUnique({
@@ -125,8 +137,8 @@ export class AuthService {
 
       const accessToken = jwt.sign(
         payload,
-        process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
       );
 
       return {
@@ -143,7 +155,7 @@ export class AuthService {
 
   static async verifyToken(token: string): Promise<ServiceResponse<JWTPayload>> {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+      const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
       
       // Verify admin still exists and is active
       const admin = await prisma.admin.findUnique({
@@ -174,7 +186,7 @@ export class AuthService {
     email: string;
     password: string;
     name: string;
-    role?: 'admin' | 'super_admin';
+    role?: AdminRole;
     permissions?: string[];
   }): Promise<ServiceResponse<{ id: number; email: string; name: string }>> {
     try {
@@ -199,7 +211,7 @@ export class AuthService {
           email: adminData.email.toLowerCase(),
           name: adminData.name,
           passwordHash,
-          role: adminData.role || 'admin',
+          role: adminData.role || AdminRole.ADMIN,
           permissions: adminData.permissions || [],
           isActive: true,
         },

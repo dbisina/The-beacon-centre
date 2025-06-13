@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { sendError } from '../utils/responses';
-import { AuthenticatedRequest } from '../types';
+import { AuthenticatedRequest, AdminRole } from '../types';
 
 export const authenticate = async (
   req: AuthenticatedRequest,
@@ -25,7 +25,7 @@ export const authenticate = async (
       return;
     }
 
-    // Find admin details
+    // Find admin details with all required properties
     const { prisma } = await import('../config/database');
     const admin = await prisma.admin.findUnique({
       where: { id: result.data.adminId },
@@ -36,6 +36,10 @@ export const authenticate = async (
         role: true,
         permissions: true,
         isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        lastLogin: true,
+        loginCount: true,
       },
     });
 
@@ -58,7 +62,8 @@ export const requirePermission = (permission: string) => {
       return;
     }
 
-    if (req.admin.role === 'super_admin' || req.admin.permissions.includes(permission)) {
+    // Use the correct AdminRole enum value
+    if (req.admin.role === AdminRole.SUPER_ADMIN || req.admin.permissions.includes(permission)) {
       next();
       return;
     }
@@ -67,7 +72,7 @@ export const requirePermission = (permission: string) => {
   };
 };
 
-export const requireRole = (roles: string[]) => {
+export const requireRole = (roles: AdminRole[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.admin) {
       sendError(res, 'Authentication required', 401);

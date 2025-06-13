@@ -1,3 +1,4 @@
+// backend/src/utils/responses.ts
 import { Response } from 'express';
 import { ApiResponse } from '../types';
 
@@ -8,14 +9,14 @@ import { ApiResponse } from '../types';
 
 export const sendSuccess = <T>(
   res: Response,
-  data: T,
-  message?: string,
+  message: string,
+  data?: T,
   statusCode: number = 200
 ): Response => {
   const response: ApiResponse<T> = {
     success: true,
-    data,
-    message
+    message,
+    data
   };
   return res.status(statusCode).json(response);
 };
@@ -96,6 +97,7 @@ export const sendServerError = (
 // Helper for paginated responses
 export const sendPaginatedSuccess = <T>(
   res: Response,
+  message: string,
   data: T[],
   pagination: {
     currentPage: number;
@@ -104,19 +106,18 @@ export const sendPaginatedSuccess = <T>(
     itemsPerPage: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-  },
-  message?: string
+  }
 ): Response => {
   const response: ApiResponse<{
     items: T[];
     pagination: typeof pagination;
   }> = {
     success: true,
+    message,
     data: {
       items: data,
       pagination
-    },
-    message
+    }
   };
   return res.status(200).json(response);
 };

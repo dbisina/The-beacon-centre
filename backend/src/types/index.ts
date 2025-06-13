@@ -1,3 +1,5 @@
+// backend/src/types/index.ts
+import { Request } from 'express';
 import { 
   Devotional, 
   VideoSermon, 
@@ -375,7 +377,7 @@ export interface EnvironmentConfig {
   RATE_LIMIT_MAX_REQUESTS: number;
 }
 
-// Middleware types
+// Middleware types - FIXED: Properly extend Express Request
 export interface AuthenticatedRequest extends Request {
   admin?: Omit<Admin, 'passwordHash'>;
 }
