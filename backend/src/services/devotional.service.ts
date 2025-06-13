@@ -1,445 +1,324 @@
-import { PrismaClient } from '@prisma/client';
-import {
-  CreateDevotionalRequest,
-  UpdateDevotionalRequest,
-  DevotionalFilters,
-  DevotionalWithInteractions,
-  PaginatedResponse,
-  ServiceResponse
-} from '../types';
-
-const prisma = new PrismaClient();
+// backend/src/services/devotional.service.ts
+import { prisma } from '../config/database';
+import { ServiceResponse, CreateDevotionalRequest, UpdateDevotionalRequest, DevotionalFilters } from '../types';
+import { Devotional } from '@prisma/client';
 
 export class DevotionalService {
-  // Get all devotionals with filters and pagination
-  static async getDevotionals(
-    filters: DevotionalFilters = {}
-  ): Promise<ServiceResponse<PaginatedResponse<DevotionalWithInteractions>>> {
+  static async getAllDevotionals(filters: DevotionalFilters): Promise<ServiceResponse<{
+    devotionals: Devotional[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>> {
     try {
       const {
         page = 1,
         limit = 10,
-        sortBy = 'date',
-        sortOrder = 'desc',
+        search,
         startDate,
         endDate,
-        search,
-        isActive
+        sortBy = 'date',
+        sortOrder = 'desc',
       } = filters;
 
       const skip = (page - 1) * limit;
-      const take = Math.min(limit, 100); // Max 100 items per page
 
       // Build where clause
       const where: any = {};
-      
-      if (isActive !== undefined) {
-        where.isActive = isActive;
-      }
-
-      if (startDate || endDate) {
-        where.date = {};
-        if (startDate) where.date.gte = new Date(startDate);
-        if (endDate) where.date.lte = new Date(endDate);
-      }
 
       if (search) {
         where.OR = [
           { title: { contains: search, mode: 'insensitive' } },
           { content: { contains: search, mode: 'insensitive' } },
           { verseReference: { contains: search, mode: 'insensitive' } },
-          { verseText: { contains: search, mode: 'insensitive' } }
         ];
       }
 
-      // Get total count for pagination
-      const totalItems = await prisma.devotional.count({ where });
-      const totalPages = Math.ceil(totalItems / take);
+      if (startDate) {
+        where.date = { ...where.date, gte: new Date(startDate) };
+      }
 
-      // Get devotionals with interactions
+      if (endDate) {
+        where.date = { ...where.date, lte: new Date(endDate) };
+      }
+
+      // Get total count
+      const total = await prisma.devotional.count({ where });
+
+      // Get devotionals
       const devotionals = await prisma.devotional.findMany({
         where,
-        include: {
-          interactions: {
-            select: {
-              id: true,
-              interactionType: true,
-              createdAt: true
-            }
-          },
-          _count: {
-            select: {
-              interactions: true
-            }
-          }
-        },
-        orderBy: {
-          [sortBy]: sortOrder
-        },
         skip,
-        take
+        take: limit,
+        orderBy: {
+          [sortBy]: sortOrder,
+        },
       });
+
+      const totalPages = Math.ceil(total / limit);
 
       return {
         success: true,
         data: {
-          data: devotionals,
-          pagination: {
-            currentPage: page,
-            totalPages,
-            totalItems,
-            itemsPerPage: take,
-            hasNextPage: page < totalPages,
-            hasPrevPage: page > 1
-          }
-        }
+          devotionals,
+          total,
+          page,
+          limit,
+          totalPages,
+        },
       };
     } catch (error) {
       return {
         success: false,
         error: 'Failed to fetch devotionals',
-        details: error
+        details: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
-  // Get devotional by ID
-  static async getDevotionalById(id: number): Promise<ServiceResponse<DevotionalWithInteractions>> {
+  static async getDevotionalById(id: number): Promise<ServiceResponse<Devotional>> {
     try {
       const devotional = await prisma.devotional.findUnique({
         where: { id },
-        include: {
-          interactions: {
-            select: {
-              id: true,
-              interactionType: true,
-              createdAt: true
-            }
-          },
-          _count: {
-            select: {
-              interactions: true
-            }
-          }
-        }
       });
 
       if (!devotional) {
         return {
           success: false,
-          error: 'Devotional not found'
+          error: 'Devotional not found',
         };
       }
 
       return {
         success: true,
-        data: devotional
+        data: devotional,
       };
     } catch (error) {
       return {
         success: false,
         error: 'Failed to fetch devotional',
-        details: error
+        details: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
-  // Get devotional by date
-  static async getDevotionalByDate(date: string): Promise<ServiceResponse<DevotionalWithInteractions>> {
+  static async getDevotionalByDate(date: string): Promise<ServiceResponse<Devotional>> {
     try {
       const devotional = await prisma.devotional.findUnique({
         where: { date: new Date(date) },
-        include: {
-          interactions: {
-            select: {
-              id: true,
-              interactionType: true,
-              createdAt: true
-            }
-          },
-          _count: {
-            select: {
-              interactions: true
-            }
-          }
-        }
       });
 
       if (!devotional) {
         return {
           success: false,
-          error: 'No devotional found for this date'
+          error: 'No devotional found for this date',
         };
       }
 
       return {
         success: true,
-        data: devotional
+        data: devotional,
       };
     } catch (error) {
       return {
         success: false,
         error: 'Failed to fetch devotional',
-        details: error
+        details: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
-  // Get today's devotional
-  static async getTodaysDevotional(): Promise<ServiceResponse<DevotionalWithInteractions>> {
-    const today = new Date().toISOString().split('T')[0];
-    return this.getDevotionalByDate(today);
+  static async getTodaysDevotional(): Promise<ServiceResponse<Devotional>> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const devotional = await prisma.devotional.findUnique({
+        where: { date: today },
+      });
+
+      if (!devotional) {
+        return {
+          success: false,
+          error: 'No devotional available for today',
+        };
+      }
+
+      return {
+        success: true,
+        data: devotional,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to fetch today\'s devotional',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   }
 
-  // Create devotional
-  static async createDevotional(data: CreateDevotionalRequest): Promise<ServiceResponse<DevotionalWithInteractions>> {
+  static async createDevotional(devotionalData: CreateDevotionalRequest): Promise<ServiceResponse<Devotional>> {
     try {
       // Check if devotional already exists for this date
       const existingDevotional = await prisma.devotional.findUnique({
-        where: { date: new Date(data.date) }
+        where: { date: new Date(devotionalData.date) },
       });
 
       if (existingDevotional) {
         return {
           success: false,
-          error: 'A devotional already exists for this date'
+          error: 'A devotional already exists for this date',
         };
       }
 
       const devotional = await prisma.devotional.create({
         data: {
-          date: new Date(data.date),
-          title: data.title,
-          verseText: data.verseText,
-          verseReference: data.verseReference,
-          content: data.content,
-          prayer: data.prayer,
-          isActive: data.isActive ?? true
+          title: devotionalData.title,
+          date: new Date(devotionalData.date),
+          verseText: devotionalData.verseText,
+          verseReference: devotionalData.verseReference,
+          content: devotionalData.content,
+          prayer: devotionalData.prayer || null,
         },
-        include: {
-          interactions: {
-            select: {
-              id: true,
-              interactionType: true,
-              createdAt: true
-            }
-          },
-          _count: {
-            select: {
-              interactions: true
-            }
-          }
-        }
       });
 
       return {
         success: true,
-        data: devotional
+        data: devotional,
       };
     } catch (error) {
       return {
         success: false,
         error: 'Failed to create devotional',
-        details: error
+        details: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
-  // Update devotional
-  static async updateDevotional(data: UpdateDevotionalRequest): Promise<ServiceResponse<DevotionalWithInteractions>> {
+  static async updateDevotional(id: number, updateData: UpdateDevotionalRequest): Promise<ServiceResponse<Devotional>> {
     try {
-      const { id, ...updateData } = data;
-
       // Check if devotional exists
       const existingDevotional = await prisma.devotional.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!existingDevotional) {
         return {
           success: false,
-          error: 'Devotional not found'
+          error: 'Devotional not found',
         };
       }
 
-      // If date is being updated, check for conflicts
+      // If updating date, check for conflicts
       if (updateData.date) {
-        const conflictingDevotional = await prisma.devotional.findFirst({
+        const dateConflict = await prisma.devotional.findFirst({
           where: {
             date: new Date(updateData.date),
-            id: { not: id }
-          }
+            id: { not: id },
+          },
         });
 
-        if (conflictingDevotional) {
+        if (dateConflict) {
           return {
             success: false,
-            error: 'A devotional already exists for this date'
+            error: 'Another devotional already exists for this date',
           };
         }
       }
 
-      const devotional = await prisma.devotional.update({
+      const updatedDevotional = await prisma.devotional.update({
         where: { id },
         data: {
-          ...(updateData.date && { date: new Date(updateData.date) }),
           ...(updateData.title && { title: updateData.title }),
+          ...(updateData.date && { date: new Date(updateData.date) }),
           ...(updateData.verseText && { verseText: updateData.verseText }),
           ...(updateData.verseReference && { verseReference: updateData.verseReference }),
           ...(updateData.content && { content: updateData.content }),
           ...(updateData.prayer !== undefined && { prayer: updateData.prayer }),
-          ...(updateData.isActive !== undefined && { isActive: updateData.isActive }),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
-        include: {
-          interactions: {
-            select: {
-              id: true,
-              interactionType: true,
-              createdAt: true
-            }
-          },
-          _count: {
-            select: {
-              interactions: true
-            }
-          }
-        }
       });
 
       return {
         success: true,
-        data: devotional
+        data: updatedDevotional,
       };
     } catch (error) {
       return {
         success: false,
         error: 'Failed to update devotional',
-        details: error
+        details: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
-  // Delete devotional
   static async deleteDevotional(id: number): Promise<ServiceResponse<{ id: number }>> {
     try {
       const existingDevotional = await prisma.devotional.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!existingDevotional) {
         return {
           success: false,
-          error: 'Devotional not found'
+          error: 'Devotional not found',
         };
       }
 
       await prisma.devotional.delete({
-        where: { id }
+        where: { id },
       });
 
       return {
         success: true,
-        data: { id }
+        data: { id },
       };
     } catch (error) {
       return {
         success: false,
         error: 'Failed to delete devotional',
-        details: error
+        details: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
-  // Bulk create devotionals
-  static async bulkCreateDevotionals(devotionals: CreateDevotionalRequest[]): Promise<ServiceResponse<{ created: number; skipped: number }>> {
+  static async bulkCreateDevotionals(devotionals: CreateDevotionalRequest[]): Promise<ServiceResponse<{
+    created: number;
+    skipped: number;
+    errors: string[];
+  }>> {
     try {
-      let created = 0;
-      let skipped = 0;
+      const results = {
+        created: 0,
+        skipped: 0,
+        errors: [] as string[],
+      };
 
       for (const devotionalData of devotionals) {
-        const result = await this.createDevotional(devotionalData);
-        if (result.success) {
-          created++;
-        } else {
-          skipped++;
+        try {
+          const result = await this.createDevotional(devotionalData);
+          if (result.success) {
+            results.created++;
+          } else {
+            results.skipped++;
+            results.errors.push(`Date ${devotionalData.date}: ${result.error}`);
+          }
+        } catch (error) {
+          results.skipped++;
+          results.errors.push(`Date ${devotionalData.date}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
       return {
         success: true,
-        data: { created, skipped }
+        data: results,
       };
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to bulk create devotionals',
-        details: error
-      };
-    }
-  }
-
-  // Increment view count
-  static async incrementViewCount(id: number): Promise<ServiceResponse<{ viewCount: number }>> {
-    try {
-      const devotional = await prisma.devotional.update({
-        where: { id },
-        data: {
-          viewCount: {
-            increment: 1
-          }
-        },
-        select: {
-          viewCount: true
-        }
-      });
-
-      return {
-        success: true,
-        data: { viewCount: devotional.viewCount }
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to increment view count',
-        details: error
-      };
-    }
-  }
-
-  // Get devotional statistics
-  static async getDevotionalStats(): Promise<ServiceResponse<{
-    total: number;
-    active: number;
-    inactive: number;
-    totalViews: number;
-    averageViewsPerDevotional: number;
-  }>> {
-    try {
-      const [total, active, viewsAgg] = await Promise.all([
-        prisma.devotional.count(),
-        prisma.devotional.count({ where: { isActive: true } }),
-        prisma.devotional.aggregate({
-          _sum: { viewCount: true },
-          _avg: { viewCount: true }
-        })
-      ]);
-
-      return {
-        success: true,
-        data: {
-          total,
-          active,
-          inactive: total - active,
-          totalViews: viewsAgg._sum.viewCount || 0,
-          averageViewsPerDevotional: Math.round(viewsAgg._avg.viewCount || 0)
-        }
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to get devotional statistics',
-        details: error
+        error: 'Bulk creation failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
