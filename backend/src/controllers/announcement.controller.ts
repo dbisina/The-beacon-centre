@@ -11,7 +11,7 @@ export class AnnouncementController {
         page: parseInt(req.query.page as string) || 1,
         limit: parseInt(req.query.limit as string) || 10,
         search: req.query.search as string,
-        priority: req.query.priority as 'low' | 'medium' | 'high',
+        priority: req.query.priority as 'LOW' | 'MEDIUM' | 'HIGH',
         isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : true,
         isExpired: req.query.isExpired ? req.query.isExpired === 'true' : false,
         sortBy: (req.query.sortBy as string) || 'createdAt',

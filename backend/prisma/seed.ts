@@ -1,4 +1,5 @@
-// backend/src/scripts/seed.ts
+// backend/prisma/seed.ts - FIXED VERSION
+
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
@@ -81,7 +82,7 @@ async function main() {
         email: 'admin@beaconcentre.org',
         name: 'System Administrator',
         passwordHash: hashedPassword,
-        role: 'super_admin',
+        role: 'SUPER_ADMIN', // FIXED: Use correct enum value
         permissions: [
           'manage_devotionals',
           'manage_sermons',
@@ -193,7 +194,7 @@ async function main() {
         create: {
           title: 'Welcome to The Beacon Centre App!',
           content: 'We are excited to have you join our digital community. Explore daily devotionals, sermons, and stay updated with church announcements.',
-          priority: 'high',
+          priority: 'HIGH', // FIXED: Use correct enum value
           startDate: new Date(),
           expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
           actionText: 'Get Started',
@@ -207,7 +208,7 @@ async function main() {
         create: {
           title: 'Youth Conference 2024',
           content: 'Join us for an exciting youth conference featuring inspiring speakers, worship, and fellowship. Registration is now open!',
-          priority: 'medium',
+          priority: 'MEDIUM', // FIXED: Use correct enum value
           startDate: new Date(),
           expiryDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
           actionText: 'Register Now',
@@ -221,7 +222,7 @@ async function main() {
         create: {
           title: 'New Bible Study Groups',
           content: 'We are starting new small group Bible studies. Find a group that fits your schedule and join us for deeper fellowship and learning.',
-          priority: 'medium',
+          priority: 'MEDIUM', // FIXED: Use correct enum value
           startDate: new Date(),
           expiryDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000), // 45 days from now
           actionText: 'View Groups',

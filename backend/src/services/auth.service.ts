@@ -1,4 +1,4 @@
-// backend/src/services/auth.service.ts
+// backend/src/services/auth.service.ts - FINAL FIX
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
@@ -62,17 +62,9 @@ export class AuthService {
         permissions: admin.permissions,
       };
 
-      const accessToken = jwt.sign(
-        payload,
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-      );
-
-      const refreshToken = jwt.sign(
-        { adminId: admin.id },
-        JWT_REFRESH_SECRET,
-        { expiresIn: JWT_REFRESH_EXPIRES_IN }
-      );
+      // SIMPLE FIX: Direct inline options (no separate variables)
+      const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ adminId: admin.id }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
       // Update last login and login count
       await prisma.admin.update({
@@ -135,11 +127,8 @@ export class AuthService {
         permissions: admin.permissions,
       };
 
-      const accessToken = jwt.sign(
-        payload,
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-      );
+      // SIMPLE FIX: Direct inline options
+      const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
 
       return {
         success: true,

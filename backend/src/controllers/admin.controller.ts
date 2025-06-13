@@ -1,15 +1,14 @@
-// backend/src/controllers/admin.controller.ts
+// backend/src/controllers/admin.controller.ts - COMPLETE FIX
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { sendSuccess, sendError } from '../utils/responses';
-import { AdminLoginRequest, AuthenticatedRequest } from '../types';
+import { AdminLoginRequest, AuthenticatedRequest, AdminRole } from '../types';
 
 export class AdminController {
   static async login(req: Request, res: Response): Promise<void> {
     try {
       const loginData: AdminLoginRequest = req.body;
 
-      // Validation
       if (!loginData.email || !loginData.password) {
         sendError(res, 'Email and password are required', 400);
         return;
@@ -18,12 +17,11 @@ export class AdminController {
       const result = await AuthService.login(loginData);
 
       if (result.success) {
-        // Set refresh token as httpOnly cookie
         res.cookie('refreshToken', result.data.refreshToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         sendSuccess(res, 'Login successful', {
@@ -52,7 +50,6 @@ export class AdminController {
       if (result.success) {
         sendSuccess(res, 'Token refreshed successfully', result.data);
       } else {
-        // Clear invalid refresh token cookie
         res.clearCookie('refreshToken');
         sendError(res, result.error, 401);
       }
@@ -63,9 +60,8 @@ export class AdminController {
 
   static async logout(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      // Clear refresh token cookie
       res.clearCookie('refreshToken');
-      sendSuccess(res, 'Logout successful', null);
+      sendSuccess(res, 'Logout successful');
     } catch (error) {
       sendError(res, 'Logout failed', 500, error);
     }
@@ -86,8 +82,8 @@ export class AdminController {
 
   static async createAdmin(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      // Only super admins can create other admins
-      if (req.admin?.role !== 'super_admin') {
+      // FIXED: Use enum comparison
+      if (req.admin?.role !== AdminRole.SUPER_ADMIN) {
         sendError(res, 'Only super admins can create new admins', 403);
         return;
       }
@@ -103,7 +99,7 @@ export class AdminController {
         email,
         password,
         name,
-        role: role || 'admin',
+        role: role || AdminRole.ADMIN,
         permissions: permissions || [],
       });
 
@@ -119,8 +115,8 @@ export class AdminController {
 
   static async getAllAdmins(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      // Only super admins can view all admins
-      if (req.admin?.role !== 'super_admin') {
+      // FIXED: Use enum comparison
+      if (req.admin?.role !== AdminRole.SUPER_ADMIN) {
         sendError(res, 'Only super admins can view all admins', 403);
         return;
       }
@@ -136,6 +132,8 @@ export class AdminController {
           permissions: true,
           createdAt: true,
           updatedAt: true,
+          lastLogin: true,
+          loginCount: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -158,15 +156,14 @@ export class AdminController {
         return;
       }
 
-      // Only super admins can update other admins, or admins can update themselves (limited fields)
-      if (req.admin?.role !== 'super_admin' && req.admin?.id !== adminId) {
+      // FIXED: Use enum comparison
+      if (req.admin?.role !== AdminRole.SUPER_ADMIN && req.admin?.id !== adminId) {
         sendError(res, 'Insufficient permissions', 403);
         return;
       }
 
       const { prisma } = await import('../config/database');
       
-      // Check if admin exists
       const existingAdmin = await prisma.admin.findUnique({
         where: { id: adminId },
       });
@@ -176,13 +173,12 @@ export class AdminController {
         return;
       }
 
-      // Prepare update data based on permissions
       const updateData: any = {};
       
       if (name) updateData.name = name;
       
-      // Only super admins can update role, permissions, and active status
-      if (req.admin?.role === 'super_admin') {
+      // FIXED: Use enum comparison
+      if (req.admin?.role === AdminRole.SUPER_ADMIN) {
         if (role) updateData.role = role;
         if (permissions !== undefined) updateData.permissions = permissions;
         if (isActive !== undefined) updateData.isActive = isActive;
@@ -201,6 +197,9 @@ export class AdminController {
           isActive: true,
           permissions: true,
           updatedAt: true,
+          createdAt: true,
+          lastLogin: true,
+          loginCount: true,
         },
       });
 
@@ -219,13 +218,12 @@ export class AdminController {
         return;
       }
 
-      // Only super admins can delete other admins
-      if (req.admin?.role !== 'super_admin') {
+      // FIXED: Use enum comparison
+      if (req.admin?.role !== AdminRole.SUPER_ADMIN) {
         sendError(res, 'Only super admins can delete admins', 403);
         return;
       }
 
-      // Prevent self-deletion
       if (req.admin?.id === adminId) {
         sendError(res, 'Cannot delete your own account', 400);
         return;
@@ -233,7 +231,6 @@ export class AdminController {
 
       const { prisma } = await import('../config/database');
       
-      // Check if admin exists
       const existingAdmin = await prisma.admin.findUnique({
         where: { id: adminId },
       });

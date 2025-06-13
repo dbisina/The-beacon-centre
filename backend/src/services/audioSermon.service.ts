@@ -431,7 +431,7 @@ export class AudioSermonService {
       ]);
 
       // Get category names
-      const categoryIds = categoryStats.map(stat => stat.categoryId).filter(Boolean);
+      const categoryIds = categoryStats.map(stat => stat.categoryId).filter((id): id is number => id !== null);
       const categories = categoryIds.length > 0 ? await prisma.category.findMany({
         where: { id: { in: categoryIds } },
         select: { id: true, name: true },
@@ -450,7 +450,7 @@ export class AudioSermonService {
       })).sort((a, b) => b.count - a.count);
 
       // Format file size
-      const totalSizeBytes = sizeData._sum.fileSize || 0;
+      const totalSizeBytes = Number(sizeData._sum.fileSize || 0);
       const totalSize = this.formatFileSize(totalSizeBytes);
 
       return {

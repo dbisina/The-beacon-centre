@@ -153,7 +153,7 @@ export class AnnouncementService {
         data: {
           title: announcementData.title,
           content: announcementData.content,
-          priority: announcementData.priority || 'medium',
+          priority: announcementData.priority || 'MEDIUM',
           startDate: new Date(announcementData.startDate),
           expiryDate: announcementData.expiryDate ? new Date(announcementData.expiryDate) : null,
           imageUrl: announcementData.imageUrl || null,

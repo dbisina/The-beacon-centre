@@ -454,7 +454,7 @@ export class VideoSermonService {
       ]);
 
       // Get category names
-      const categoryIds = categoryStats.map(stat => stat.categoryId).filter(Boolean);
+      const categoryIds = categoryStats.map(stat => stat.categoryId).filter((id): id is number => id !== null);
       const categories = categoryIds.length > 0 ? await prisma.category.findMany({
         where: { id: { in: categoryIds } },
         select: { id: true, name: true },
