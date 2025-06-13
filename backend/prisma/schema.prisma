@@ -1,0 +1,202 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Devotional {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @unique @db.Date
+  title         String   @db.VarChar(255)
+  verseText     String   @map("verse_text") @db.Text
+  verseReference String   @map("verse_reference") @db.VarChar(100)
+  content       String   @db.Text
+  prayer        String?  @db.Text
+  isActive      Boolean  @default(true) @map("is_active")
+  viewCount     Int      @default(0) @map("view_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  interactions ContentInteraction[]
+
+  @@map("devotionals")
+}
+
+model VideoSermon {
+  id           Int      @id @default(autoincrement())
+  title        String   @db.VarChar(255)
+  speaker      String   @db.VarChar(255)
+  youtubeId    String   @unique @map("youtube_id") @db.VarChar(50)
+  description  String?  @db.Text
+  duration     String?  @db.VarChar(20)
+  categoryId   Int?     @map("category_id")
+  sermonDate   DateTime? @map("sermon_date") @db.Date
+  thumbnailUrl String?  @map("thumbnail_url") @db.VarChar(500)
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  isActive     Boolean  @default(true) @map("is_active")
+  viewCount    Int      @default(0) @map("view_count")
+  tags         String[] @default([])
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  interactions ContentInteraction[]
+
+  @@map("video_sermons")
+}
+
+model AudioSermon {
+  id                  Int      @id @default(autoincrement())
+  title               String   @db.VarChar(255)
+  speaker             String   @db.VarChar(255)
+  audioUrl            String   @map("audio_url") @db.VarChar(500)
+  cloudinaryPublicId  String   @map("cloudinary_public_id") @db.VarChar(255)
+  duration            String?  @db.VarChar(20)
+  fileSize            BigInt?  @map("file_size")
+  categoryId          Int?     @map("category_id")
+  sermonDate          DateTime? @map("sermon_date") @db.Date
+  description         String?  @db.Text
+  isFeatured          Boolean  @default(false) @map("is_featured")
+  isActive            Boolean  @default(true) @map("is_active")
+  playCount           Int      @default(0) @map("play_count")
+  downloadCount       Int      @default(0) @map("download_count")
+  tags                String[] @default([])
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  category            Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  interactions        ContentInteraction[]
+
+  @@map("audio_sermons")
+}
+
+model Announcement {
+  id                 Int      @id @default(autoincrement())
+  title              String   @db.VarChar(255)
+  content            String   @db.Text
+  priority           Priority @default(MEDIUM)
+  startDate          DateTime @map("start_date") @db.Date
+  expiryDate         DateTime? @map("expiry_date") @db.Date
+  imageUrl           String?  @map("image_url") @db.VarChar(500)
+  cloudinaryPublicId String?  @map("cloudinary_public_id") @db.VarChar(255)
+  actionUrl          String?  @map("action_url") @db.VarChar(500)
+  actionText         String?  @map("action_text") @db.VarChar(100)
+  isActive           Boolean  @default(true) @map("is_active")
+  viewCount          Int      @default(0) @map("view_count")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  interactions       ContentInteraction[]
+
+  @@map("announcements")
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.Text
+  color       String?  @db.VarChar(7) // Hex color code
+  icon        String?  @db.VarChar(50)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  videoSermons AudioSermon[]
+  audioSermons VideoSermon[]
+
+  @@map("categories")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  name         String   @db.VarChar(255)
+  role         AdminRole @default(ADMIN)
+  permissions  String[] @default([])
+  isActive     Boolean  @default(true) @map("is_active")
+  lastLogin    DateTime? @map("last_login")
+  loginCount   Int      @default(0) @map("login_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("admins")
+}
+
+model DeviceSession {
+  id            Int      @id @default(autoincrement())
+  deviceId      String   @map("device_id") @db.VarChar(255)
+  platform      String?  @db.VarChar(20)
+  appVersion    String?  @map("app_version") @db.VarChar(20)
+  country       String?  @db.VarChar(3)
+  state         String?  @db.VarChar(100)
+  lastActive    DateTime @default(now()) @map("last_active")
+  totalSessions Int      @default(1) @map("total_sessions")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([deviceId])
+  @@map("device_sessions")
+}
+
+model ContentInteraction {
+  id              Int      @id @default(autoincrement())
+  deviceId        String   @map("device_id") @db.VarChar(255)
+  contentType     ContentType @map("content_type")
+  contentId       Int      @map("content_id")
+  interactionType InteractionType @map("interaction_type")
+  durationSeconds Int?     @map("duration_seconds") // For audio/video tracking
+  metadata        Json?    // Additional data as JSON
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations - polymorphic associations
+  devotional      Devotional?   @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "devotional_interaction")
+  videoSermon     VideoSermon?  @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "video_sermon_interaction")
+  audioSermon     AudioSermon?  @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "audio_sermon_interaction")
+  announcement    Announcement? @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "announcement_interaction")
+
+  @@index([deviceId])
+  @@index([contentType, contentId])
+  @@index([createdAt])
+  @@map("content_interactions")
+}
+
+// Enums
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+}
+
+enum ContentType {
+  DEVOTIONAL
+  VIDEO_SERMON
+  AUDIO_SERMON
+  ANNOUNCEMENT
+}
+
+enum InteractionType {
+  VIEWED
+  PLAYED
+  COMPLETED
+  DOWNLOADED
+  FAVORITED
+  SHARED
+  BOOKMARKED
+}
