@@ -294,11 +294,6 @@ function DevotionalCard({ devotional, onDelete }: DevotionalCardProps) {
                 {devotional.verseReference}
               </Badge>
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100 rounded-lg">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuItem asChild>
