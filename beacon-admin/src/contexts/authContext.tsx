@@ -1,4 +1,3 @@
-// contexts/AuthContext.tsx - FIXED with proper session persistence
 
 'use client';
 

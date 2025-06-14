@@ -1,4 +1,3 @@
-// src/app/page.tsx - Root page redirect
 
 'use client';
 

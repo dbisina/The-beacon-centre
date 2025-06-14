@@ -1,5 +1,3 @@
-// app/dashboard/devotionals/new/page.tsx - Create new devotional
-
 'use client';
 
 import React from 'react';
