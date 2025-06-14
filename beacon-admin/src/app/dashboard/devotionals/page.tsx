@@ -189,47 +189,64 @@ interface SearchAndFiltersProps {
 
 function SearchAndFilters({ searchTerm, setSearchTerm }: SearchAndFiltersProps) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8">
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              placeholder="Search devotionals..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-12 rounded-xl border-gray-200 focus:border-purple-300 focus:ring-purple-200"
-            />
-          </div>
-        </div>
-        
-        <div className="flex gap-3">
-          <Button variant="outline" size="sm" className="rounded-xl">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button>
-          <Button variant="outline" size="sm" className="rounded-xl">
-            <Calendar className="mr-2 h-4 w-4" />
-            Date Range
-          </Button>
-        </div>
-      </div>
-      
-      <div className="flex gap-2 mt-4">
-        <Badge variant="default" className="bg-purple-100 text-purple-700 hover:bg-purple-200">
-          All
-        </Badge>
-        <Badge variant="outline" className="hover:bg-gray-100">
-          Published
-        </Badge>
-        <Badge variant="outline" className="hover:bg-gray-100">
-          Drafts
-        </Badge>
-        <Badge variant="outline" className="hover:bg-gray-100">
-          Scheduled
-        </Badge>
-      </div>
-    </div>
+   <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+  {/* Left: Filters */}
+  <div className="flex flex-wrap items-center gap-2">
+    {/* All */}
+    <Button
+      variant="outline"
+      className="h-9 px-4 text-sm rounded-md border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-teal-600 transition-colors"
+    >
+      All
+    </Button>
+
+    {/* Published */}
+    <Button
+      variant="outline"
+      className="h-9 px-4 text-sm rounded-md border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-teal-600 transition-colors"
+    >
+      Published
+    </Button>
+
+    {/* Drafts */}
+    <Button
+      variant="outline"
+      className="h-9 px-4 text-sm rounded-md border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-teal-600 transition-colors"
+    >
+      Drafts
+    </Button>
+
+    {/* Scheduled */}
+    <Button
+      variant="outline"
+      className="h-9 px-4 text-sm rounded-md border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-teal-600 transition-colors"
+    >
+      Scheduled
+    </Button>
+
+    {/* Date Range */}
+    <select
+      className="h-9 px-3 text-sm border border-gray-200 rounded-md bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+    >
+      <option value="today">Today</option>
+      <option value="week">This Week</option>
+      <option value="month">This Month</option>
+      <option value="custom">Custom Range</option>
+    </select>
+  </div>
+
+  {/* Right: Search */}
+  <div className="relative w-full sm:w-auto sm:min-w-[250px]">
+    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+    <Input
+      type="text"
+      placeholder="Search..."
+      className="pl-10 pr-4 w-full h-9 text-sm rounded-md border border-gray-200 shadow-sm focus:ring-teal-500 focus:border-teal-500"
+    />
+  </div>
+</div>
+
+
   );
 }
 
