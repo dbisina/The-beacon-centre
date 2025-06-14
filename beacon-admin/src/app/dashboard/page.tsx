@@ -464,13 +464,11 @@ function SystemStatus() {
 export default function DashboardPage() {
   const { admin } = useAuth();
 
-  // Fetch analytics data - KEEPING ALL ORIGINAL TANSTACK REACT QUERY LOGIC
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analytics-dashboard'],
     queryFn: () => analyticsApi.getDashboard(),
   });
 
-  // Fetch recent content stats - KEEPING ALL ORIGINAL API CALLS
   const { data: recentDevotionals } = useQuery({
     queryKey: ['recent-devotionals-count'],
     queryFn: () => devotionalsApi.getAll(1, 1),
@@ -498,7 +496,7 @@ export default function DashboardPage() {
         {/* Enhanced Welcome Header */}
         <WelcomeSection admin={admin} />
 
-        {/* Main Stats Grid - KEEPING ALL ORIGINAL DATA LOGIC */}
+        {/* Main Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {analyticsLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
@@ -552,7 +550,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Content Overview - KEEPING ALL ORIGINAL DATA CALLS */}
+        {/* Content Overview  */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <StatsCard
             title="Devotionals"
