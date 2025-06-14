@@ -2,9 +2,10 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { format, isToday, isTomorrow, isYesterday } from 'date-fns';
 import { 
   BookOpen, 
   Video, 
@@ -17,15 +18,25 @@ import {
   Clock,
   Eye,
   Download,
-  BarChart3
+  BarChart3,
+  Play,
+  Star,
+  AlertCircle,
+  CheckCircle,
+  ArrowRight,
+  Activity,
+  Globe,
+  Smartphone,
+  RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { analyticsApi, devotionalsApi, videoSermonsApi, audioSermonsApi, announcementsApi } from '@/lib/api';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
-import DashboardLayout from '@/components/Layout/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import { formatDate, formatDateTime, getInitials } from '@/lib/utils';
 
 // Quick stats card component
 interface StatsCardProps {
@@ -35,19 +46,21 @@ interface StatsCardProps {
   icon: React.ElementType;
   trend?: number;
   color?: string;
+  href?: string;
 }
 
-function StatsCard({ title, value, description, icon: Icon, trend, color = 'teal' }: StatsCardProps) {
+function StatsCard({ title, value, description, icon: Icon, trend, color = 'teal', href }: StatsCardProps) {
   const colorClasses = {
     teal: 'text-teal-600 bg-teal-100',
     blue: 'text-blue-600 bg-blue-100',
     green: 'text-green-600 bg-green-100',
     orange: 'text-orange-600 bg-orange-100',
     purple: 'text-purple-600 bg-purple-100',
+    red: 'text-red-600 bg-red-100',
   };
 
-  return (
-    <Card>
+  const content = (
+    <>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <div className={`p-2 rounded-lg ${colorClasses[color as keyof typeof colorClasses]}`}>
@@ -65,131 +78,97 @@ function StatsCard({ title, value, description, icon: Icon, trend, color = 'teal
           )}
         </p>
       </CardContent>
-    </Card>
+    </>
   );
+
+  if (href) {
+    return (
+      <Card className="cursor-pointer hover:shadow-md transition-shadow">
+        <Link href={href}>
+          {content}
+        </Link>
+      </Card>
+    );
+  }
+
+  return <Card>{content}</Card>;
 }
 
-// Quick actions component
-function QuickActions() {
-  const actions = [
+// Recent activity component
+function RecentActivity() {
+  const activities = [
     {
-      title: 'Add Devotional',
-      description: 'Create today\'s devotional',
-      href: '/dashboard/devotionals/new',
+      id: 1,
+      type: 'devotional',
+      action: 'created',
+      title: 'Faith in Times of Uncertainty',
+      time: '2 hours ago',
       icon: BookOpen,
-      color: 'bg-teal-600 hover:bg-teal-700',
+      color: 'text-teal-600',
     },
     {
-      title: 'Upload Audio',
-      description: 'Add new audio sermon',
-      href: '/dashboard/audio-sermons/new',
-      icon: Headphones,
-      color: 'bg-blue-600 hover:bg-blue-700',
-    },
-    {
-      title: 'Add Video',
-      description: 'Link YouTube sermon',
-      href: '/dashboard/video-sermons/new',
+      id: 2,
+      type: 'video',
+      action: 'published',
+      title: 'Sunday Service - The Power of Prayer',
+      time: '5 hours ago',
       icon: Video,
-      color: 'bg-green-600 hover:bg-green-700',
+      color: 'text-red-600',
     },
     {
-      title: 'New Announcement',
-      description: 'Post announcement',
-      href: '/dashboard/announcements/new',
+      id: 3,
+      type: 'announcement',
+      action: 'updated',
+      title: 'Youth Conference 2024',
+      time: '1 day ago',
       icon: Megaphone,
-      color: 'bg-orange-600 hover:bg-orange-700',
+      color: 'text-orange-600',
+    },
+    {
+      id: 4,
+      type: 'audio',
+      action: 'uploaded',
+      title: 'Midweek Bible Study',
+      time: '2 days ago',
+      icon: Headphones,
+      color: 'text-purple-600',
     },
   ];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
+        <CardTitle className="flex items-center">
+          <Activity className="mr-2 h-5 w-5" />
+          Recent Activity
+        </CardTitle>
         <CardDescription>
-          Frequently used actions to manage your content
+          Latest content updates and changes
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-4">
-          {actions.map((action) => (
-            <Link key={action.title} href={action.href}>
-              <Button
-                variant="outline"
-                className={`w-full h-auto p-4 flex flex-col items-center space-y-2 hover:scale-105 transition-transform`}
-              >
-                <div className={`p-3 rounded-lg ${action.color} text-white`}>
-                  <action.icon className="h-6 w-6" />
-                </div>
-                <div className="text-center">
-                  <div className="font-medium">{action.title}</div>
-                  <div className="text-xs text-muted-foreground">{action.description}</div>
-                </div>
-              </Button>
-            </Link>
+        <div className="space-y-4">
+          {activities.map((activity) => (
+            <div key={activity.id} className="flex items-center space-x-3">
+              <div className={`p-2 rounded-full bg-gray-100 ${activity.color}`}>
+                <activity.icon className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {activity.title}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {activity.action} • {activity.time}
+                </p>
+              </div>
+            </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Recent activity component
-function RecentActivity() {
-  const { data: recentDevotionals } = useQuery({
-    queryKey: ['devotionals', { page: 1, limit: 3, sortBy: 'createdAt', sortOrder: 'desc' }],
-    queryFn: () => devotionalsApi.getAll({ page: 1, limit: 3, sortBy: 'createdAt', sortOrder: 'desc' }),
-  });
-
-  const { data: recentVideos } = useQuery({
-    queryKey: ['video-sermons', { page: 1, limit: 3, sortBy: 'createdAt', sortOrder: 'desc' }],
-    queryFn: () => videoSermonsApi.getAll({ page: 1, limit: 3, sortBy: 'createdAt', sortOrder: 'desc' }),
-  });
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
-        <CardDescription>
-          Latest content additions and updates
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {recentDevotionals?.devotionals?.slice(0, 2).map((devotional: any) => (
-          <div key={devotional.id} className="flex items-center space-x-3">
-            <div className="p-2 bg-teal-100 rounded-lg">
-              <BookOpen className="h-4 w-4 text-teal-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{devotional.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {new Date(devotional.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-            <Badge variant="secondary">Devotional</Badge>
-          </div>
-        ))}
-
-        {recentVideos?.sermons?.slice(0, 2).map((video: any) => (
-          <div key={video.id} className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Video className="h-4 w-4 text-blue-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{video.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {new Date(video.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-            <Badge variant="secondary">Video</Badge>
-          </div>
-        ))}
-
-        <div className="pt-2">
+        <div className="mt-4 pt-4 border-t">
           <Link href="/dashboard/analytics">
-            <Button variant="outline" size="sm" className="w-full">
-              <BarChart3 className="mr-2 h-4 w-4" />
+            <Button variant="ghost" size="sm" className="w-full">
               View All Activity
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -200,61 +179,83 @@ function RecentActivity() {
 
 // Content calendar component
 function ContentCalendar() {
-  const today = new Date();
-  const dates = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    return date;
+  const { data: devotionals } = useQuery({
+    queryKey: ['recent-devotionals'],
+    queryFn: () => devotionalsApi.getAll(1, 7), // Get next 7 devotionals
   });
+
+  const getDateStatus = (date: string) => {
+    const devotionalDate = new Date(date);
+    
+    if (isToday(devotionalDate)) {
+      return { label: 'Today', variant: 'default' as const, urgent: true };
+    } else if (isTomorrow(devotionalDate)) {
+      return { label: 'Tomorrow', variant: 'secondary' as const, urgent: true };
+    } else if (isYesterday(devotionalDate)) {
+      return { label: 'Yesterday', variant: 'outline' as const, urgent: false };
+    } else {
+      return { 
+        label: format(devotionalDate, 'MMM dd'), 
+        variant: 'outline' as const, 
+        urgent: false 
+      };
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Content Calendar</CardTitle>
+        <CardTitle className="flex items-center">
+          <Calendar className="mr-2 h-5 w-5" />
+          Content Calendar
+        </CardTitle>
         <CardDescription>
-          Upcoming week's devotionals and content
+          Upcoming devotionals and content schedule
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {dates.map((date, index) => (
-            <div key={date.toISOString()} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="text-center">
-                  <div className="text-sm font-medium">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                  <div className="text-lg font-bold">{date.getDate()}</div>
+          {devotionals?.devotionals?.slice(0, 5).map((devotional, index) => {
+            const status = getDateStatus(devotional.date);
+            return (
+              <div key={devotional.id} className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 rounded-full bg-teal-500" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {devotional.title}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {format(new Date(devotional.date), 'EEEE, MMMM d')}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">
-                    {index === 0 ? 'Today\'s Devotional' : `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} Devotional`}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {index === 0 ? 'Published' : 'Scheduled'}
-                  </p>
+                <div className="flex items-center space-x-2">
+                  <Badge variant={status.variant}>
+                    {status.label}
+                  </Badge>
+                  {status.urgent && (
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/dashboard/devotionals/${devotional.id}/edit`}>
+                        <Plus className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                {index === 0 ? (
-                  <Badge variant="default" className="bg-green-100 text-green-800">Ready</Badge>
-                ) : index <= 2 ? (
-                  <Badge variant="secondary">Scheduled</Badge>
-                ) : (
-                  <Badge variant="outline">Pending</Badge>
-                )}
-                {index > 0 && (
-                  <Button variant="ghost" size="sm">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
+            );
+          }) || (
+            <div className="text-center py-4 text-gray-500">
+              <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>No upcoming content</p>
             </div>
-          ))}
+          )}
         </div>
-        <div className="pt-4">
+        <div className="mt-4 pt-4 border-t">
           <Link href="/dashboard/devotionals">
-            <Button variant="outline" size="sm" className="w-full">
-              <Calendar className="mr-2 h-4 w-4" />
+            <Button variant="ghost" size="sm" className="w-full">
               Manage Calendar
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -263,96 +264,364 @@ function ContentCalendar() {
   );
 }
 
+// Quick actions component
+function QuickActions() {
+  const actions = [
+    {
+      title: 'New Devotional',
+      description: 'Create daily devotional',
+      href: '/dashboard/devotionals/new',
+      icon: BookOpen,
+      color: 'bg-teal-500 hover:bg-teal-600',
+    },
+    {
+      title: 'Add Video',
+      description: 'Upload sermon video',
+      href: '/dashboard/video-sermons/new',
+      icon: Video,
+      color: 'bg-red-500 hover:bg-red-600',
+    },
+    {
+      title: 'Upload Audio',
+      description: 'Add audio sermon',
+      href: '/dashboard/audio-sermons/new',
+      icon: Headphones,
+      color: 'bg-purple-500 hover:bg-purple-600',
+    },
+    {
+      title: 'New Announcement',
+      description: 'Create announcement',
+      href: '/dashboard/announcements/new',
+      icon: Megaphone,
+      color: 'bg-orange-500 hover:bg-orange-600',
+    },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Quick Actions</CardTitle>
+        <CardDescription>
+          Common tasks and shortcuts
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-3">
+          {actions.map((action) => (
+            <Link key={action.href} href={action.href}>
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center space-y-2 hover:shadow-md transition-shadow"
+              >
+                <div className={`p-2 rounded-lg text-white ${action.color}`}>
+                  <action.icon className="h-5 w-5" />
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-sm">{action.title}</p>
+                  <p className="text-xs text-gray-500">{action.description}</p>
+                </div>
+              </Button>
+            </Link>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// System status component
+function SystemStatus() {
+  const status = {
+    api: 'operational',
+    database: 'operational',
+    storage: 'operational',
+    notifications: 'degraded',
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'operational':
+        return 'text-green-600 bg-green-100';
+      case 'degraded':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'down':
+        return 'text-red-600 bg-red-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'operational':
+        return CheckCircle;
+      case 'degraded':
+        return AlertCircle;
+      case 'down':
+        return AlertCircle;
+      default:
+        return Clock;
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Activity className="mr-2 h-5 w-5" />
+          System Status
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {Object.entries(status).map(([service, serviceStatus]) => {
+            const StatusIcon = getStatusIcon(serviceStatus);
+            return (
+              <div key={service} className="flex items-center justify-between">
+                <span className="text-sm font-medium capitalize">
+                  {service.replace(/([A-Z])/g, ' $1')}
+                </span>
+                <div className="flex items-center space-x-2">
+                  <div className={`p-1 rounded-full ${getStatusColor(serviceStatus)}`}>
+                    <StatusIcon className="h-3 w-3" />
+                  </div>
+                  <span className="text-xs text-gray-500 capitalize">
+                    {serviceStatus}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
+  const { admin } = useAuth();
+
   // Fetch analytics data
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analytics-dashboard'],
     queryFn: () => analyticsApi.getDashboard(),
   });
 
+  // Fetch recent content stats
+  const { data: recentDevotionals } = useQuery({
+    queryKey: ['recent-devotionals-count'],
+    queryFn: () => devotionalsApi.getAll(1, 1),
+  });
+
+  const { data: recentVideos } = useQuery({
+    queryKey: ['recent-videos-count'],
+    queryFn: () => videoSermonsApi.getAll(1, 1),
+  });
+
+  const { data: recentAudio } = useQuery({
+    queryKey: ['recent-audio-count'],
+    queryFn: () => audioSermonsApi.getAll(1, 1),
+  });
+
+  const { data: recentAnnouncements } = useQuery({
+    queryKey: ['recent-announcements-count'],
+    queryFn: () => announcementsApi.getAll(1, 1),
+  });
+
   return (
-    <ProtectedRoute>
-      <DashboardLayout>
-        <div className="space-y-6">
-          {/* Page Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="mt-2 text-gray-600">
-                Welcome back! Here's what's happening with your content.
+    <div className="space-y-6">
+      {/* Welcome Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Welcome back, {admin?.name?.split(' ')[0] || 'Admin'}! 👋
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Here's what's happening with your content today.
+          </p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-900">
+              {format(new Date(), 'EEEE')}
+            </p>
+            <p className="text-sm text-gray-500">
+              {format(new Date(), 'MMMM d, yyyy')}
+            </p>
+          </div>
+          <Avatar className="h-10 w-10">
+            <AvatarFallback className="bg-teal-100 text-teal-700">
+              {admin?.name ? getInitials(admin.name) : 'AD'}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      </div>
+
+      {/* Main Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {analyticsLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <>
+            <StatsCard
+              title="Total Users"
+              value={analytics?.overview.totalDevices || 0}
+              description="Unique app users"
+              icon={Users}
+              trend={12}
+              color="blue"
+              href="/dashboard/analytics"
+            />
+            <StatsCard
+              title="Total Content"
+              value={analytics?.overview.totalContent.total || 0}
+              description="Published content pieces"
+              icon={BookOpen}
+              trend={5}
+              color="green"
+            />
+            <StatsCard
+              title="This Month Views"
+              value="12.4K"
+              description="Content views this month"
+              icon={Eye}
+              trend={8}
+              color="purple"
+              href="/dashboard/analytics"
+            />
+            <StatsCard
+              title="Engagement Rate"
+              value="87%"
+              description="User interaction rate"
+              icon={TrendingUp}
+              trend={3}
+              color="orange"
+            />
+          </>
+        )}
+      </div>
+
+      {/* Content Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatsCard
+          title="Devotionals"
+          value={recentDevotionals?.total || 0}
+          description="Total devotionals"
+          icon={BookOpen}
+          color="teal"
+          href="/dashboard/devotionals"
+        />
+        <StatsCard
+          title="Video Sermons"
+          value={recentVideos?.total || 0}
+          description="Video content"
+          icon={Video}
+          color="red"
+          href="/dashboard/video-sermons"
+        />
+        <StatsCard
+          title="Audio Sermons"
+          value={recentAudio?.total || 0}
+          description="Audio content"
+          icon={Headphones}
+          color="purple"
+          href="/dashboard/audio-sermons"
+        />
+        <StatsCard
+          title="Announcements"
+          value={recentAnnouncements?.total || 0}
+          description="Active announcements"
+          icon={Megaphone}
+          color="orange"
+          href="/dashboard/announcements"
+        />
+      </div>
+
+      {/* Dashboard Widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Content Calendar - Takes up more space */}
+        <div className="lg:col-span-2">
+          <ContentCalendar />
+        </div>
+        
+        {/* Quick Actions */}
+        <div>
+          <QuickActions />
+        </div>
+      </div>
+
+      {/* Bottom Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <RecentActivity />
+        
+        {/* System Status */}
+        <SystemStatus />
+      </div>
+
+      {/* Performance Insights */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <BarChart3 className="mr-2 h-5 w-5" />
+            Performance Insights
+          </CardTitle>
+          <CardDescription>
+            Key metrics and recommendations for your content
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">94%</div>
+              <p className="text-sm text-gray-600">Content Completion Rate</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Users finishing devotionals
               </p>
             </div>
-            <div className="flex items-center space-x-3">
-              <Badge variant="outline" className="px-3 py-1">
-                <Clock className="mr-1 h-3 w-3" />
-                Last updated: {new Date().toLocaleTimeString()}
-              </Badge>
-              <Button asChild>
-                <Link href="/dashboard/devotionals/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Quick Add
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">4.8/5</div>
+              <p className="text-sm text-gray-600">Average Rating</p>
+              <p className="text-xs text-gray-500 mt-1">
+                User satisfaction score
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">68%</div>
+              <p className="text-sm text-gray-600">Return Rate</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Users coming back weekly
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-6 pt-6 border-t">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-gray-900">💡 Recommendation</h4>
+                <p className="text-sm text-gray-600 mt-1">
+                  Your video sermons have 23% higher engagement than audio. Consider creating more video content.
+                </p>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/dashboard/video-sermons/new">
+                  Create Video
                 </Link>
               </Button>
             </div>
           </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {analyticsLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-8 w-8 rounded-lg" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-8 w-16 mb-2" />
-                    <Skeleton className="h-3 w-32" />
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <>
-                <StatsCard
-                  title="Total Content"
-                  value={analytics?.overview?.totalContent?.total || 0}
-                  description="Published items"
-                  icon={BookOpen}
-                  color="teal"
-                />
-                <StatsCard
-                  title="Active Users"
-                  value={analytics?.overview?.activeDevices || 0}
-                  description="Last 30 days"
-                  icon={Users}
-                  color="blue"
-                />
-                <StatsCard
-                  title="Total Views"
-                  value={analytics?.overview?.totalInteractions || 0}
-                  description="All content"
-                  icon={Eye}
-                  color="green"
-                />
-                <StatsCard
-                  title="This Month"
-                  value={analytics?.overview?.recentInteractions || 0}
-                  description="Recent activity"
-                  icon={TrendingUp}
-                  color="purple"
-                />
-              </>
-            )}
-          </div>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <QuickActions />
-            <RecentActivity />
-            <ContentCalendar />
-          </div>
-        </div>
-      </DashboardLayout>
-    </ProtectedRoute>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

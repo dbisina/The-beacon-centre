@@ -1,16 +1,15 @@
-// app/layout.tsx - Root layout with providers
+// src/app/layout.tsx - Root layout with providers
 
+import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import './globals.css';
-import { Providers } from './providers';
-import { cn } from '@/lib/utils';
+import { Providers } from '@/components/Providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'The Beacon Centre Admin',
-  description: 'Admin dashboard for managing The Beacon Centre content',
+  title: 'TBC Admin - The Beacon Centre',
+  description: 'Content Management System for The Beacon Centre',
   icons: {
     icon: '/favicon.ico',
   },
@@ -22,9 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head />
-      <body className={cn(inter.className, 'min-h-screen bg-background font-sans antialiased')}>
+    <html lang="en">
+      <body className={inter.className}>
         <Providers>
           {children}
         </Providers>
