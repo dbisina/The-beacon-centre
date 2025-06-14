@@ -1,4 +1,3 @@
-// src/app/dashboard/settings/page.tsx - Settings management
 
 'use client';
 
