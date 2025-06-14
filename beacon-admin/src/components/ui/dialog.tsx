@@ -1,4 +1,3 @@
-// src/components/ui/dialog.tsx
 "use client"
 
 import * as React from "react"
@@ -113,8 +112,8 @@ export {
   Dialog,
   DialogPortal,
   DialogOverlay,
-  DialogClose,
   DialogTrigger,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogFooter,

@@ -55,7 +55,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { audioSermonsApi, categoriesApi } from '@/lib/api';
 import { AudioSermon } from '@/lib/types';
 

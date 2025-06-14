@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { audioSermonsApi, categoriesApi, uploadApi } from '@/lib/api';
 import { AudioSermon } from '@/lib/types';
 import { cn, formatFileSize, formatDuration } from '@/lib/utils';

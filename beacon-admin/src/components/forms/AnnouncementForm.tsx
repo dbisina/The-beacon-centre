@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { announcementsApi, uploadApi } from '@/lib/api';
 import { Announcement } from '@/lib/types';
 import { cn } from '@/lib/utils';

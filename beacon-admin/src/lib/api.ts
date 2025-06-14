@@ -1,34 +1,47 @@
-// lib/api.ts - API client and authentication
+// lib/api.ts - Fixed API client to prevent hydration issues
 
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { ApiResponse, ApiError } from './types';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Auth token management
+// Auth token management - Fixed to prevent hydration issues
 class AuthTokenManager {
   private static readonly TOKEN_KEY = 'beacon_admin_token';
   
   static getToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.TOKEN_KEY);
+    try {
+      return localStorage.getItem(this.TOKEN_KEY);
+    } catch (error) {
+      console.error('Error reading from localStorage:', error);
+      return null;
+    }
   }
   
   static setToken(token: string): void {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(this.TOKEN_KEY, token);
+    try {
+      localStorage.setItem(this.TOKEN_KEY, token);
+    } catch (error) {
+      console.error('Error writing to localStorage:', error);
+    }
   }
   
   static removeToken(): void {
     if (typeof window === 'undefined') return;
-    localStorage.removeItem(this.TOKEN_KEY);
+    try {
+      localStorage.removeItem(this.TOKEN_KEY);
+    } catch (error) {
+      console.error('Error removing from localStorage:', error);
+    }
   }
 }
 
@@ -89,16 +102,32 @@ async function apiRequest<T>(
 // Authentication API
 export const authApi = {
   async login(credentials: { email: string; password: string }) {
-    const response = await api.post('/admin/auth/login', credentials);
-    if (response.data.success && response.data.data.accessToken) {
-      AuthTokenManager.setToken(response.data.data.accessToken);
+    try {
+      const response = await api.post('/admin/auth/login', credentials);
+      
+      if (response.data.success && response.data.data.accessToken) {
+        AuthTokenManager.setToken(response.data.data.accessToken);
+        return response.data.data;
+      } else {
+        throw new Error(response.data.error || 'Login failed');
+      }
+    } catch (error: any) {
+      // Enhanced error handling for login
+      if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Login failed - please check your credentials');
+      }
     }
-    return apiRequest(() => Promise.resolve(response));
   },
 
   async logout() {
     try {
       await api.post('/admin/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
     } finally {
       AuthTokenManager.removeToken();
     }
@@ -136,6 +165,14 @@ export const devotionalsApi = {
     return apiRequest(() => api.get(`/devotionals/${id}`));
   },
 
+  async getByDate(date: string) {
+    return apiRequest(() => api.get(`/devotionals/date/${date}`));
+  },
+
+  async getToday() {
+    return apiRequest(() => api.get('/devotionals/today'));
+  },
+
   async create(data: any) {
     return apiRequest(() => api.post('/admin/devotionals', data));
   },
@@ -171,6 +208,14 @@ export const videoSermonsApi = {
     return apiRequest(() => api.get(`/video-sermons/${id}`));
   },
 
+  async getFeatured() {
+    return apiRequest(() => api.get('/video-sermons/featured'));
+  },
+
+  async getByCategory(category: string) {
+    return apiRequest(() => api.get(`/video-sermons/category/${category}`));
+  },
+
   async create(data: any) {
     return apiRequest(() => api.post('/admin/video-sermons', data));
   },
@@ -181,14 +226,6 @@ export const videoSermonsApi = {
 
   async delete(id: number) {
     return apiRequest(() => api.delete(`/admin/video-sermons/${id}`));
-  },
-
-  async toggleFeatured(id: number) {
-    return apiRequest(() => api.patch(`/admin/video-sermons/${id}/featured`));
-  },
-
-  async getStats() {
-    return apiRequest(() => api.get('/admin/video-sermons/stats'));
   },
 };
 
@@ -210,16 +247,16 @@ export const audioSermonsApi = {
     return apiRequest(() => api.get(`/audio-sermons/${id}`));
   },
 
-  async create(data: any) {
-    return apiRequest(() => api.post('/admin/audio-sermons', data));
+  async getFeatured() {
+    return apiRequest(() => api.get('/audio-sermons/featured'));
   },
 
-  async createWithUpload(formData: FormData) {
-    return apiRequest(() => 
-      api.post('/admin/audio-sermons/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-    );
+  async getByCategory(category: string) {
+    return apiRequest(() => api.get(`/audio-sermons/category/${category}`));
+  },
+
+  async create(data: any) {
+    return apiRequest(() => api.post('/admin/audio-sermons', data));
   },
 
   async update(id: number, data: any) {
@@ -228,14 +265,6 @@ export const audioSermonsApi = {
 
   async delete(id: number) {
     return apiRequest(() => api.delete(`/admin/audio-sermons/${id}`));
-  },
-
-  async toggleFeatured(id: number) {
-    return apiRequest(() => api.patch(`/admin/audio-sermons/${id}/featured`));
-  },
-
-  async getStats() {
-    return apiRequest(() => api.get('/admin/audio-sermons/stats'));
   },
 };
 
@@ -251,6 +280,10 @@ export const announcementsApi = {
       });
     }
     return apiRequest(() => api.get(`/announcements?${params.toString()}`));
+  },
+
+  async getActive() {
+    return apiRequest(() => api.get('/announcements/active'));
   },
 
   async getById(id: number) {
@@ -271,10 +304,6 @@ export const announcementsApi = {
 
   async toggleActive(id: number) {
     return apiRequest(() => api.patch(`/admin/announcements/${id}/activate`));
-  },
-
-  async getStats() {
-    return apiRequest(() => api.get('/admin/announcements/stats'));
   },
 };
 
@@ -307,100 +336,72 @@ export const categoriesApi = {
 
 // Analytics API
 export const analyticsApi = {
+  async trackInteraction(data: any) {
+    return apiRequest(() => api.post('/analytics/track', data));
+  },
+
+  async trackSession(data: any) {
+    return apiRequest(() => api.post('/analytics/session', data));
+  },
+
   async getDashboard() {
     return apiRequest(() => api.get('/admin/analytics/dashboard'));
   },
 
-  async getContentPerformance(filters?: Record<string, any>) {
-    const params = new URLSearchParams();
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
-      });
-    }
-    return apiRequest(() => api.get(`/admin/analytics/content-performance?${params.toString()}`));
+  async getContentPerformance() {
+    return apiRequest(() => api.get('/admin/analytics/content-performance'));
   },
 
-  async getUserEngagement(filters?: Record<string, any>) {
-    const params = new URLSearchParams();
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
-      });
-    }
-    return apiRequest(() => api.get(`/admin/analytics/user-engagement?${params.toString()}`));
+  async getUserEngagement() {
+    return apiRequest(() => api.get('/admin/analytics/user-engagement'));
   },
 
-  async getPopularContent(filters?: Record<string, any>) {
-    const params = new URLSearchParams();
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
-      });
-    }
-    return apiRequest(() => api.get(`/admin/analytics/popular-content?${params.toString()}`));
+  async getPopularContent() {
+    return apiRequest(() => api.get('/admin/analytics/popular-content'));
   },
 };
 
 // Upload API
 export const uploadApi = {
-  async uploadAudio(file: File) {
+  async uploadImage(file: File, folder?: string) {
     const formData = new FormData();
-    formData.append('audio', file);
-    return apiRequest(() => 
-      api.post('/admin/upload/audio', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-    );
-  },
+    formData.append('file', file);
+    if (folder) {
+      formData.append('folder', folder);
+    }
 
-  async uploadImage(file: File) {
-    const formData = new FormData();
-    formData.append('image', file);
     return apiRequest(() => 
       api.post('/admin/upload/image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       })
     );
   },
 
-  async uploadThumbnail(file: File) {
+  async uploadAudio(file: File, folder?: string) {
     const formData = new FormData();
-    formData.append('thumbnail', file);
+    formData.append('file', file);
+    if (folder) {
+      formData.append('folder', folder);
+    }
+
     return apiRequest(() => 
-      api.post('/admin/upload/thumbnail', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      api.post('/admin/upload/audio', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       })
     );
   },
 
-  async extractYouTubeThumbnail(youtubeId: string) {
-    return apiRequest(() => 
-      api.post('/admin/upload/youtube-thumbnail', { youtubeId })
-    );
-  },
-
-  async deleteFile(publicId: string, resourceType: 'image' | 'video' = 'image') {
-    return apiRequest(() => 
-      api.delete(`/admin/upload/${publicId}?resourceType=${resourceType}`)
-    );
-  },
-
-  async getFileDetails(publicId: string, resourceType: 'image' | 'video' = 'image') {
-    return apiRequest(() => 
-      api.get(`/admin/upload/${publicId}/details?resourceType=${resourceType}`)
-    );
+  async deleteFile(fileId: string) {
+    return apiRequest(() => api.delete(`/admin/upload/${fileId}`));
   },
 };
 
-// Admins API
-export const adminsApi = {
+// Admin Management API
+export const adminApi = {
   async getAll() {
     return apiRequest(() => api.get('/admin'));
   },
@@ -418,4 +419,5 @@ export const adminsApi = {
   },
 };
 
+// Export the main API instance for custom requests
 export default api;
