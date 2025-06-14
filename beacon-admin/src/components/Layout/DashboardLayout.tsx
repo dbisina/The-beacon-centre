@@ -1,4 +1,4 @@
-// components/Layout/DashboardLayout.tsx - Main dashboard layout
+// components/Layout/DashboardLayout.tsx - Fixed version
 
 'use client';
 
@@ -26,7 +26,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarInitials } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -198,10 +198,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {admin?.name}
+                  {admin?.name || 'Admin User'}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {admin?.role?.replace('_', ' ').toLowerCase()}
+                  {admin?.email || 'admin@example.com'}
                 </p>
               </div>
             </div>
@@ -211,27 +211,27 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
+        {/* Top navigation */}
         <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center">
+          <div className="flex items-center justify-between h-16 px-4 sm:px-6">
+            <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
-                className="lg:hidden mr-2"
+                className="lg:hidden"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Menu className="h-5 w-5" />
               </Button>
               
               {/* Search */}
-              <div className="hidden md:block">
+              <div className="hidden sm:block">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     type="text"
                     placeholder="Search content..."
-                    className="pl-10 w-80"
+                    className="pl-10 pr-4 w-64"
                   />
                 </div>
               </div>
@@ -245,39 +245,36 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   variant="destructive" 
                   className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
                 >
-                  3
+                  2
                 </Badge>
               </Button>
 
               {/* User menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2">
+                  <Button variant="ghost" className="flex items-center space-x-2 p-2">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-teal-100 text-teal-700">
                         {admin?.name ? getInitials(admin.name) : 'AD'}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="hidden md:block text-left">
-                      <p className="text-sm font-medium">{admin?.name}</p>
-                      <p className="text-xs text-gray-500">{admin?.email}</p>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                    <span className="hidden md:block text-sm font-medium">
+                      {admin?.name || 'Admin User'}
+                    </span>
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/profile">Profile Settings</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings">App Settings</Link>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -288,9 +285,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-gray-50">
           <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              {children}
-            </div>
+            {children}
           </div>
         </main>
       </div>
