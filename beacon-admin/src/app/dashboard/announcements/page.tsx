@@ -1,5 +1,3 @@
-// app/dashboard/announcements/page.tsx - Announcements management
-
 'use client';
 
 import React, { useState } from 'react';
@@ -21,7 +19,11 @@ import {
   Image,
   Filter,
   Download,
-  Upload
+  Upload,
+  TrendingUp,
+  Users,
+  Star,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,30 +72,49 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center space-x-4 p-4">
-            <Skeleton className="h-16 w-16" />
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-8 w-8" />
+          <div key={i} className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-16 w-16 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-64" />
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <div className="flex space-x-2">
+                <Skeleton className="h-6 w-16" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            </div>
           </div>
         ))}
       </div>
     );
   }
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityConfig = (priority: string) => {
     switch (priority) {
       case 'HIGH':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return {
+          className: 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-lg shadow-red-500/25',
+          icon: <Zap className="w-3 h-3" />
+        };
       case 'MEDIUM':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return {
+          className: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg shadow-amber-500/25',
+          icon: <Star className="w-3 h-3" />
+        };
       case 'LOW':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return {
+          className: 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-0 shadow-lg shadow-slate-500/25',
+          icon: <Calendar className="w-3 h-3" />
+        };
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return {
+          className: 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-0',
+          icon: <Calendar className="w-3 h-3" />
+        };
     }
   };
 
@@ -104,29 +125,39 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
 
   return (
     <>
-      <div className="rounded-md border">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Image</TableHead>
-              <TableHead>Title & Content</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Dates</TableHead>
-              <TableHead>Views</TableHead>
-              <TableHead>Status</TableHead>
+            <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-150 border-b border-slate-200">
+              <TableHead className="w-[100px] font-semibold text-slate-700 py-4">Preview</TableHead>
+              <TableHead className="font-semibold text-slate-700">Announcement Details</TableHead>
+              <TableHead className="font-semibold text-slate-700 w-[120px]">Priority</TableHead>
+              <TableHead className="font-semibold text-slate-700 w-[180px]">Schedule</TableHead>
+              <TableHead className="font-semibold text-slate-700 w-[100px]">Engagement</TableHead>
+              <TableHead className="font-semibold text-slate-700 w-[120px]">Status</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {announcements.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <div className="flex flex-col items-center space-y-3">
-                    <Megaphone className="h-8 w-8 text-gray-400" />
-                    <p className="text-gray-500">No announcements found</p>
-                    <Button asChild size="sm">
+                <TableCell colSpan={7} className="text-center py-16">
+                  <div className="flex flex-col items-center space-y-6">
+                    <div className="relative">
+                      <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/25">
+                        <Megaphone className="h-12 w-12 text-white" />
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center">
+                        <Plus className="h-4 w-4 text-white" />
+                      </div>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <h3 className="text-xl font-semibold text-slate-800">No announcements yet</h3>
+                      <p className="text-slate-500 max-w-sm">Get started by creating your first announcement to keep your community informed.</p>
+                    </div>
+                    <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 px-8">
                       <Link href="/dashboard/announcements/new">
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-2 h-5 w-5" />
                         Create First Announcement
                       </Link>
                     </Button>
@@ -134,121 +165,156 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                 </TableCell>
               </TableRow>
             ) : (
-              announcements.map((announcement) => (
-                <TableRow key={announcement.id}>
-                  <TableCell>
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+              announcements.map((announcement, index) => (
+                <TableRow 
+                  key={announcement.id} 
+                  className="group hover:bg-slate-50/50 transition-all duration-200 border-b border-slate-100 last:border-0"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <TableCell className="py-4">
+                    <div className="relative w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-200">
                       {announcement.imageUrl ? (
-                        <img
-                          src={announcement.imageUrl}
-                          alt={announcement.title}
-                          className="w-full h-full object-cover"
-                        />
+                        <>
+                          <img
+                            src={announcement.imageUrl}
+                            alt={announcement.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
+                        </>
                       ) : (
-                        <Image className="h-6 w-6 text-gray-400" />
+                        <Image className="h-8 w-8 text-slate-400" />
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="max-w-[300px]">
-                      <p className="font-medium truncate">{announcement.title}</p>
-                      <p className="text-sm text-gray-500 truncate mb-2">
-                        {announcement.content.substring(0, 80)}...
+                  <TableCell className="py-4">
+                    <div className="max-w-[350px] space-y-2">
+                      <div className="flex items-start space-x-2">
+                        <h3 className="font-semibold text-slate-800 text-base leading-tight line-clamp-2">
+                          {announcement.title}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
+                        {announcement.content.substring(0, 120)}...
                       </p>
                       {announcement.actionUrl && (
-                        <div className="flex items-center space-x-1">
-                          <ExternalLink className="h-3 w-3 text-blue-600" />
-                          <span className="text-xs text-blue-600 truncate max-w-[200px]">
-                            {announcement.actionText || 'Learn More'}
-                          </span>
+                        <div className="flex items-center space-x-2 pt-1">
+                          <div className="flex items-center space-x-1 px-2 py-1 bg-blue-50 rounded-lg">
+                            <ExternalLink className="h-3 w-3 text-blue-600" />
+                            <span className="text-xs font-medium text-blue-700 truncate max-w-[150px]">
+                              {announcement.actionText || 'Learn More'}
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={getPriorityColor(announcement.priority)}>
-                      {announcement.priority}
-                    </Badge>
+                  <TableCell className="py-4">
+                    {(() => {
+                      const config = getPriorityConfig(announcement.priority);
+                      return (
+                        <Badge className={`${config.className} font-medium px-3 py-1`}>
+                          <span className="flex items-center space-x-1">
+                            {config.icon}
+                            <span>{announcement.priority}</span>
+                          </span>
+                        </Badge>
+                      );
+                    })()}
                   </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-1 text-sm">
-                        <Calendar className="h-3 w-3 text-gray-400" />
-                        <span>Start: {format(new Date(announcement.startDate), 'MMM dd')}</span>
+                  <TableCell className="py-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2 text-sm">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-slate-600">Started {format(new Date(announcement.startDate), 'MMM dd')}</span>
                       </div>
                       {announcement.expiryDate && (
-                        <div className={`flex items-center space-x-1 text-sm ${isExpired(announcement.expiryDate) ? 'text-red-600' : 'text-gray-600'}`}>
-                          <Clock className="h-3 w-3" />
+                        <div className={`flex items-center space-x-2 text-sm ${isExpired(announcement.expiryDate) ? 'text-red-600' : 'text-slate-600'}`}>
+                          <div className={`w-2 h-2 rounded-full ${isExpired(announcement.expiryDate) ? 'bg-red-500' : 'bg-amber-500'}`}></div>
                           <span>
-                            {isExpired(announcement.expiryDate) ? 'Expired' : 'Expires'}: {format(new Date(announcement.expiryDate), 'MMM dd')}
+                            {isExpired(announcement.expiryDate) ? 'Expired' : 'Expires'} {format(new Date(announcement.expiryDate), 'MMM dd')}
                           </span>
                         </div>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <Eye className="h-4 w-4 text-gray-400" />
-                      <span>{announcement.viewCount}</span>
+                  <TableCell className="py-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1 px-2 py-1 bg-slate-100 rounded-lg">
+                        <Eye className="h-3 w-3 text-slate-500" />
+                        <span className="text-sm font-medium text-slate-700">{announcement.viewCount}</span>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <Badge variant={announcement.isActive ? 'default' : 'secondary'}>
+                  <TableCell className="py-4">
+                    <div className="flex flex-col space-y-2">
+                      <Badge 
+                        variant={announcement.isActive ? 'default' : 'secondary'}
+                        className={announcement.isActive 
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-sm' 
+                          : 'bg-slate-200 text-slate-700'
+                        }
+                      >
                         {announcement.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                       {isExpired(announcement.expiryDate) && (
-                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                        <Badge className="bg-gradient-to-r from-red-500 to-rose-500 text-white border-0 text-xs">
                           Expired
                         </Badge>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button 
+                          variant="ghost" 
+                          className="h-9 w-9 p-0 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem asChild>
+                      <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 shadow-xl rounded-lg">
+                        <DropdownMenuLabel className="text-slate-700 font-semibold">Actions</DropdownMenuLabel>
+                        <DropdownMenuItem asChild className="hover:bg-slate-50 rounded-md mx-1">
                           <Link href={`/dashboard/announcements/${announcement.id}`}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
+                            <Eye className="mr-2 h-4 w-4 text-blue-600" />
+                            <span>View Details</span>
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
+                        <DropdownMenuItem asChild className="hover:bg-slate-50 rounded-md mx-1">
                           <Link href={`/dashboard/announcements/${announcement.id}/edit`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
+                            <Edit className="mr-2 h-4 w-4 text-amber-600" />
+                            <span>Edit</span>
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onToggleActive(announcement.id)}>
-                          <AlertCircle className="mr-2 h-4 w-4" />
-                          {announcement.isActive ? 'Deactivate' : 'Activate'}
+                        <DropdownMenuItem 
+                          onClick={() => onToggleActive(announcement.id)}
+                          className="hover:bg-slate-50 rounded-md mx-1"
+                        >
+                          <AlertCircle className="mr-2 h-4 w-4 text-purple-600" />
+                          <span>{announcement.isActive ? 'Deactivate' : 'Activate'}</span>
                         </DropdownMenuItem>
                         {announcement.actionUrl && (
-                          <DropdownMenuItem asChild>
+                          <DropdownMenuItem asChild className="hover:bg-slate-50 rounded-md mx-1">
                             <a 
                               href={announcement.actionUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
                             >
-                              <ExternalLink className="mr-2 h-4 w-4" />
-                              Visit Link
+                              <ExternalLink className="mr-2 h-4 w-4 text-green-600" />
+                              <span>Visit Link</span>
                             </a>
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => setDeleteId(announcement.id)}
-                          className="text-red-600"
+                          className="text-red-600 hover:bg-red-50 rounded-md mx-1"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          <span>Delete</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -262,15 +328,15 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white border border-slate-200 shadow-2xl rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the announcement.
+            <AlertDialogTitle className="text-xl font-semibold text-slate-800">Delete Announcement?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600 leading-relaxed">
+              This action cannot be undone. This will permanently delete the announcement and remove it from your dashboard.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="space-x-3">
+            <AlertDialogCancel className="hover:bg-slate-100">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (deleteId) {
@@ -278,9 +344,9 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                   setDeleteId(null);
                 }
               }}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0 shadow-lg"
             >
-              Delete
+              Delete Announcement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -362,25 +428,32 @@ export default function AnnouncementsPage() {
     a.expiryDate && new Date(a.expiryDate) < new Date()
   ).length;
   const highPriorityCount = announcements.filter(a => a.priority === 'HIGH').length;
+  const totalViews = announcements.reduce((sum, a) => sum + (a.viewCount || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-6 space-y-8">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Announcements</h1>
-          <p className="mt-2 text-gray-600">
-            Manage church announcements and important notices
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+            Announcements
+          </h1>
+          <p className="text-lg text-slate-600 max-w-2xl">
+            Keep your community informed with important updates and notices
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export
+        <div className="flex items-center space-x-4">
+          <Button variant="outline" size="lg" className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all">
+            <Download className="mr-2 h-5 w-5" />
+            Export Data
           </Button>
-          <Button asChild>
+          <Button 
+            asChild 
+            size="lg" 
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 px-8"
+          >
             <Link href="/dashboard/announcements/new">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-5 w-5" />
               New Announcement
             </Link>
           </Button>
@@ -388,82 +461,107 @@ export default function AnnouncementsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Announcements</CardTitle>
-            <Megaphone className="h-4 w-4 text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+            <CardTitle className="text-sm font-semibold text-slate-700">Total Announcements</CardTitle>
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <Megaphone className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              All announcements
+          <CardContent className="relative">
+            <div className="text-3xl font-bold text-slate-800 mb-1">{data?.total || 0}</div>
+            <p className="text-sm text-slate-500">
+              Total announcements created
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <AlertCircle className="h-4 w-4 text-green-600" />
+
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+            <CardTitle className="text-sm font-semibold text-slate-700">Active Now</CardTitle>
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Currently visible
+          <CardContent className="relative">
+            <div className="text-3xl font-bold text-slate-800 mb-1">{activeCount}</div>
+            <p className="text-sm text-slate-500">
+              Currently visible to users
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Priority</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-600" />
+
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+            <CardTitle className="text-sm font-semibold text-slate-700">High Priority</CardTitle>
+            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25">
+              <Zap className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{highPriorityCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Urgent notices
+          <CardContent className="relative">
+            <div className="text-3xl font-bold text-slate-800 mb-1">{highPriorityCount}</div>
+            <p className="text-sm text-slate-500">
+              Urgent notices requiring attention
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expired</CardTitle>
-            <Clock className="h-4 w-4 text-gray-600" />
+
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+            <CardTitle className="text-sm font-semibold text-slate-700">Total Views</CardTitle>
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+              <Users className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{expiredCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Past expiry date
+          <CardContent className="relative">
+            <div className="text-3xl font-bold text-slate-800 mb-1">{totalViews.toLocaleString()}</div>
+            <p className="text-sm text-slate-500">
+              Community engagement metrics
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters and Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Announcements</CardTitle>
-          <CardDescription>
-            Manage church announcements, notices, and important updates
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      {/* Main Content Card */}
+      <Card className="bg-white border-0 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 pb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-bold text-slate-800">Manage Announcements</CardTitle>
+              <CardDescription className="text-slate-600 mt-2">
+                Create, edit, and manage your community announcements
+              </CardDescription>
+            </div>
+          </div>
+          
+          {/* Search and Filters */}
+          <div className="flex items-center space-x-4 mt-6">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
                 placeholder="Search announcements..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-12 h-12 border-slate-300 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 bg-white shadow-sm"
               />
             </div>
-            <Button variant="outline" size="sm">
-              <Filter className="mr-2 h-4 w-4" />
-              Filter
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl px-6"
+            >
+              <Filter className="mr-2 h-5 w-5" />
+              Filter & Sort
             </Button>
           </div>
+        </CardHeader>
 
+        <CardContent className="p-8">
           <AnnouncementsTable
             announcements={announcements}
             isLoading={isLoading}
@@ -473,24 +571,46 @@ export default function AnnouncementsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <p className="text-sm text-gray-600">
-                Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, data?.total || 0)} of {data?.total || 0} announcements
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
+              <p className="text-sm text-slate-600">
+                Showing <span className="font-medium">{((currentPage - 1) * 20) + 1}</span> to <span className="font-medium">{Math.min(currentPage * 20, data?.total || 0)}</span> of <span className="font-medium">{data?.total || 0}</span> announcements
               </p>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="lg"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
+                  className="border-slate-300 hover:bg-slate-50 rounded-xl px-6"
                 >
                   Previous
                 </Button>
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const page = i + 1;
+                    return (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 rounded-lg ${
+                          currentPage === page 
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-md' 
+                            : 'border-slate-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        {page}
+                      </Button>
+                    );
+                  })}
+                </div>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="lg"
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
+                  className="border-slate-300 hover:bg-slate-50 rounded-xl px-6"
                 >
                   Next
                 </Button>
