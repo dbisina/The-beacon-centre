@@ -67,6 +67,34 @@ import { categoriesApi } from '@/lib/api';
 import { Category } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 
+// Color name mapping function
+const getColorName = (hexColor: string): string => {
+  const colorMap: { [key: string]: string } = {
+    '#ef4444': 'Red',
+    '#f97316': 'Orange',
+    '#f59e0b': 'Amber',
+    '#eab308': 'Yellow',
+    '#84cc16': 'Lime',
+    '#22c55e': 'Green',
+    '#10b981': 'Emerald',
+    '#14b8a6': 'Teal',
+    '#06b6d4': 'Cyan',
+    '#0ea5e9': 'Sky Blue',
+    '#3b82f6': 'Blue',
+    '#6366f1': 'Indigo',
+    '#8b5cf6': 'Violet',
+    '#a855f7': 'Purple',
+    '#d946ef': 'Fuchsia',
+    '#ec4899': 'Pink',
+    '#f43f5e': 'Rose',
+    '#64748b': 'Slate',
+    '#374151': 'Gray',
+    '#111827': 'Dark'
+  };
+  
+  return colorMap[hexColor] || 'Custom';
+};
+
 // Enhanced Color picker component
 const ColorPicker = ({ value, onChange }: { value: string; onChange: (color: string) => void }) => {
   const colors = [
@@ -96,7 +124,7 @@ const ColorPicker = ({ value, onChange }: { value: string; onChange: (color: str
           className="w-6 h-6 rounded-lg border border-slate-300 shadow-sm"
           style={{ backgroundColor: value }}
         />
-        <span className="text-sm font-medium text-slate-700">Selected: {value}</span>
+        <span className="text-sm font-medium text-slate-700">Selected: {getColorName(value)}</span>
       </div>
     </div>
   );
@@ -319,15 +347,14 @@ export default function CategoriesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Total Categories</CardTitle>
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
               <Layers className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="relative">
+          <CardContent>
             <div className="text-3xl font-bold text-slate-800 mb-1">{categories?.length || 0}</div>
             <p className="text-sm text-slate-500">
               All content categories
@@ -335,15 +362,14 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">For Devotionals</CardTitle>
             <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
               <BookOpen className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="relative">
+          <CardContent>
             <div className="text-3xl font-bold text-slate-800 mb-1">5</div>
             <p className="text-sm text-slate-500">
               Used in devotionals
@@ -351,15 +377,14 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">For Sermons</CardTitle>
             <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25">
               <Video className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="relative">
+          <CardContent>
             <div className="text-3xl font-bold text-slate-800 mb-1">8</div>
             <p className="text-sm text-slate-500">
               Used in sermons
@@ -367,15 +392,14 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-amber-50 hover:to-orange-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Most Used</CardTitle>
             <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="relative">
+          <CardContent>
             <div className="text-2xl font-bold text-slate-800 mb-1">Sunday Service</div>
             <p className="text-sm text-slate-500">
               Most popular category
@@ -470,13 +494,13 @@ export default function CategoriesPage() {
                   filteredCategories.map((category, index) => (
                     <TableRow 
                       key={category.id} 
-                      className="group hover:bg-slate-50/50 transition-all duration-200 border-b border-slate-100 last:border-0"
+                      className="hover:bg-slate-50/50 transition-colors duration-200 border-b border-slate-100 last:border-0"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <TableCell className="py-4">
                         <div className="flex items-center space-x-4">
                           <div 
-                            className="w-8 h-8 rounded-xl border-2 border-white shadow-lg transition-transform duration-200 group-hover:scale-110"
+                            className="w-8 h-8 rounded-xl border-2 border-white shadow-lg transition-transform duration-200 hover:scale-110"
                             style={{ backgroundColor: category.color || '#3b82f6' }}
                           />
                           <div>
@@ -504,7 +528,7 @@ export default function CategoriesPage() {
                             backgroundColor: `${category.color || '#3b82f6'}10`
                           }}
                         >
-                          {category.color || '#3b82f6'}
+                          {getColorName(category.color || '#3b82f6')}
                         </Badge>
                       </TableCell>
                       <TableCell className="py-4">
