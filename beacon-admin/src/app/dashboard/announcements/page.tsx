@@ -128,7 +128,7 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-150 border-b border-slate-200">
+            <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
               <TableHead className="w-[100px] font-semibold text-slate-700 py-4">Preview</TableHead>
               <TableHead className="font-semibold text-slate-700">Announcement Details</TableHead>
               <TableHead className="font-semibold text-slate-700 w-[120px]">Priority</TableHead>
@@ -168,11 +168,11 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
               announcements.map((announcement, index) => (
                 <TableRow 
                   key={announcement.id} 
-                  className="group hover:bg-slate-50/50 transition-all duration-200 border-b border-slate-100 last:border-0"
+                  className="border-b border-slate-100 last:border-0"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <TableCell className="py-4">
-                    <div className="relative w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-200">
+                    <div className="relative w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
                       {announcement.imageUrl ? (
                         <>
                           <img
@@ -180,7 +180,7 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                             alt={announcement.title}
                             className="w-full h-full object-cover"
                           />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-200" />
                         </>
                       ) : (
                         <Image className="h-8 w-8 text-slate-400" />
@@ -269,20 +269,20 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                       <DropdownMenuTrigger asChild>
                         <Button 
                           variant="ghost" 
-                          className="h-9 w-9 p-0 hover:bg-slate-100 rounded-lg transition-colors"
+                          className="h-9 w-9 p-0 rounded-lg"
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 shadow-xl rounded-lg">
                         <DropdownMenuLabel className="text-slate-700 font-semibold">Actions</DropdownMenuLabel>
-                        <DropdownMenuItem asChild className="hover:bg-slate-50 rounded-md mx-1">
+                        <DropdownMenuItem asChild className="rounded-md mx-1">
                           <Link href={`/dashboard/announcements/${announcement.id}`}>
                             <Eye className="mr-2 h-4 w-4 text-blue-600" />
                             <span>View Details</span>
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="hover:bg-slate-50 rounded-md mx-1">
+                        <DropdownMenuItem asChild className="rounded-md mx-1">
                           <Link href={`/dashboard/announcements/${announcement.id}/edit`}>
                             <Edit className="mr-2 h-4 w-4 text-amber-600" />
                             <span>Edit</span>
@@ -291,13 +291,13 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => onToggleActive(announcement.id)}
-                          className="hover:bg-slate-50 rounded-md mx-1"
+                          className="rounded-md mx-1"
                         >
                           <AlertCircle className="mr-2 h-4 w-4 text-purple-600" />
                           <span>{announcement.isActive ? 'Deactivate' : 'Activate'}</span>
                         </DropdownMenuItem>
                         {announcement.actionUrl && (
-                          <DropdownMenuItem asChild className="hover:bg-slate-50 rounded-md mx-1">
+                          <DropdownMenuItem asChild className="rounded-md mx-1">
                             <a 
                               href={announcement.actionUrl} 
                               target="_blank" 
@@ -311,7 +311,7 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => setDeleteId(announcement.id)}
-                          className="text-red-600 hover:bg-red-50 rounded-md mx-1"
+                          className="text-red-600 rounded-md mx-1"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           <span>Delete</span>
@@ -326,7 +326,6 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
         </Table>
       </div>
 
-      {/* Delete confirmation dialog */}
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent className="bg-white border border-slate-200 shadow-2xl rounded-2xl">
           <AlertDialogHeader>
@@ -336,7 +335,7 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="space-x-3">
-            <AlertDialogCancel className="hover:bg-slate-100">Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (deleteId) {
@@ -361,7 +360,6 @@ export default function AnnouncementsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch announcements
   const { data, isLoading } = useQuery({
     queryKey: ['announcements', { page: currentPage, search: searchTerm, limit: 20 }],
     queryFn: () => announcementsApi.getAll({
@@ -373,7 +371,6 @@ export default function AnnouncementsPage() {
     }),
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: (id: number) => announcementsApi.delete(id),
     onSuccess: () => {
@@ -392,7 +389,6 @@ export default function AnnouncementsPage() {
     },
   });
 
-  // Toggle active mutation
   const toggleActiveMutation = useMutation({
     mutationFn: (id: number) => announcementsApi.toggleActive(id),
     onSuccess: () => {
@@ -422,7 +418,6 @@ export default function AnnouncementsPage() {
   const announcements = data?.announcements || [];
   const totalPages = data?.totalPages || 1;
 
-  // Calculate stats
   const activeCount = announcements.filter(a => a.isActive).length;
   const expiredCount = announcements.filter(a => 
     a.expiryDate && new Date(a.expiryDate) < new Date()
@@ -432,7 +427,6 @@ export default function AnnouncementsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-6 space-y-8">
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
@@ -443,7 +437,7 @@ export default function AnnouncementsPage() {
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <Button variant="outline" size="lg" className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all">
+          <Button variant="outline" size="lg" className="border-slate-300 rounded-xl px-6">
             <Download className="mr-2 h-5 w-5" />
             Export Data
           </Button>
@@ -460,17 +454,15 @@ export default function AnnouncementsPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Total Announcements</CardTitle>
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
               <Megaphone className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="relative">
+          <CardContent>
             <div className="text-3xl font-bold text-slate-800 mb-1">{data?.total || 0}</div>
             <p className="text-sm text-slate-500">
               Total announcements created
@@ -478,15 +470,14 @@ export default function AnnouncementsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Active Now</CardTitle>
             <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="relative">
+          <CardContent>
             <div className="text-3xl font-bold text-slate-800 mb-1">{activeCount}</div>
             <p className="text-sm text-slate-500">
               Currently visible to users
@@ -494,15 +485,14 @@ export default function AnnouncementsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">High Priority</CardTitle>
             <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25">
               <Zap className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="relative">
+          <CardContent>
             <div className="text-3xl font-bold text-slate-800 mb-1">{highPriorityCount}</div>
             <p className="text-sm text-slate-500">
               Urgent notices requiring attention
@@ -510,15 +500,14 @@ export default function AnnouncementsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Total Views</CardTitle>
             <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
               <Users className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent className="relative">
+          <CardContent>
             <div className="text-3xl font-bold text-slate-800 mb-1">{totalViews.toLocaleString()}</div>
             <p className="text-sm text-slate-500">
               Community engagement metrics
@@ -527,7 +516,6 @@ export default function AnnouncementsPage() {
         </Card>
       </div>
 
-      {/* Main Content Card */}
       <Card className="bg-white border-0 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 pb-6">
           <div className="flex items-center justify-between">
@@ -539,7 +527,6 @@ export default function AnnouncementsPage() {
             </div>
           </div>
           
-          {/* Search and Filters */}
           <div className="flex items-center space-x-4 mt-6">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -553,7 +540,7 @@ export default function AnnouncementsPage() {
             <Button 
               variant="outline" 
               size="lg" 
-              className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl px-6"
+              className="border-slate-300 rounded-xl px-6"
             >
               <Filter className="mr-2 h-5 w-5" />
               Filter & Sort
@@ -569,7 +556,6 @@ export default function AnnouncementsPage() {
             onToggleActive={handleToggleActive}
           />
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
               <p className="text-sm text-slate-600">
@@ -581,7 +567,7 @@ export default function AnnouncementsPage() {
                   size="lg"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="border-slate-300 hover:bg-slate-50 rounded-xl px-6"
+                  className="border-slate-300 rounded-xl px-6"
                 >
                   Previous
                 </Button>
@@ -597,7 +583,7 @@ export default function AnnouncementsPage() {
                         className={`w-10 h-10 rounded-lg ${
                           currentPage === page 
                             ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-md' 
-                            : 'border-slate-300 hover:bg-slate-50'
+                            : 'border-slate-300'
                         }`}
                       >
                         {page}
@@ -610,7 +596,7 @@ export default function AnnouncementsPage() {
                   size="lg"
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="border-slate-300 hover:bg-slate-50 rounded-xl px-6"
+                  className="border-slate-300 rounded-xl px-6"
                 >
                   Next
                 </Button>
