@@ -85,7 +85,7 @@ const VideoSermons = ({ navigation }: { navigation: any }) => {
                 sermon={sermon}
                 onPress={() => handleVideoPress(sermon)}
                 isFavorite={favoriteVideos.includes(sermon.id)}
-                onToggleFavorite={() => handleToggleFavorite(sermon.id)}
+                //onToggleFavorite={() => handleToggleFavorite(sermon.id)}
               />
             ))}
           </View>
@@ -105,7 +105,7 @@ const VideoSermons = ({ navigation }: { navigation: any }) => {
               sermon={sermon}
               onPress={() => handleVideoPress(sermon)}
               isFavorite={favoriteVideos.includes(sermon.id)}
-              onToggleFavorite={() => handleToggleFavorite(sermon.id)}
+              //onToggleFavorite={() => handleToggleFavorite(sermon.id)}
             />
           ))}
         </View>

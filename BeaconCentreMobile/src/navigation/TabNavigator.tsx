@@ -70,7 +70,7 @@ export default function TabNavigator() {
         component={DevotionalStack}
         options={{ 
           title: 'Devotional',
-          tabBarTestID: 'devotional-tab',
+          //tabBarTestID: 'devotional-tab',
         }}
       />
       <Tab.Screen 
@@ -78,7 +78,7 @@ export default function TabNavigator() {
         component={SermonsStack}
         options={{ 
           title: 'Sermons',
-          tabBarTestID: 'sermons-tab',
+          //tabBarTestID: 'sermons-tab',
         }}
       />
       <Tab.Screen 
@@ -86,7 +86,7 @@ export default function TabNavigator() {
         component={AnnouncementsStack}
         options={{ 
           title: 'News',
-          tabBarTestID: 'announcements-tab',
+         // tabBarTestID: 'announcements-tab',
         }}
       />
       <Tab.Screen 
@@ -94,7 +94,7 @@ export default function TabNavigator() {
         component={FavoritesStack}
         options={{ 
           title: 'Favorites',
-          tabBarTestID: 'favorites-tab',
+         // tabBarTestID: 'favorites-tab',
         }}
       />
       <Tab.Screen 
@@ -102,7 +102,7 @@ export default function TabNavigator() {
         component={SettingsStack}
         options={{ 
           title: 'Settings',
-          tabBarTestID: 'settings-tab',
+         // tabBarTestID: 'settings-tab',
         }}
       />
     </Tab.Navigator>

@@ -18,15 +18,15 @@ import { typography } from '@/constants/typography';
 interface VideoCardProps {
   sermon: VideoSermon;
   onPress: () => void;
+  onFavorite?: () => void;
   isFavorite?: boolean;
-  onToggleFavorite?: () => void;
 }
 
 const VideoCard: React.FC<VideoCardProps> = ({
   sermon,
   onPress,
+  onFavorite,
   isFavorite = false,
-  onToggleFavorite,
 }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -60,9 +60,9 @@ const VideoCard: React.FC<VideoCardProps> = ({
         style={[
           styles.card,
           {
+            transform: [{ scale: scaleValue }],
             backgroundColor: isDark ? colors.dark.card : colors.light.card,
             borderColor: isDark ? colors.dark.border : colors.light.border,
-            transform: [{ scale: scaleValue }],
           },
         ]}
       >
@@ -73,7 +73,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
             resizeMode="cover"
           />
           <View style={styles.playOverlay}>
-            <Icon name="play-circle-filled" size={48} color="#fff" />
+            <Icon name="play-circle-filled" size={64} color="#fff" />
           </View>
           {sermon.is_featured && (
             <View style={styles.featuredBadge}>
@@ -92,7 +92,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
 
           <Text style={[
             styles.speaker,
-            { color: colors.primary }
+            { color: colors.textGrey }
           ]}>
             {sermon.speaker}
           </Text>
@@ -111,17 +111,20 @@ const VideoCard: React.FC<VideoCardProps> = ({
           </View>
 
           {sermon.category && (
-            <View style={styles.categoryContainer}>
-              <Text style={[styles.category, { color: colors.blue }]}>
+            <View style={[
+              styles.categoryContainer,
+              { backgroundColor: isDark ? colors.dark.surface : colors.light.surface }
+            ]}>
+              <Text style={[styles.category, { color: colors.primary }]}>
                 {sermon.category}
               </Text>
             </View>
           )}
         </View>
 
-        {onToggleFavorite && (
+        {onFavorite && (
           <TouchableOpacity
-            onPress={onToggleFavorite}
+            onPress={onFavorite}
             style={styles.favoriteButton}
           >
             <Icon
@@ -138,20 +141,20 @@ const VideoCard: React.FC<VideoCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
+    borderRadius: 16,
     marginHorizontal: 16,
     marginVertical: 8,
     borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowRadius: 8,
+    elevation: 4,
     overflow: 'hidden',
   },
   thumbnailContainer: {
     position: 'relative',
-    height: 180,
+    height: 200,
   },
   thumbnail: {
     width: '100%',
@@ -169,36 +172,39 @@ const styles = StyleSheet.create({
   },
   featuredBadge: {
     position: 'absolute',
-    top: 8,
-    left: 8,
+    top: 12,
+    left: 12,
     backgroundColor: colors.yellow,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   featuredText: {
     fontFamily: typography.fonts.poppins.medium,
     fontSize: typography.sizes.small,
     color: '#fff',
+    letterSpacing: typography.letterSpacing.tight,
   },
   contentContainer: {
-    padding: 16,
+    padding: 20,
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.medium,
-    marginBottom: 8,
-    lineHeight: 20,
+    fontSize: typography.sizes.large,
+    lineHeight: typography.lineHeights.tight,
+    letterSpacing: typography.letterSpacing.tight,
+    marginBottom: 12,
   },
   speaker: {
     fontFamily: typography.fonts.poppins.medium,
     fontSize: typography.sizes.medium,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   date: {
     fontFamily: typography.fonts.poppins.regular,
@@ -210,6 +216,9 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   category: {
     fontFamily: typography.fonts.poppins.medium,
@@ -219,12 +228,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 8,
     borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 

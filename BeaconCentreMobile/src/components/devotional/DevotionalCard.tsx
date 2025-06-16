@@ -55,74 +55,67 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({
     });
   };
 
+  const formatTime = (timeInMinutes: number) => {
+    const hours = Math.floor(timeInMinutes / 60);
+    const minutes = timeInMinutes % 60;
+    return `${hours}h ${minutes}m`;
+  };
+
   return (
     <TouchableOpacity
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      activeOpacity={0.9}
+      activeOpacity={0.92}
+      style={{ marginBottom: 16 }}
     >
       <Animated.View
         style={[
           styles.card,
           {
+            transform: [{ scale: scaleValue }],
             backgroundColor: isDark ? colors.dark.card : colors.light.card,
             borderColor: isDark ? colors.dark.border : colors.light.border,
-            transform: [{ scale: scaleValue }],
+            shadowColor: isDark ? '#000' : colors.primary,
+            shadowOpacity: isDark ? 0.18 : 0.12,
+            elevation: 8,
           },
         ]}
       >
-        {showDate && (
-          <View style={styles.dateHeader}>
-            <Text style={[
-              styles.dateText,
-              { color: isDark ? colors.dark.text : colors.primary }
-            ]}>
-              {formatDate(devotional.date)}
-            </Text>
-            {isRead && (
-              <Icon name="check-circle" size={20} color={colors.success} />
-            )}
-          </View>
-        )}
+        <View style={styles.contentContainer}>
+          {showDate && (
+            <View style={styles.header}>
+              <Text style={[styles.date, { color: colors.textGrey }]}>
+                {formatDate(devotional.date)}
+              </Text>
+              {isRead && (
+                <View style={[styles.readBadge, { backgroundColor: colors.success }]}>
+                  <Text style={styles.readText}>Read</Text>
+                </View>
+              )}
+            </View>
+          )}
 
-        <Text style={[
-          styles.title,
-          { color: isDark ? colors.dark.text : colors.light.text }
-        ]}>
-          {devotional.title}
-        </Text>
-
-        <View style={styles.verseContainer}>
           <Text style={[
-            styles.verseReference,
-            { color: colors.primary }
+            styles.title,
+            { color: isDark ? colors.dark.text : colors.light.text }
           ]}>
-            {devotional.verse_reference}
+            {devotional.title}
           </Text>
+
           <Text style={[
-            styles.verseText,
+            styles.description,
             { color: isDark ? colors.dark.text : colors.textGrey }
-          ]} numberOfLines={3}>
-            "{devotional.verse_text}"
+          ]} numberOfLines={2}>
+            {devotional.content}
           </Text>
-        </View>
 
-        <Text style={[
-          styles.preview,
-          { color: isDark ? colors.dark.text : colors.textGrey }
-        ]} numberOfLines={2}>
-          {devotional.content.substring(0, 120)}...
-        </Text>
-
-        <View style={styles.footer}>
-          <Text style={[
-            styles.readMore,
-            { color: colors.primary }
-          ]}>
-            Read More
-          </Text>
-          <Icon name="arrow-forward" size={16} color={colors.primary} />
+          <View style={styles.metaContainer}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="auto-stories" size={18} color={colors.primary} style={{ marginRight: 6 }} />
+              <Text style={[styles.verseReference, { color: colors.primary }]}>{devotional.verse_reference}</Text>
+            </View>
+          </View>
         </View>
       </Animated.View>
     </TouchableOpacity>
@@ -131,68 +124,63 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 20,
     marginHorizontal: 16,
-    marginVertical: 8,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 24,
+    overflow: 'hidden',
   },
-  dateHeader: {
+  contentContainer: {
+    padding: 24,
+  },
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  dateText: {
-    fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    marginBottom: 18,
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
-    marginBottom: 12,
-    lineHeight: 24,
+    fontSize: typography.sizes.xl,
+    lineHeight: 28,
+    letterSpacing: 0.1,
+    marginBottom: 10,
   },
-  verseContainer: {
-    marginBottom: 12,
-    paddingLeft: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
+  description: {
+    fontFamily: typography.fonts.notoSerif.regular,
+    fontSize: typography.sizes.medium,
+    lineHeight: 22,
+    marginBottom: 18,
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.light.border,
+  },
+  date: {
+    fontFamily: typography.fonts.poppins.medium,
+    fontSize: typography.sizes.small,
+  },
+  readBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  readText: {
+    fontFamily: typography.fonts.poppins.medium,
+    fontSize: typography.sizes.xs,
+    color: '#fff',
+    letterSpacing: 0.2,
   },
   verseReference: {
     fontFamily: typography.fonts.poppins.medium,
     fontSize: typography.sizes.small,
-    marginBottom: 4,
-  },
-  verseText: {
-    fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.medium,
-    fontStyle: 'italic',
-    lineHeight: 20,
-  },
-  preview: {
-    fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.medium,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  readMore: {
-    fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
-    marginRight: 4,
   },
 });
 

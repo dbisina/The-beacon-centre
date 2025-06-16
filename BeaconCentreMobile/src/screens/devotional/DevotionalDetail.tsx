@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.header,
+    fontSize: typography.sizes.large,
     lineHeight: 36,
     marginBottom: 20,
   },

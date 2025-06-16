@@ -4,6 +4,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import LocalStorageService from '@/services/storage/LocalStorage';
+import { NotificationBehavior } from 'expo-notifications';
 
 class NotificationService {
   private static instance: NotificationService;
@@ -18,10 +19,12 @@ class NotificationService {
   async initialize(): Promise<void> {
     // Configure notification handling
     Notifications.setNotificationHandler({
-      handleNotification: async () => ({
+      handleNotification: async (): Promise<NotificationBehavior> => ({
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
       }),
     });
 
@@ -92,11 +95,7 @@ class NotificationService {
         body: "Start your day with God's Word. Your daily devotional is waiting for you.",
         data: { type: 'daily_devotional' },
       },
-      trigger: {
-        hour: 7,
-        minute: 0,
-        repeats: true,
-      },
+      trigger: null,
     });
 
     // Schedule weekly sermon reminder
@@ -106,12 +105,7 @@ class NotificationService {
         body: 'Check out the latest video and audio sermons from The Beacon Centre.',
         data: { type: 'weekly_sermons' },
       },
-      trigger: {
-        weekday: 1, // Monday
-        hour: 9,
-        minute: 0,
-        repeats: true,
-      },
+      trigger: null,
     });
   }
 
@@ -148,7 +142,7 @@ class NotificationService {
         body,
         data: { type: 'streak_celebration', days: streakDays },
       },
-      trigger: null, // Send immediately
+      trigger: null,
     });
   }
 
@@ -187,7 +181,7 @@ class NotificationService {
         body: notificationBody,
         data: { type: 'new_content', contentType },
       },
-      trigger: null, // Send immediately
+      trigger: null,
     });
   }
 

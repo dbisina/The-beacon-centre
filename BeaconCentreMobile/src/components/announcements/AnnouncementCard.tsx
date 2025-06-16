@@ -160,56 +160,62 @@ const AnnouncementCard: React.FC<AnnouncementCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
+    borderRadius: 16,
     marginHorizontal: 16,
     marginVertical: 8,
     borderWidth: 1,
-    borderLeftWidth: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowRadius: 8,
+    elevation: 4,
     overflow: 'hidden',
   },
   image: {
     width: '100%',
-    height: 160,
+    height: 180,
   },
   contentContainer: {
-    padding: 16,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   priorityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   priority: {
     fontFamily: typography.fonts.poppins.medium,
     fontSize: typography.sizes.small,
     marginLeft: 4,
+    letterSpacing: typography.letterSpacing.tight,
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
     fontSize: typography.sizes.large,
-    marginBottom: 8,
-    lineHeight: 22,
+    lineHeight: typography.lineHeights.tight,
+    letterSpacing: typography.letterSpacing.tight,
+    marginBottom: 12,
   },
   content: {
     fontFamily: typography.fonts.notoSerif.regular,
     fontSize: typography.sizes.medium,
-    lineHeight: 20,
-    marginBottom: 12,
+    lineHeight: typography.lineHeights.normal,
+    marginBottom: 16,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
   },
   date: {
     fontFamily: typography.fonts.poppins.regular,
@@ -218,11 +224,17 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   actionText: {
     fontFamily: typography.fonts.poppins.medium,
     fontSize: typography.sizes.small,
+    color: '#fff',
     marginRight: 4,
+    letterSpacing: typography.letterSpacing.tight,
   },
 });
 

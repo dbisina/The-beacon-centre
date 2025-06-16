@@ -26,19 +26,19 @@ const TabNavigator = () => {
           let iconName: string;
 
           switch (route.name) {
-            case 'Devotional':
+            case 'DevotionalTab':
               iconName = 'book';
               break;
-            case 'Sermons':
+            case 'SermonsTab':
               iconName = 'play-circle-filled';
               break;
-            case 'Announcements':
+            case 'AnnouncementsTab':
               iconName = 'announcement';
               break;
-            case 'Favorites':
+            case 'FavoritesTab':
               iconName = 'favorite';
               break;
-            case 'Settings':
+            case 'SettingsTab':
               iconName = 'settings';
               break;
             default:
@@ -56,11 +56,11 @@ const TabNavigator = () => {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Devotional" component={DevotionalStack} />
-      <Tab.Screen name="Sermons" component={SermonsStack} />
-      <Tab.Screen name="Announcements" component={AnnouncementsStack} />
-      <Tab.Screen name="Favorites" component={FavoritesStack} />
-      <Tab.Screen name="Settings" component={SettingsStack} />
+      <Tab.Screen name="DevotionalTab" component={DevotionalStack} />
+      <Tab.Screen name="SermonsTab" component={SermonsStack} />
+      <Tab.Screen name="AnnouncementsTab" component={AnnouncementsStack} />
+      <Tab.Screen name="FavoritesTab" component={FavoritesStack} />
+      <Tab.Screen name="SettingsTab" component={SettingsStack} />
     </Tab.Navigator>
   );
 };
@@ -80,6 +80,24 @@ const AppNavigator = () => {
           text: isDark ? colors.dark.text : colors.light.text,
           border: isDark ? colors.dark.border : colors.light.border,
           notification: colors.primary,
+        },
+        fonts: {
+          regular: {
+            fontFamily: 'System',
+            fontWeight: '400',
+          },
+          medium: {
+            fontFamily: 'System',
+            fontWeight: '500',
+          },
+          bold: {
+            fontFamily: 'System',
+            fontWeight: '700',
+          },
+          heavy: {
+            fontFamily: 'System',
+            fontWeight: '900',
+          },
         },
       }}
     >
