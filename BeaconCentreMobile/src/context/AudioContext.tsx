@@ -13,6 +13,20 @@ interface AudioContextType {
   resume: () => Promise<void>;
   skipToNext: () => Promise<void>;
   skipToPrevious: () => Promise<void>;
+  playPause: () => void;           // Toggle play/pause
+    seekTo: (position: number) => void;  // Seek to position in seconds
+    skipForward: () => void;         // Skip 15 seconds forward
+    skipBackward: () => void;        // Skip 15 seconds backward
+
+    // Player visibility control
+    isPlayerVisible: boolean;        // Whether mini player should show
+    showMiniPlayer: () => void;      // Show mini player
+    hideMiniPlayer: () => void;      // Hide mini player  
+    closePlayer: () => void;         // Close player completely
+
+    // Favorites integration
+    toggleFavorite: () => void;      // Toggle current sermon favorite
+    isFavorite: boolean;          
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -63,6 +77,34 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     await audioService.skipToPrevious();
   };
 
+  const playPause = () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      resume();
+    }
+  };
+
+  const seekTo = (position: number) => {
+    audioService.seekTo(position);
+  };
+
+  const skipForward = () => {
+    audioService.skipForward();
+  };
+
+  const skipBackward = () => {
+    audioService.skipBackward();
+  };
+
+  const showMiniPlayer = () => {
+    setIsPlayerVisible(true);
+  };
+
+  const hideMiniPlayer = () => {
+    setIsPlayerVisible(false);
+  };
+
   return (
     <AudioContext.Provider
       value={{
@@ -74,6 +116,16 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         resume,
         skipToNext,
         skipToPrevious,
+        playPause,
+        seekTo,
+        skipForward,
+        skipBackward,
+        isPlayerVisible,
+        showMiniPlayer,
+        hideMiniPlayer,
+        closePlayer,
+        toggleFavorite,
+        isFavorite,
       }}
     >
       {children}

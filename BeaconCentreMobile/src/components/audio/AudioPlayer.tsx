@@ -1,301 +1,348 @@
-// src/components/audio/AudioPlayer.tsx
+// src/components/audio/FullAudioPlayer.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  useColorScheme,
+  Image,
+  Dimensions,
+  Modal,
+  StatusBar,
 } from 'react-native';
-import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Audio } from 'expo-av';
-
-import { AudioSermon } from '@/types/api';
-import { colors, } from '@/constants/colors';
+import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
-import TrackPlayerService from '@/services/audio/TrackPlayerService';
+import { useAudio } from '@/context/AudioContext';
+
+const { width } = Dimensions.get('window');
 
 interface AudioPlayerProps {
-  sermon: AudioSermon;
-  onClose?: () => void;
-  showMiniPlayer?: boolean;
+  visible: boolean;
+  onClose: () => void;
 }
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
-  sermon,
-  onClose,
-  showMiniPlayer = false,
+  visible,
+  onClose
 }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [duration, setDuration] = useState(0);
-  const [position, setPosition] = useState(0);
+  const { 
+    currentSermon, 
+    isPlaying, 
+    position, 
+    duration,
+    playPause,
+    seekTo,
+    skipForward,
+    skipBackward,
+    toggleFavorite,
+    isFavorite 
+  } = useAudio();
 
-  const audioService = TrackPlayerService.getInstance();
+  const [localPosition, setLocalPosition] = useState(0);
 
   useEffect(() => {
-    const checkPlaybackStatus = async () => {
-      const sound = await audioService.getCurrentTrack();
-      if (sound) {
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded) {
-          setIsPlaying(status.isPlaying);
-          setDuration(status.durationMillis ? status.durationMillis / 1000 : 0);
-          setPosition(status.positionMillis ? status.positionMillis / 1000 : 0);
-        }
-      }
-    };
+    setLocalPosition(position);
+  }, [position]);
 
-    const interval = setInterval(checkPlaybackStatus, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handlePlayPause = async () => {
-    try {
-      if (isPlaying) {
-        await audioService.pause();
-      } else {
-        const currentSound = await audioService.getCurrentTrack();
-        if (currentSound) {
-          await audioService.play();
-        } else {
-          await audioService.playSermon(sermon);
-        }
-      }
-    } catch (error) {
-      console.error('Play/pause error:', error);
-    }
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleSeek = async (value: number) => {
-    await audioService.seekTo(value);
+  const handleSeek = (value: number) => {
+    setLocalPosition(value);
+    seekTo(value);
   };
 
-  const formatTime = (timeInSeconds: number) => {
-    const minutes = Math.floor(timeInSeconds / 60);
-    const seconds = Math.floor(timeInSeconds % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+  const progress = duration > 0 ? localPosition / duration : 0;
 
-  if (showMiniPlayer) {
-    return (
-      <View style={[
-        styles.miniPlayer,
-        { backgroundColor: isDark ? colors.dark.card : colors.light.card }
-      ]}>
-        <View style={styles.miniInfo}>
-          <Text style={[
-            styles.miniTitle,
-            { color: isDark ? colors.dark.text : colors.light.text }
-          ]} numberOfLines={1}>
-            {sermon.title}
-          </Text>
-          <Text style={[
-            styles.miniSpeaker,
-            { color: colors.textGrey }
-          ]} numberOfLines={1}>
-            {sermon.speaker}
-          </Text>
-        </View>
-        
-        <TouchableOpacity onPress={handlePlayPause} style={styles.miniPlayButton}>
-          <Icon
-            name={isPlaying ? 'pause' : 'play-arrow'}
-            size={28}
-            color={colors.primary}
-          />
-        </TouchableOpacity>
-        
-        {onClose && (
-          <TouchableOpacity onPress={onClose} style={styles.miniCloseButton}>
-            <Icon name="close" size={20} color={colors.textGrey} />
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  }
+  if (!currentSermon) return null;
 
   return (
-    <View style={[
-      styles.container,
-      { backgroundColor: isDark ? colors.dark.background : colors.light.background }
-    ]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[
-          styles.headerTitle,
-          { color: isDark ? colors.dark.text : colors.light.text }
-        ]}>
-          Now Playing
-        </Text>
-        {onClose && (
-          <TouchableOpacity onPress={onClose}>
-            <Icon name="keyboard-arrow-down" size={28} color={colors.textGrey} />
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={onClose}
+    >
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onClose} style={styles.headerButton}>
+            <Icon name="keyboard-arrow-down" size={24} color={colors.textGrey} />
           </TouchableOpacity>
-        )}
-      </View>
+          <Text style={styles.headerTitle}>Now Playing</Text>
+          <TouchableOpacity 
+            onPress={toggleFavorite} 
+            style={styles.headerButton}
+          >
+            <Icon 
+              name={isFavorite ? "favorite" : "favorite-border"} 
+              size={24} 
+              color={isFavorite ? colors.red : colors.textGrey} 
+            />
+          </TouchableOpacity>
+        </View>
 
-      {/* Sermon Info */}
-      <View style={styles.sermonInfo}>
-        <Text style={[
-          styles.title,
-          { color: isDark ? colors.dark.text : colors.light.text }
-        ]}>
-          {sermon.title}
-        </Text>
-        <Text style={[styles.speaker, { color: colors.textGrey }]}>
-          {sermon.speaker}
-        </Text>
-        {sermon.sermon_date && (
-          <Text style={[styles.date, { color: colors.textGrey }]}>
-            {new Date(sermon.sermon_date).toLocaleDateString()}
-          </Text>
-        )}
-      </View>
+        {/* Album Art */}
+        <View style={styles.albumContainer}>
+          <View style={styles.albumArt}>
+            {currentSermon.thumbnail_url ? (
+              <Image source={{ uri: currentSermon.thumbnail_url }} style={styles.albumImage} />
+            ) : (
+              <View style={styles.placeholderAlbum}>
+                <Icon name="library-music" size={80} color={colors.textGrey} />
+              </View>
+            )}
+          </View>
+        </View>
 
-      {/* Progress Slider */}
-      <View style={styles.progressContainer}>
-        <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={duration}
-          value={position}
-          onSlidingComplete={handleSeek}
-          minimumTrackTintColor={colors.primary}
-          maximumTrackTintColor={isDark ? colors.dark.border : colors.light.border}
-          thumbTintColor={colors.primary}
-        />
-        <View style={styles.timeContainer}>
-          <Text style={[styles.time, { color: colors.textGrey }]}>
-            {formatTime(position)}
-          </Text>
-          <Text style={[styles.time, { color: colors.textGrey }]}>
-            {formatTime(duration)}
-          </Text>
+        {/* Track Info */}
+        <View style={styles.trackInfo}>
+          <Text style={styles.trackTitle}>{currentSermon.title}</Text>
+          <Text style={styles.trackArtist}>{currentSermon.speaker}</Text>
+          {currentSermon.category && (
+            <Text style={styles.trackCategory}>{currentSermon.category}</Text>
+          )}
+        </View>
+
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+            <TouchableOpacity 
+              style={[styles.progressThumb, { left: `${progress * 100}%` }]}
+              onPress={() => {}} // Handle drag here
+            />
+          </View>
+          <View style={styles.timeContainer}>
+            <Text style={styles.timeText}>{formatTime(localPosition)}</Text>
+            <Text style={styles.timeText}>{formatTime(duration)}</Text>
+          </View>
+        </View>
+
+        {/* Controls */}
+        <View style={styles.controls}>
+          <TouchableOpacity 
+            onPress={skipBackward} 
+            style={styles.controlButton}
+          >
+            <Icon name="replay-15" size={32} color={colors.textGrey} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={playPause} 
+            style={styles.playButton}
+          >
+            <Icon 
+              name={isPlaying ? "pause" : "play-arrow"} 
+              size={32} 
+              color="#ffffff" 
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={skipForward} 
+            style={styles.controlButton}
+          >
+            <Icon name="forward-15" size={32} color={colors.textGrey} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.actionButton}>
+            <Icon name="share" size={24} color={colors.textGrey} />
+            <Text style={styles.actionText}>Share</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton}>
+            <Icon name="file-download" size={24} color={colors.textGrey} />
+            <Text style={styles.actionText}>Download</Text>
+          </TouchableOpacity>
         </View>
       </View>
-
-      {/* Controls */}
-      <View style={styles.controls}>
-        <TouchableOpacity
-          onPress={() => audioService.skipToPrevious()}
-          style={styles.controlButton}
-        >
-          <Icon name="skip-previous" size={32} color={colors.textGrey} />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={handlePlayPause} style={styles.playButton}>
-          <Icon
-            name={isPlaying ? 'pause' : 'play-arrow'}
-            size={48}
-            color="#fff"
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => audioService.skipToNext()}
-          style={styles.controlButton}
-        >
-          <Icon name="skip-next" size={32} color={colors.textGrey} />
-        </TouchableOpacity>
-      </View>
-    </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 40,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    paddingTop: 50, // Account for status bar
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
-    fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.large,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textGrey,
+    fontFamily: typography.fonts.poppins.semiBold,
   },
-  sermonInfo: {
+  albumContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
+    paddingHorizontal: 40,
   },
-  title: {
-    fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.title,
+  albumArt: {
+    width: width - 80,
+    height: width - 80,
+    maxWidth: 300,
+    maxHeight: 300,
+    borderRadius: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  albumImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 15,
+  },
+  placeholderAlbum: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  trackInfo: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  trackTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#000',
     textAlign: 'center',
     marginBottom: 8,
+    fontFamily: typography.fonts.poppins.bold,
   },
-  speaker: {
-    fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.large,
+  trackArtist: {
+    fontSize: 18,
+    color: colors.primary,
+    textAlign: 'center',
     marginBottom: 4,
+    fontFamily: typography.fonts.poppins.medium,
   },
-  date: {
-    fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.medium,
+  trackCategory: {
+    fontSize: 14,
+    color: colors.textGrey,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   progressContainer: {
-    marginBottom: 40,
+    paddingHorizontal: 30,
+    marginBottom: 30,
   },
-  slider: {
-    width: '100%',
-    height: 40,
+  progressBar: {
+    height: 4,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 2,
+    position: 'relative',
+    marginBottom: 10,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 2,
+  },
+  progressThumb: {
+    width: 16,
+    height: 16,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    position: 'absolute',
+    top: -6,
+    transform: [{ translateX: -8 }],
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
   },
   timeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
   },
-  time: {
-    fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+  timeText: {
+    fontSize: 12,
+    color: colors.textGrey,
+    fontWeight: '500',
   },
   controls: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 40,
+    marginBottom: 40,
   },
   controlButton: {
-    paddingHorizontal: 20,
-  },
-  playButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 40,
-    width: 80,
-    height: 80,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 20,
   },
-  miniPlayer: {
-    flexDirection: 'row',
+  playButton: {
+    width: 70,
+    height: 70,
+    backgroundColor: colors.primary,
+    borderRadius: 35,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.light.border,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
-  miniInfo: {
-    flex: 1,
-    marginRight: 12,
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    paddingBottom: 50,
   },
-  miniTitle: {
+  actionButton: {
+    alignItems: 'center',
+    marginHorizontal: 30,
+  },
+  actionText: {
+    fontSize: 12,
+    color: colors.textGrey,
+    marginTop: 8,
+    fontWeight: '500',
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
-  },
-  miniSpeaker: {
-    fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
-  },
-  miniPlayButton: {
-    marginRight: 8,
-  },
-  miniCloseButton: {
-    padding: 4,
   },
 });
 
