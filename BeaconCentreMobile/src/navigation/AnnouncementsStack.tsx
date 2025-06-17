@@ -11,6 +11,7 @@ const AnnouncementsStack = () => {
   return (
     <Stack.Navigator
       screenOptions={{
+        headerShown: false,
         headerStyle: {
           backgroundColor: colors.primary,
         },

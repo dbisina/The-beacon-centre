@@ -1,4 +1,4 @@
-// App.tsx - Main application entry point
+// App.tsx - FIXED VERSION
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
@@ -7,6 +7,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
+
+// CRITICAL FIX: Import crypto polyfill for UUID
+import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 
 // Context Providers
@@ -61,19 +64,15 @@ const queryClient = new QueryClient({
 // Initialize services
 const initializeServices = async () => {
   try {
-    // Initialize notification service
-    const notificationService = NotificationService.getInstance();
-    await notificationService.initialize();
-
-    // Initialize offline manager
-    const offlineManager = OfflineManager.getInstance();
-    
-    // Initialize audio service
     if (Platform.OS !== 'web') {
+      const notificationService = NotificationService.getInstance();
+      await notificationService.initialize();
+
       const audioService = TrackPlayerService.getInstance();
       await audioService.setup();
     }
 
+    const offlineManager = OfflineManager.getInstance();
     console.log('Services initialized successfully');
   } catch (error) {
     console.error('Failed to initialize services:', error);
@@ -99,24 +98,17 @@ export default function App() {
         // Initialize services
         await initializeServices();
 
-        // Artificial delay for splash screen (optional)
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (e) {
-        console.warn('App preparation error:', e);
+        console.log('App initialized successfully');
+      } catch (error) {
+        console.warn('App initialization error:', error);
       } finally {
         setAppIsReady(true);
+        await SplashScreen.hideAsync();
       }
     }
 
     prepare();
   }, []);
-
-  const onLayoutRootView = React.useCallback(async () => {
-    if (appIsReady) {
-      // This tells the splash screen to hide immediately
-      await SplashScreen.hideAsync();
-    }
-  }, [appIsReady]);
 
   if (!appIsReady) {
     return <LoadingSpinner />;
@@ -124,7 +116,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
           <QueryClientProvider client={queryClient}>
             <ThemeProvider>

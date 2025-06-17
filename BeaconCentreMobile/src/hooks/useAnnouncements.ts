@@ -1,44 +1,35 @@
-// src/hooks/useAnnouncements.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { announcementsApi } from '@/services/api/announcements';
-import { analyticsApi } from '@/services/api/analytics';
+// src/hooks/api/useAnnouncements.ts - ROBUST ANNOUNCEMENTS
+import { useQuery } from '@tanstack/react-query';
+import { announcementApi } from '@/services/api/client';
 import { Announcement } from '@/types/api';
 
 export const useAnnouncements = () => {
   return useQuery({
     queryKey: ['announcements'],
-    queryFn: announcementsApi.getAll,
+    queryFn: async (): Promise<Announcement[]> => {
+      try {
+        console.log('Fetching announcements...');
+        const data = await announcementApi.getAll();
+        console.log('Announcements fetched:', data?.length || 0);
+        
+        if (!data || !Array.isArray(data)) {
+          console.warn('Invalid announcements data, returning empty array');
+          return [];
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Failed to fetch announcements:', error);
+        return [];
+      }
+    },
+    initialData: [], // CRITICAL: Provide initial data
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-  });
-};
-
-export const useActiveAnnouncements = () => {
-  return useQuery({
-    queryKey: ['announcements', 'active'],
-    queryFn: announcementsApi.getActive,
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-export const useAnnouncementsByPriority = (priority: 'low' | 'medium' | 'high') => {
-  return useQuery({
-    queryKey: ['announcements', 'priority', priority],
-    queryFn: () => announcementsApi.getByPriority(priority),
-    staleTime: 10 * 60 * 1000,
-  });
-};
-
-export const useTrackAnnouncementView = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (announcementId: number) => {
-      await analyticsApi.trackAnnouncementView(announcementId);
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    retry: (failureCount, error: any) => {
+      console.log('Query retry attempt:', failureCount);
+      return failureCount < 2;
     },
-    onSuccess: () => {
-      // Optional: invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['analytics'] });
-    },
+    retryDelay: 1000,
   });
 };

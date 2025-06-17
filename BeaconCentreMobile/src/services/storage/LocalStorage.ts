@@ -1,7 +1,7 @@
-// src/services/storage/LocalStorage.ts
+// src/services/storage/LocalStorage.ts - FIXED VERSION
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { randomUUID } from 'expo-crypto';
 import { LocalUserData, DownloadedAudio, AppSettings } from '@/types/storage';
-import { v4 as uuidv4 } from 'uuid';
 
 class LocalStorageService {
   private static readonly USER_DATA_KEY = 'beacon_user_data';
@@ -63,13 +63,13 @@ class LocalStorageService {
     
     switch(type) {
       case 'devotional':
-        data.favoriteDevotionals = data.favoriteDevotionals.filter(i => i !== id);
+        data.favoriteDevotionals = data.favoriteDevotionals.filter(fId => fId !== id);
         break;
       case 'video':
-        data.favoriteVideoSermons = data.favoriteVideoSermons.filter(i => i !== id);
+        data.favoriteVideoSermons = data.favoriteVideoSermons.filter(fId => fId !== id);
         break;
       case 'audio':
-        data.favoriteAudioSermons = data.favoriteAudioSermons.filter(i => i !== id);
+        data.favoriteAudioSermons = data.favoriteAudioSermons.filter(fId => fId !== id);
         break;
     }
     
@@ -78,33 +78,11 @@ class LocalStorageService {
 
   static async markDevotionalRead(devotionalId: number): Promise<void> {
     const data = await this.getUserData();
-    
     if (!data.readDevotionals.includes(devotionalId)) {
       data.readDevotionals.push(devotionalId);
       this.updateReadingStreak(data);
       await this.saveUserData(data);
     }
-  }
-
-  static async addDownloadedAudio(audioData: DownloadedAudio): Promise<void> {
-    const data = await this.getUserData();
-    
-    // Remove existing download if any
-    data.downloadedAudio = data.downloadedAudio.filter(
-      item => item.sermonId !== audioData.sermonId
-    );
-    
-    // Add new download
-    data.downloadedAudio.push(audioData);
-    await this.saveUserData(data);
-  }
-
-  static async removeDownloadedAudio(sermonId: number): Promise<void> {
-    const data = await this.getUserData();
-    data.downloadedAudio = data.downloadedAudio.filter(
-      item => item.sermonId !== sermonId
-    );
-    await this.saveUserData(data);
   }
 
   static async updateSettings(settings: Partial<AppSettings>): Promise<void> {
@@ -113,64 +91,30 @@ class LocalStorageService {
     await this.saveUserData(data);
   }
 
-  static async isFavorite(
-    type: 'devotional' | 'video' | 'audio', 
-    id: number
-  ): Promise<boolean> {
+  static async addDownloadedAudio(audio: DownloadedAudio): Promise<void> {
     const data = await this.getUserData();
-    
-    switch(type) {
-      case 'devotional':
-        return data.favoriteDevotionals.includes(id);
-      case 'video':
-        return data.favoriteVideoSermons.includes(id);
-      case 'audio':
-        return data.favoriteAudioSermons.includes(id);
-      default:
-        return false;
-    }
+    data.downloadedAudio.push(audio);
+    await this.saveUserData(data);
   }
 
-  static async isDevotionalRead(devotionalId: number): Promise<boolean> {
+  static async removeDownloadedAudio(sermonId: number): Promise<void> {
     const data = await this.getUserData();
-    return data.readDevotionals.includes(devotionalId);
+    data.downloadedAudio = data.downloadedAudio.filter(audio => audio.sermonId !== sermonId);
+    await this.saveUserData(data);
   }
 
-  static async isAudioDownloaded(sermonId: number): Promise<boolean> {
-    const data = await this.getUserData();
-    return data.downloadedAudio.some(item => item.sermonId === sermonId);
-  }
-
-  static async getDownloadedAudio(sermonId: number): Promise<DownloadedAudio | null> {
-    const data = await this.getUserData();
-    return data.downloadedAudio.find(item => item.sermonId === sermonId) || null;
-  }
-
-  // Cache management for offline data
-  static async cacheData<T>(key: string, data: T): Promise<void> {
+  static async cacheData(key: string, data: any): Promise<void> {
     try {
-      await AsyncStorage.setItem(
-        `${this.CACHE_PREFIX}${key}`, 
-        JSON.stringify({
-          data,
-          timestamp: Date.now(),
-        })
-      );
+      await AsyncStorage.setItem(`${this.CACHE_PREFIX}${key}`, JSON.stringify(data));
     } catch (error) {
       console.error('Failed to cache data:', error);
     }
   }
 
-  static async getCachedData<T>(key: string, maxAge: number = 24 * 60 * 60 * 1000): Promise<T | null> {
+  static async getCachedData<T>(key: string): Promise<T | null> {
     try {
       const cached = await AsyncStorage.getItem(`${this.CACHE_PREFIX}${key}`);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < maxAge) {
-          return data;
-        }
-      }
-      return null;
+      return cached ? JSON.parse(cached) : null;
     } catch (error) {
       console.error('Failed to get cached data:', error);
       return null;
@@ -187,9 +131,75 @@ class LocalStorageService {
     }
   }
 
+  static async toggleFavorite(
+    type: 'devotional' | 'video' | 'audio', 
+    id: number
+  ): Promise<boolean> {
+    try {
+      const data = await this.getUserData();
+      let favoritesList: number[];
+      
+      switch(type) {
+        case 'devotional':
+          favoritesList = data.favoriteDevotionals || [];
+          if (favoritesList.includes(id)) {
+            data.favoriteDevotionals = favoritesList.filter(fId => fId !== id);
+          } else {
+            data.favoriteDevotionals = [...favoritesList, id];
+          }
+          break;
+        case 'video':
+          favoritesList = data.favoriteVideoSermons || [];
+          if (favoritesList.includes(id)) {
+            data.favoriteVideoSermons = favoritesList.filter(fId => fId !== id);
+          } else {
+            data.favoriteVideoSermons = [...favoritesList, id];
+          }
+          break;
+        case 'audio':
+          favoritesList = data.favoriteAudioSermons || [];
+          if (favoritesList.includes(id)) {
+            data.favoriteAudioSermons = favoritesList.filter(fId => fId !== id);
+          } else {
+            data.favoriteAudioSermons = [...favoritesList, id];
+          }
+          break;
+      }
+      
+      await this.saveUserData(data);
+      return true;
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      return false;
+    }
+  }
+  
+  static async isFavorite(
+    type: 'devotional' | 'video' | 'audio', 
+    id: number
+  ): Promise<boolean> {
+    try {
+      const data = await this.getUserData();
+      
+      switch(type) {
+        case 'devotional':
+          return data.favoriteDevotionals?.includes(id) || false;
+        case 'video':
+          return data.favoriteVideoSermons?.includes(id) || false;
+        case 'audio':
+          return data.favoriteAudioSermons?.includes(id) || false;
+        default:
+          return false;
+      }
+    } catch (error) {
+      console.error('Failed to check favorite status:', error);
+      return false;
+    }
+  }
+
   private static createDefaultUserData(): LocalUserData {
     return {
-      deviceId: uuidv4(),
+      deviceId: randomUUID(), // FIXED: Use expo-crypto instead of uuid
       favoriteDevotionals: [],
       favoriteVideoSermons: [],
       favoriteAudioSermons: [],
@@ -216,7 +226,6 @@ class LocalStorageService {
     const lastRead = new Date(data.readingStreak.lastReadDate).toDateString();
     
     if (lastRead === today) {
-      // Already read today
       return;
     }
     
@@ -224,10 +233,8 @@ class LocalStorageService {
     yesterday.setDate(yesterday.getDate() - 1);
     
     if (lastRead === yesterday.toDateString()) {
-      // Consecutive day
       data.readingStreak.currentStreak += 1;
     } else {
-      // Streak broken, start new
       data.readingStreak.currentStreak = 1;
     }
     

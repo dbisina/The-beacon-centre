@@ -1,4 +1,4 @@
-// src/screens/devotional/DevotionalHome.tsx
+// src/screens/devotional/DevotionalHome.tsx - MODERN UI
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -8,50 +8,39 @@ import {
   useColorScheme,
   Text,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { colors } from '@/constants/colors';
+import { typography } from '@/constants/typography';
+import { useDevotionals } from '@/hooks/api';
+import { useApp } from '@/context/AppContext';
 import DevotionalCard from '@/components/devotional/DevotionalCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import OfflineBanner from '@/components/common/OfflineBanner';
-import { useTodaysDevotional, useDevotionals } from '@/hooks/useDevotionals';
-import { useApp } from '@/context/AppContext';
-import { colors, typography } from '@/constants';
-import LocalStorageService from '@/services/storage/LocalStorage';
-import { Devotional } from '@/types/api';
 
-const DevotionalHome = ({ navigation }: { navigation: any }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+const { width } = Dimensions.get('window');
+
+const DevotionalHome = ({ navigation }: any) => {
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
   const { state } = useApp();
-  
-  const { data: todaysDevotional, isLoading: todayLoading, refetch: refetchToday } = useTodaysDevotional();
-  const { data: recentDevotionals, isLoading: recentLoading, refetch: refetchRecent } = useDevotionals();
-  
-  const [readDevotionals, setReadDevotionals] = useState<number[]>([]);
-  const [readingStreak, setReadingStreak] = useState(0);
+  const { data: devotionals, isLoading, refetch } = useDevotionals();
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (state.userData) {
-      setReadDevotionals(state.userData.readDevotionals);
-      setReadingStreak(state.userData.readingStreak.currentStreak);
-    }
-  }, [state.userData]);
+  const todaysDevotional = devotionals?.find(d => 
+    d.date === new Date().toISOString().split('T')[0]
+  );
 
-  const handleRefresh = async () => {
-    await Promise.all([refetchToday(), refetchRecent()]);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
   };
 
-  const navigateToDetail = (devotional: Devotional) => {
-    navigation.navigate('DevotionalDetail', { devotional });
-  };
-
-  const navigateToArchive = () => {
-    navigation.navigate('DevotionalArchive');
-  };
-
-  if (todayLoading || recentLoading) {
+  if (isLoading) {
     return <LoadingSpinner />;
   }
 
@@ -60,58 +49,103 @@ const DevotionalHome = ({ navigation }: { navigation: any }) => {
       styles.container,
       { backgroundColor: isDark ? colors.dark.background : colors.light.background }
     ]}>
-      {!state.isOnline && <OfflineBanner />}
-      
       <ScrollView
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl
-            refreshing={false}
-            onRefresh={handleRefresh}
-            tintColor={colors.primary}
-          />
-        }
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        {/* Reading Streak Header */}
-        <View style={styles.streakContainer}>
-          <View style={styles.streakInfo}>
-            <Icon name="local-fire-department" size={24} color={colors.yellow} />
-            <Text style={[
-              styles.streakText,
-              { color: isDark ? colors.dark.text : colors.light.text }
-            ]}>
-              {readingStreak} day streak
-            </Text>
-          </View>
-          <TouchableOpacity onPress={navigateToArchive}>
-            <Text style={[styles.archiveLink, { color: colors.primary }]}>
-              View Archive
-            </Text>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <Text style={[
+            styles.greeting,
+            { color: isDark ? colors.dark.text : colors.light.text }
+          ]}>
+            Welcome Shining Light
+          </Text>
+          <TouchableOpacity style={styles.settingsButton}>
+            <Ionicons name="settings-outline" size={24} color={colors.black} />
           </TouchableOpacity>
         </View>
 
-        {/* Today's Devotional */}
-        <View style={styles.section}>
+        {/* Today's Devotional Card */}
+        {todaysDevotional && (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('DevotionalDetail', { 
+              devotional: todaysDevotional 
+            })}
+            style={styles.featuredCard}
+          >
+            <LinearGradient
+              colors={colors.gradients.primary}
+              style={styles.gradientCard}
+            >
+              <View style={styles.cardContent}>
+                <Text style={styles.cardLabel}>Daily Devotional</Text>
+                <Text style={styles.cardTitle} numberOfLines={2}>
+                  {todaysDevotional.title}
+                </Text>
+                <Text style={styles.cardSubtitle} numberOfLines={1}>
+                  Dive into today's scripture and reflection
+                </Text>
+                <View style={styles.readButton}>
+                  <Text style={styles.readButtonText}>READ</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+
+        {/* Menu Section */}
+        <View style={styles.menuSection}>
           <Text style={[
             styles.sectionTitle,
             { color: isDark ? colors.dark.text : colors.light.text }
           ]}>
-            Today's Devotional
+            Menu
           </Text>
           
-          {todaysDevotional && (
-            <DevotionalCard
-              devotional={todaysDevotional}
-              onPress={() => navigateToDetail(todaysDevotional)}
-              isRead={readDevotionals.includes(todaysDevotional.id)}
-              showDate={true}
-            />
-          )}
+          <TouchableOpacity 
+            style={[styles.menuItem, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}
+            onPress={() => navigation.navigate('AnnouncementsHome')}
+          >
+            <View style={[styles.menuIcon, { backgroundColor: isDark ? colors.dark.backgroundSecondary : colors.light.backgroundSecondary }]}>
+              <Ionicons name="megaphone-outline" size={24} color={colors.black} />
+            </View>
+            <Text style={[styles.menuText, { color: isDark ? colors.dark.text : colors.light.text }]}>
+              Announcements
+            </Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.textGrey} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.menuItem, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}
+            onPress={() => navigation.navigate('DevotionalArchive')}
+          >
+            <View style={[styles.menuIcon, { backgroundColor: isDark ? colors.dark.backgroundSecondary : colors.light.backgroundSecondary }]}>
+              <Ionicons name="calendar-outline" size={24} color={colors.black} />
+            </View>
+            <Text style={[styles.menuText, { color: isDark ? colors.dark.text : colors.light.text }]}>
+              Calendar
+            </Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.textGrey} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.menuItem, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}
+          >
+            <View style={[styles.menuIcon, { backgroundColor: isDark ? colors.dark.backgroundSecondary : colors.light.backgroundSecondary }]}>
+              <Ionicons name="ticket-outline" size={24} color={colors.black} />
+            </View>
+            <Text style={[styles.menuText, { color: isDark ? colors.dark.text : colors.light.text }]}>
+              Events
+            </Text>
+            <Ionicons name="chevron-forward" size={24} color={colors.textGrey} />
+          </TouchableOpacity>
         </View>
 
         {/* Recent Devotionals */}
-        <View style={styles.section}>
+        <View style={styles.recentSection}>
           <Text style={[
             styles.sectionTitle,
             { color: isDark ? colors.dark.text : colors.light.text }
@@ -119,13 +153,12 @@ const DevotionalHome = ({ navigation }: { navigation: any }) => {
             Recent Devotionals
           </Text>
           
-          {recentDevotionals?.slice(0, 5).map((devotional) => (
+          {devotionals?.slice(0, 5).map((devotional) => (
             <DevotionalCard
               key={devotional.id}
               devotional={devotional}
-              onPress={() => navigateToDetail(devotional)}
-              isRead={readDevotionals.includes(devotional.id)}
-              showDate={true}
+              onPress={() => navigation.navigate('DevotionalDetail', { devotional })}
+              isRead={state.userData?.readDevotionals.includes(devotional.id)}
             />
           ))}
         </View>
@@ -138,37 +171,105 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  streakContainer: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
-  streakInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  greeting: {
+    ...typography.styles.h2,
+    flex: 1,
+    fontFamily: typography.fonts.poppins.semiBold,
+    fontSize: typography.sizes.lg,
+    textAlign: 'center',
   },
-  streakText: {
+  settingsButton: {
+    padding: 8,
+  },
+  featuredCard: {
+    marginHorizontal: 20,
+    marginVertical: 15,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+  },
+  gradientCard: {
+    padding: 24,
+    minHeight: 160,
+  },
+  cardContent: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  cardLabel: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
-    marginLeft: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  archiveLink: {
-    fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+  cardTitle: {
+    color: '#FFFFFF',
+    ...typography.styles.h3,
+    marginTop: 8,
   },
-  section: {
-    marginVertical: 16,
+  cardSubtitle: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 16,
+    fontFamily: typography.fonts.poppins.regular,
+    marginTop: 8,
+  },
+  readButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginTop: 16,
+  },
+  readButtonText: {
+    color: '#FFFFFF',
+    fontFamily: typography.fonts.poppins.semiBold,
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+  menuSection: {
+    paddingHorizontal: 20,
+    marginTop: 20,
   },
   sectionTitle: {
-    fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
-    marginBottom: 8,
-    paddingHorizontal: 16,
+    ...typography.styles.h3,
+    marginBottom: 16,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    marginBottom: 12,
+  },
+  menuText: {
+    flex: 1,
+    marginLeft: 16,
+    ...typography.styles.body1,
+  },
+  menuIcon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 100,
+    padding: 10,
+    marginRight: 10,
+  },
+  recentSection: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+    paddingBottom: 100, // Bottom tab space
   },
 });
 

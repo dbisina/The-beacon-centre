@@ -1,6 +1,6 @@
-// src/hooks/useDevotionals.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/services/api/client';
+// src/hooks/api/useDevotionals.ts - FIXED QUERY
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { devotionalApi } from '@/services/api/client';
 import { Devotional } from '@/types/api';
 import LocalStorageService from '@/services/storage/LocalStorage';
 
@@ -9,72 +9,87 @@ export const useDevotionals = () => {
     queryKey: ['devotionals'],
     queryFn: async (): Promise<Devotional[]> => {
       try {
-        return await apiClient.get<Devotional[]>('/devotionals');
-      } catch (error) {
-        // Fallback to cached data if offline
-        const cached = await LocalStorageService.getCachedData<Devotional[]>('devotionals');
-        if (cached) {
-          return cached;
+        console.log('Fetching devotionals...');
+        const data = await devotionalApi.getAll();
+        console.log('Devotionals fetched:', data?.length || 0);
+        
+        // CRITICAL: Always return an array, never undefined
+        if (!data || !Array.isArray(data)) {
+          console.warn('Invalid devotionals data, returning empty array');
+          return [];
         }
-        throw error;
+        
+        return data;
+      } catch (error) {
+        console.error('Failed to fetch devotionals:', error);
+        // Return empty array instead of undefined
+        return [];
       }
     },
+    initialData: [], // CRITICAL: Provide initial data
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    retry: (failureCount, error: any) => {
+      console.log('Query retry attempt:', failureCount);
+      return failureCount < 2;
+    },
+    retryDelay: 1000,
   });
 };
 
 export const useTodaysDevotional = () => {
   return useQuery({
     queryKey: ['devotional', 'today'],
-    queryFn: async (): Promise<Devotional> => {
+    queryFn: async (): Promise<Devotional | null> => {
       try {
-        return await apiClient.get<Devotional>('/devotionals/today');
+        const data = await devotionalApi.getToday();
+        return data;
       } catch (error) {
-        // Fallback to cached data
-        const cached = await LocalStorageService.getCachedData<Devotional>('todays_devotional');
-        if (cached) {
-          return cached;
-        }
-        throw error;
+        console.error('Failed to fetch today\'s devotional:', error);
+        return null;
       }
     },
     staleTime: 60 * 60 * 1000, // 1 hour
     gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    retry: 2,
   });
 };
 
-export const useDevotionalByDate = (date: string) => {
+export const useDevotionalById = (id: number) => {
   return useQuery({
-    queryKey: ['devotional', 'date', date],
-    queryFn: (): Promise<Devotional> => 
-      apiClient.get<Devotional>(`/devotionals/date/${date}`),
-    enabled: !!date,
-  });
-};
-
-export const useMarkDevotionalRead = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (devotionalId: number) => {
-      await LocalStorageService.markDevotionalRead(devotionalId);
+    queryKey: ['devotional', id],
+    queryFn: async (): Promise<Devotional | null> => {
+      if (!id) return null;
       
-      // Track analytics
-      const userData = await LocalStorageService.getUserData();
       try {
-        await apiClient.post('/analytics/track', {
-          device_id: userData.deviceId,
-          content_type: 'devotional',
-          content_id: devotionalId,
-          interaction_type: 'completed',
-        });
+        const data = await devotionalApi.getById(id);
+        return data;
       } catch (error) {
-        console.log('Analytics tracking failed (offline)');
+        console.error('Failed to fetch devotional by ID:', error);
+        return null;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user', 'reading-streak'] });
-    },
+    enabled: !!id,
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
+};
+
+// Custom hook for marking devotional as read
+export const useMarkDevotionalRead = () => {
+  const queryClient = useQueryClient();
+  
+  return async (devotionalId: number): Promise<boolean> => {
+    try {
+      // Update local storage
+      await LocalStorageService.markDevotionalRead(devotionalId);
+      
+      // Invalidate related queries to refresh UI
+      queryClient.invalidateQueries({ queryKey: ['userData'] });
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to mark devotional as read:', error);
+      return false;
+    }
+  };
 };

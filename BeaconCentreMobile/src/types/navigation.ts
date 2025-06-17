@@ -1,4 +1,4 @@
-// src/types/navigation.ts
+// src/types/navigation.ts - UPDATED WITH NEW SCREENS
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { Devotional, VideoSermon, AudioSermon, Announcement } from './api';
 
@@ -8,12 +8,14 @@ export type RootStackParamList = {
   SermonDetail: { sermon: VideoSermon | AudioSermon; type: 'video' | 'audio' };
   AnnouncementDetail: { announcement: Announcement };
   AudioPlayer: { sermon: AudioSermon };
+  ScriptureBooks: { category: string };
+  ScriptureChapter: { book: string; chapter: number };
 };
 
 export type MainTabParamList = {
   DevotionalStack: NavigatorScreenParams<DevotionalStackParamList>;
   SermonsStack: NavigatorScreenParams<SermonsStackParamList>;
-  AnnouncementsStack: NavigatorScreenParams<AnnouncementsStackParamList>;
+  AnnouncementsStack: NavigatorScreenParams<ScripturesStackParamList>; // Now Scriptures
   FavoritesStack: NavigatorScreenParams<FavoritesStackParamList>;
   SettingsStack: NavigatorScreenParams<SettingsStackParamList>;
 };
@@ -31,9 +33,11 @@ export type SermonsStackParamList = {
   SermonDetail: { sermon: VideoSermon | AudioSermon; type: 'video' | 'audio' };
 };
 
-export type AnnouncementsStackParamList = {
-  AnnouncementsHome: undefined;
-  AnnouncementDetail: { announcement: Announcement };
+export type ScripturesStackParamList = {
+  ScripturesHome: undefined;
+  ScriptureBooks: { category: string };
+  ScriptureChapter: { book: string; chapter: number };
+  ScriptureReader: { book: string; chapter: number; verse?: number };
 };
 
 export type FavoritesStackParamList = {
@@ -42,45 +46,7 @@ export type FavoritesStackParamList = {
 
 export type SettingsStackParamList = {
   SettingsHome: undefined;
+  NotificationSettings: undefined;
+  DisplaySettings: undefined;
+  AboutApp: undefined;
 };
-
-// src/types/content.ts
-export interface ContentFilter {
-  category?: string;
-  speaker?: string;
-  dateRange?: {
-    start: string;
-    end: string;
-  };
-  featured?: boolean;
-}
-
-export interface ContentSort {
-  field: 'date' | 'title' | 'speaker' | 'created_at';
-  direction: 'asc' | 'desc';
-}
-
-export interface SearchResult<T> {
-  items: T[];
-  totalCount: number;
-  hasMore: boolean;
-}
-
-export interface PlaylistItem {
-  id: number;
-  type: 'audio' | 'video';
-  title: string;
-  speaker: string;
-  duration?: string;
-  url: string;
-  thumbnail?: string;
-}
-
-export interface ReadingProgress {
-  devotionalId: number;
-  progress: number; // 0-100
-  timeSpent: number; // seconds
-  lastPosition?: number;
-  completed: boolean;
-  readDate: string;
-}
