@@ -33,15 +33,7 @@ export const useAudioPlayer = () => {
       await playSermon(sermon);
       
       // Track analytics (non-blocking)
-      analyticsApi.track({
-        action: 'sermon_play',
-        contentType: 'audio',
-        contentId: sermon.id,
-        title: sermon.title,
-        speaker: sermon.speaker,
-        category: sermon.category,
-        timestamp: new Date().toISOString(),
-      }).catch(error => {
+      analyticsApi.trackInteraction('audio', sermon.id, 'play').catch((error: Error) => {
         console.log('Analytics tracking failed (non-critical):', error);
       });
     } catch (error) {
@@ -56,14 +48,7 @@ export const useAudioPlayer = () => {
       
       if (sermons[startIndex]) {
         // Track analytics (non-blocking)
-        analyticsApi.track({
-          action: 'queue_play',
-          contentType: 'audio',
-          contentId: sermons[startIndex].id,
-          queueLength: sermons.length,
-          startIndex,
-          timestamp: new Date().toISOString(),
-        }).catch(error => {
+        analyticsApi.trackInteraction('audio', sermons[startIndex].id, 'queue_play').catch((error: Error) => {
           console.log('Analytics tracking failed (non-critical):', error);
         });
       }
@@ -79,14 +64,7 @@ export const useAudioPlayer = () => {
       
       if (state.currentTrack) {
         // Track seek analytics (non-blocking)
-        analyticsApi.track({
-          action: 'sermon_seek',
-          contentType: 'audio',
-          contentId: state.currentTrack.id,
-          position,
-          duration: state.duration,
-          timestamp: new Date().toISOString(),
-        }).catch(error => {
+        analyticsApi.trackInteraction('audio', state.currentTrack.id, 'seek').catch((error: Error) => {
           console.log('Analytics tracking failed (non-critical):', error);
         });
       }
@@ -101,14 +79,7 @@ export const useAudioPlayer = () => {
       
       if (state.currentTrack) {
         // Track pause analytics (non-blocking)
-        analyticsApi.track({
-          action: 'sermon_pause',
-          contentType: 'audio',
-          contentId: state.currentTrack.id,
-          position: state.position,
-          duration: state.duration,
-          timestamp: new Date().toISOString(),
-        }).catch(error => {
+        analyticsApi.trackInteraction('audio', state.currentTrack.id, 'pause').catch((error: Error) => {
           console.log('Analytics tracking failed (non-critical):', error);
         });
       }
@@ -123,13 +94,7 @@ export const useAudioPlayer = () => {
       
       if (state.currentTrack) {
         // Track resume analytics (non-blocking)
-        analyticsApi.track({
-          action: 'sermon_resume',
-          contentType: 'audio',
-          contentId: state.currentTrack.id,
-          position: state.position,
-          timestamp: new Date().toISOString(),
-        }).catch(error => {
+        analyticsApi.trackInteraction('audio', state.currentTrack.id, 'resume').catch((error: Error) => {
           console.log('Analytics tracking failed (non-critical):', error);
         });
       }

@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     marginBottom: 8,
     lineHeight: 24,
   },
@@ -123,21 +123,21 @@ const styles = StyleSheet.create({
   },
   speaker: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.base,
     marginBottom: 4,
   },
   date: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginBottom: 2,
   },
   duration: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   description: {
     fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.base,
     lineHeight: 20,
   },
 });

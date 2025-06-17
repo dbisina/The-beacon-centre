@@ -41,7 +41,7 @@ class AudioService {
       this.player = new AudioPlayer();
       
       // Set up event listeners
-      this.player.addEventListener('statusUpdate', this.onPlaybackStatusUpdate);
+      this.player.addListener('statusUpdate', this.onPlaybackStatusUpdate);
     } catch (error) {
       console.error('Audio setup error:', error);
     }

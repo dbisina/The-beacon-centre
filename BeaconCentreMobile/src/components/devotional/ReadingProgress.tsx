@@ -158,12 +158,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
     marginLeft: 8,
   },
   progressText: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
   },
   progressBarContainer: {
     height: 6,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginLeft: 4,
   },
   completionBadge: {
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   completionText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginLeft: 4,
   },
 });

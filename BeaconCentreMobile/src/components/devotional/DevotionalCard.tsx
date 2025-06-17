@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
     lineHeight: 22,
     marginBottom: 18,
   },
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   date: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   readBadge: {
     paddingHorizontal: 16,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   verseReference: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
 });
 

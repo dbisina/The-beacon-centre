@@ -113,7 +113,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
           {sermon.category && (
             <View style={[
               styles.categoryContainer,
-              { backgroundColor: isDark ? colors.dark.surface : colors.light.surface }
+              { backgroundColor: isDark ? colors.dark.background : colors.light.background }
             ]}>
               <Text style={[styles.category, { color: colors.primary }]}>
                 {sermon.category}
@@ -179,9 +179,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
   },
-  featuredText: {
+  featuredText: {       
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.base,
     color: '#fff',
     letterSpacing: typography.letterSpacing.tight,
   },
@@ -190,14 +190,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     lineHeight: typography.lineHeights.tight,
     letterSpacing: typography.letterSpacing.tight,
     marginBottom: 12,
   },
-  speaker: {
+  speaker: {        
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.base,
     marginBottom: 12,
   },
   metaRow: {
@@ -208,11 +208,11 @@ const styles = StyleSheet.create({
   },
   date: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   duration: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   categoryContainer: {
     alignSelf: 'flex-start',
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   category: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   favoriteButton: {
     position: 'absolute',
