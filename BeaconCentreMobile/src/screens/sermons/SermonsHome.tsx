@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
+  Animated,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -276,22 +278,96 @@ const SeriesContent = () => {
   );
 };
 
+const RefreshIcon = ({ isRefreshing }: { isRefreshing: boolean }) => {
+    const rotationValue = new Animated.Value(0);
+  
+    React.useEffect(() => {
+      if (isRefreshing) {
+        // Start rotation animation
+        Animated.loop(
+          Animated.timing(rotationValue, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          })
+        ).start();
+      } else {
+        // Stop rotation and reset
+        rotationValue.stopAnimation();
+        rotationValue.setValue(0);
+      }
+    }, [isRefreshing]);
+  
+    const rotation = rotationValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '360deg'],
+    });
+  
+    return (
+      <Animated.View style={{ transform: [{ rotate: rotation }] }}>
+        <Icon 
+          name="refresh" 
+          size={24} 
+          color={isRefreshing ? colors.primary : colors.textGrey} 
+        />
+      </Animated.View>
+    );
+  };
+
 // Main Sermons Component
 const SermonsHome = ({ navigation }: any) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [activeTab, setActiveTab] = useState<TabType>('featured');
   const [refreshing, setRefreshing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Get featured sermon for the top card
-  const { data: videos } = useVideoSermons();
-  const { data: audios } = useAudioSermons();
+  // Get data and refetch functions
+  const { 
+    data: videos, 
+    refetch: refetchVideos, 
+    isLoading: loadingVideos 
+  } = useVideoSermons();
+  
+  const { 
+    data: audios, 
+    refetch: refetchAudios, 
+    isLoading: loadingAudios 
+  } = useAudioSermons();
+  
+
   const featuredVideo = videos?.find(v => v.is_featured) || videos?.[0];
 
   const onRefresh = async () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1000);
   };
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return; // Prevent multiple refreshes
+    
+    setIsRefreshing(true);
+    
+    try {
+      // Refetch all sermon data
+      await Promise.all([
+        refetchVideos(),
+        refetchAudios(),
+      ]);
+      
+      // Show success feedback
+      Alert.alert('Success', 'Content refreshed successfully!');
+    } catch (error) {
+      console.error('Refresh failed:', error);
+      Alert.alert('Error', 'Failed to refresh content. Please try again.');
+    } finally {
+      // Add a small delay to show the animation
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 500);
+    }
+  };
+
 
   const renderContent = () => {
     switch (activeTab) {
@@ -319,8 +395,15 @@ const SermonsHome = ({ navigation }: any) => {
         ]}>
           Listen
         </Text>
-        <TouchableOpacity style={styles.searchButton}>
-          <Octicons name="search" size={24} color={isDark ? colors.dark.text : colors.black} />
+        <TouchableOpacity 
+          style={[
+            styles.refreshButton,
+            isRefreshing && styles.refreshButtonActive
+          ]}
+          onPress={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshIcon isRefreshing={isRefreshing} />
         </TouchableOpacity>
       </View>
 
@@ -520,6 +603,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,
+  },
+  refreshButton: {
+    position: 'absolute',
+    right: 20,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+  },
+  refreshButtonActive: {
+    backgroundColor: `${colors.primary}15`,
   },
 });
 

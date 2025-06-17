@@ -25,8 +25,10 @@ import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
 import { SermonsStackParamList, RootStackParamList } from '@/types/navigation';
 import { VideoSermon, AudioSermon } from '@/types/api';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useDownloads } from '@/hooks/useDownloads';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import LocalStorageService from '@/services/storage/LocalStorage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -42,42 +44,28 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
   const { sermon, type } = route.params;
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { isDownloaded, isDownloading, downloadAudio, getDownloadProgress } = useDownloads();
+  const { toggleFavorite } = useFavorites();
   
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isDownloaded, setIsDownloaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  const { userData, addFavorite, removeFavorite } = useLocalStorage();
 
   useEffect(() => {
     checkFavoriteStatus();
-    checkDownloadStatus();
     setIsLoading(false);
   }, []);
 
   const checkFavoriteStatus = async () => {
     try {
+      const userData = await LocalStorageService.getUserData();
       const favorites = type === 'video' 
-        ? userData?.favoriteVideoSermons 
-        : userData?.favoriteAudioSermons;
-      setIsFavorite(favorites?.includes(sermon.id) || false);
+        ? userData.favoriteVideoSermons 
+        : userData.favoriteAudioSermons;
+      setIsFavorite(favorites.includes(sermon.id));
     } catch (error) {
       console.log('Error checking favorite status:', error);
-    }
-  };
-
-  const checkDownloadStatus = async () => {
-    if (type === 'audio') {
-      try {
-        const downloaded = userData?.downloadedAudio.find(
-          (item: { sermonId: number }) => item.sermonId === sermon.id
-        );
-        setIsDownloaded(!!downloaded);
-      } catch (error) {
-        console.log('Error checking download status:', error);
-      }
     }
   };
 
@@ -109,12 +97,10 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
 
   const handleFavorite = async () => {
     try {
-      if (isFavorite) {
-        await removeFavorite(type === 'video' ? 'video' : 'audio', sermon.id);
-      } else {
-        await addFavorite(type === 'video' ? 'video' : 'audio', sermon.id);
+      const success = await toggleFavorite(type === 'video' ? 'video_sermon' : 'audio_sermon', sermon.id);
+      if (!success) {
+        Alert.alert('Error', 'Failed to update favorites');
       }
-      setIsFavorite(!isFavorite);
     } catch (error) {
       Alert.alert('Error', 'Failed to update favorites');
     }
@@ -128,22 +114,8 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
   };
 
   const handleDownload = async () => {
-    if (type === 'audio' && !isDownloaded) {
-      Alert.alert(
-        'Download Sermon',
-        'Download this sermon for offline listening?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Download',
-            onPress: async () => {
-              // Implement download logic here
-              Alert.alert('Download Started', 'Downloading sermon for offline listening...');
-              setIsDownloaded(true);
-            }
-          }
-        ]
-      );
+    if (type === 'audio' && !isDownloaded(sermon.id) && !isDownloading(sermon.id)) {
+      await downloadAudio(sermon as AudioSermon);
     }
   };
 
@@ -296,21 +268,23 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
                 style={[
                   styles.actionButton, 
                   styles.downloadButton,
-                  isDownloaded && styles.downloadedButton
+                  (isDownloaded(sermon.id) || isDownloading(sermon.id)) && styles.downloadedButton
                 ]}
                 onPress={handleDownload}
-                disabled={isDownloaded}
+                disabled={isDownloaded(sermon.id) || isDownloading(sermon.id)}
               >
                 <Icon 
-                  name={isDownloaded ? "download-done" : "download"} 
+                  name={isDownloaded(sermon.id) ? "download-done" : isDownloading(sermon.id) ? "hourglass-empty" : "download"} 
                   size={24} 
-                  color={isDownloaded ? colors.success : "#fff"} 
+                  color={isDownloaded(sermon.id) ? colors.success : isDownloading(sermon.id) ? colors.primary : "#fff"} 
                 />
                 <Text style={[
                   styles.actionButtonText,
-                  isDownloaded && { color: colors.success }
+                  (isDownloaded(sermon.id) || isDownloading(sermon.id)) && { 
+                    color: isDownloaded(sermon.id) ? colors.success : colors.primary 
+                  }
                 ]}>
-                  {isDownloaded ? 'Downloaded' : 'Download'}
+                  {isDownloaded(sermon.id) ? 'Downloaded' : isDownloading(sermon.id) ? `${getDownloadProgress(sermon.id)}%` : 'Download'}
                 </Text>
               </TouchableOpacity>
             </>
