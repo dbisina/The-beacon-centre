@@ -95,9 +95,9 @@ const TabNavigator = () => {
           height: 85, // Increased height for modern look
           elevation: 2, // Android shadow
           shadowColor: '#000', // iOS shadow
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
+          shadowOffset: { width: 0, height: -0.1 },
+          shadowOpacity: 0.01,
+          shadowRadius: 0.1,
         },
         headerShown: false,
         tabBarActiveTintColor: colors.primary, // Teal when active

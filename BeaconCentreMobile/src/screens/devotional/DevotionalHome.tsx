@@ -64,7 +64,7 @@ const DevotionalHome = ({ navigation }: any) => {
             Welcome Shining Light
           </Text>
           <TouchableOpacity style={styles.settingsButton}>
-            <Ionicons name="settings-outline" size={24} color={colors.black} />
+            <Ionicons name="settings-outline" size={24} color={isDark ? colors.dark.text : colors.light.text} />
           </TouchableOpacity>
         </View>
 
@@ -110,12 +110,12 @@ const DevotionalHome = ({ navigation }: any) => {
             onPress={() => navigation.navigate('AnnouncementsHome')}
           >
             <View style={[styles.menuIcon, { backgroundColor: isDark ? colors.dark.backgroundSecondary : colors.light.backgroundSecondary }]}>
-              <Ionicons name="megaphone-outline" size={24} color={colors.black} />
+              <Ionicons name="megaphone-outline" size={24} color={isDark ? colors.dark.text : colors.light.text} />
             </View>
             <Text style={[styles.menuText, { color: isDark ? colors.dark.text : colors.light.text }]}>
               Announcements
             </Text>
-            <Ionicons name="chevron-forward" size={24} color={colors.textGrey} />
+            
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -123,24 +123,24 @@ const DevotionalHome = ({ navigation }: any) => {
             onPress={() => navigation.navigate('DevotionalArchive')}
           >
             <View style={[styles.menuIcon, { backgroundColor: isDark ? colors.dark.backgroundSecondary : colors.light.backgroundSecondary }]}>
-              <Ionicons name="calendar-outline" size={24} color={colors.black} />
+              <Ionicons name="calendar-outline" size={24} color={isDark ? colors.dark.text : colors.light.text} />
             </View>
             <Text style={[styles.menuText, { color: isDark ? colors.dark.text : colors.light.text }]}>
               Calendar
             </Text>
-            <Ionicons name="chevron-forward" size={24} color={colors.textGrey} />
+            
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={[styles.menuItem, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}
           >
             <View style={[styles.menuIcon, { backgroundColor: isDark ? colors.dark.backgroundSecondary : colors.light.backgroundSecondary }]}>
-              <Ionicons name="ticket-outline" size={24} color={colors.black} />
+              <Ionicons name="ticket-outline" size={24} color={isDark ? colors.dark.text : colors.light.text} />
             </View>
             <Text style={[styles.menuText, { color: isDark ? colors.dark.text : colors.light.text }]}>
               Events
             </Text>
-            <Ionicons name="chevron-forward" size={24} color={colors.textGrey} />
+            
           </TouchableOpacity>
         </View>
 

@@ -89,7 +89,9 @@ const CustomTabHeader = ({
           key={tab.key}
           style={[
             styles.customTab,
-            activeTab === tab.key && styles.activeTab,
+            activeTab === tab.key && {
+              borderBottomColor: isDark ? colors.dark.text : colors.light.text,
+            },
           ]}
           onPress={() => onTabPress(tab.key as TabType)}
         >
@@ -98,7 +100,7 @@ const CustomTabHeader = ({
               styles.customTabText,
               {
                 color: activeTab === tab.key 
-                  ? colors.black
+                  ? isDark ? colors.dark.text : colors.light.text
                   : colors.textGrey,
                 fontFamily: activeTab === tab.key 
                   ? typography.fonts.poppins.semiBold 
@@ -362,7 +364,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   headerTitle: {
-    ...typography.styles.h2,
+    ...typography.styles.h4,
     textAlign: 'center',
   },
   searchButton: {
@@ -383,9 +385,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
-  activeTab: {
-    borderBottomColor: colors.black,
-  },
+
   customTabText: {
     fontSize: 14,
   },

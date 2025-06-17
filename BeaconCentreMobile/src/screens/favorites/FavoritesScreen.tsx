@@ -204,7 +204,9 @@ const CustomFavoriteTabHeader = ({
           key={tab.key}
           style={[
             styles.customTab,
-            activeTab === tab.key && styles.activeTab,
+            activeTab === tab.key && {
+              borderBottomColor: isDark ? colors.dark.text : colors.light.text,
+            },
           ]}
           onPress={() => onTabPress(tab.key as FavoriteTabType)}
         >
@@ -213,7 +215,7 @@ const CustomFavoriteTabHeader = ({
               styles.customTabText,
               {
                 color: activeTab === tab.key 
-                  ? colors.black
+                  ? isDark ? colors.dark.text : colors.light.text
                   : colors.textGrey,
                 fontFamily: activeTab === tab.key 
                   ? typography.fonts.poppins.semiBold 
@@ -422,7 +424,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    ...typography.styles.h2,
+    ...typography.styles.h4,
   },
   
   // Custom Tab Styles
@@ -439,9 +441,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
-  activeTab: {
-    borderBottomColor: colors.black,
-  },
+
   customTabText: {
     fontSize: 14,
   },

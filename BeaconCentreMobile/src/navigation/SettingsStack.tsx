@@ -10,6 +10,7 @@ const SettingsStack = () => {
   return (
     <Stack.Navigator
       screenOptions={{
+        headerShown: false,
         headerStyle: {
           backgroundColor: colors.primary,
         },
