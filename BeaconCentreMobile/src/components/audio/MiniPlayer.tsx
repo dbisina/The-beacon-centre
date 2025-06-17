@@ -11,27 +11,43 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
-import { useAudio } from '@/context/AudioContext';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 
 interface MiniPlayerProps {
   onExpandPress: () => void;
+  visible?: boolean;
 }
 
-const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpandPress }) => {
+const MiniPlayer: React.FC<MiniPlayerProps> = ({ 
+  onExpandPress, 
+  visible = true 
+}) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
   const { 
-    currentSermon, 
+    currentTrack: currentSermon, 
     isPlaying, 
     position, 
     duration, 
-    playPause, 
-    closePlayer,
-    isPlayerVisible 
-  } = useAudio();
+    play,
+    pause
+  } = useAudioPlayer();
 
-  if (!isPlayerVisible || !currentSermon) {
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  };
+
+  const handleClose = () => {
+    pause();
+    // TODO: Add proper close functionality
+  };
+
+  if (!visible || !currentSermon) {
     return null;
   }
 
@@ -87,7 +103,7 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpandPress }) => {
         {/* Controls */}
         <View style={styles.controls}>
           <TouchableOpacity 
-            onPress={playPause}
+            onPress={handlePlayPause}
             style={styles.playButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -99,7 +115,7 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpandPress }) => {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            onPress={closePlayer}
+            onPress={handleClose}
             style={styles.closeButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >

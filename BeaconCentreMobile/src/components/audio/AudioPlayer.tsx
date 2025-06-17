@@ -1,4 +1,4 @@
-// src/components/audio/FullAudioPlayer.tsx
+// src/components/audio/AudioPlayer.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -13,7 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
-import { useAudio } from '@/context/AudioContext';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 
 const { width } = Dimensions.get('window');
 
@@ -27,17 +27,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   onClose
 }) => {
   const { 
-    currentSermon, 
+    currentTrack: currentSermon, 
     isPlaying, 
     position, 
     duration,
-    playPause,
+    play,
+    pause,
     seekTo,
-    skipForward,
-    skipBackward,
-    toggleFavorite,
-    isFavorite 
-  } = useAudio();
+    skipToNext,
+    skipToPrevious
+  } = useAudioPlayer();
 
   const [localPosition, setLocalPosition] = useState(0);
 
@@ -45,9 +44,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     setLocalPosition(position);
   }, [position]);
 
-  const formatTime = (seconds: number) => {
+  const formatTime = (milliseconds: number) => {
+    const seconds = Math.floor(milliseconds / 1000);
     const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
+    const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -56,7 +56,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     seekTo(value);
   };
 
-  const progress = duration > 0 ? localPosition / duration : 0;
+  const progress = duration > 0 ? position / duration : 0;
 
   if (!currentSermon) return null;
 
@@ -77,7 +77,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Now Playing</Text>
           <TouchableOpacity 
-            onPress={toggleFavorite} 
+            onPress={handleToggleFavorite} 
             style={styles.headerButton}
           >
             <Icon 
@@ -120,7 +120,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             />
           </View>
           <View style={styles.timeContainer}>
-            <Text style={styles.timeText}>{formatTime(localPosition)}</Text>
+            <Text style={styles.timeText}>{formatTime(position)}</Text>
             <Text style={styles.timeText}>{formatTime(duration)}</Text>
           </View>
         </View>
@@ -128,14 +128,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         {/* Controls */}
         <View style={styles.controls}>
           <TouchableOpacity 
-            onPress={skipBackward} 
+            onPress={handleSkipBackward} 
             style={styles.controlButton}
           >
             <Icon name="replay-15" size={32} color={colors.textGrey} />
           </TouchableOpacity>
 
           <TouchableOpacity 
-            onPress={playPause} 
+            onPress={handlePlayPause} 
             style={styles.playButton}
           >
             <Icon 
@@ -146,7 +146,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </TouchableOpacity>
 
           <TouchableOpacity 
-            onPress={skipForward} 
+            onPress={handleSkipForward} 
             style={styles.controlButton}
           >
             <Icon name="forward-15" size={32} color={colors.textGrey} />

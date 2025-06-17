@@ -1,5 +1,5 @@
 // src/hooks/useAudioPlayer.ts
-import { useContext } from 'react';
+import { useAudioPlayer as useExpoAudioPlayer } from 'expo-audio';
 import { useAudio } from '@/context/AudioContext';
 import { AudioSermon } from '@/types/api';
 import { analyticsApi } from '@/services/api/analytics';

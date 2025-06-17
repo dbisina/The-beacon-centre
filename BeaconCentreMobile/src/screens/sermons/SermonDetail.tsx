@@ -21,7 +21,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
 import { SermonsStackParamList } from '@/types/navigation';
-import { useAudioContext } from '@/contexts/AudioContext';
+import { useAudio } from '@/context/AudioContext';
 import { useFavorites } from '@/hooks/useFavorites';
 
 const { width } = Dimensions.get('window');
@@ -39,7 +39,7 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
-  const { playSermon, currentSermon, isPlaying } = useAudioContext();
+  const { playSermon, currentSermon, isPlaying } = useAudio();
   const { isFavorite, toggleFavorite } = useFavorites();
   
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);

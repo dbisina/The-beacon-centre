@@ -1,7 +1,7 @@
-// App.tsx - FIXED VERSION
+// App.tsx - FIXED VERSION WITH MINI PLAYER
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -25,6 +25,11 @@ import AppNavigator from '@/navigation/AppNavigator';
 import NotificationService from '@/services/notifications/NotificationService';
 import TrackPlayerService from '@/services/audio/TrackPlayerService';
 import OfflineManager from '@/services/storage/OfflineManager';
+
+// NEW: Audio Components
+import MiniPlayer from '@/components/audio/MiniPlayer';
+import AudioPlayer from '@/components/audio/AudioPlayer';
+import { useAudio } from '@/context/AudioContext';
 
 // Components
 import ErrorBoundary from '@/components/common/ErrorBoundary';
@@ -79,13 +84,52 @@ const initializeServices = async () => {
   }
 };
 
+// NEW: Audio Layer Component (inside AudioContext)
+const AudioLayer: React.FC = () => {
+  const [showFullPlayer, setShowFullPlayer] = useState(false);
+  const { currentSermon, isPlayerVisible } = useAudio();
+
+  return (
+    <>
+      {/* Mini Player - Shows when audio is playing */}
+      {isPlayerVisible && currentSermon && (
+        <MiniPlayer 
+          onExpandPress={() => setShowFullPlayer(true)}
+          visible={isPlayerVisible}
+        />
+      )}
+      
+      {/* Full Audio Player Modal */}
+      <AudioPlayer
+        visible={showFullPlayer}
+        onClose={() => setShowFullPlayer(false)}
+      />
+    </>
+  );
+};
+
+// Main App Component
+const AppContent: React.FC = () => {
+  return (
+    <View style={{ flex: 1 }}>
+      <AppNavigator />
+      
+      {/* NEW: Audio Layer with Mini Player */}
+      <AudioLayer />
+    </View>
+  );
+};
+
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
     async function prepare() {
       try {
-        // Load fonts
+        // Initialize services
+        await initializeServices();
+
+        // Pre-load fonts
         await Font.loadAsync({
           Poppins_400Regular,
           Poppins_500Medium,
@@ -95,43 +139,45 @@ export default function App() {
           NotoSerif_700Bold,
         });
 
-        // Initialize services
-        await initializeServices();
-
         console.log('App initialized successfully');
-      } catch (error) {
-        console.warn('App initialization error:', error);
+      } catch (e) {
+        console.warn('Error during app initialization:', e);
       } finally {
         setAppIsReady(true);
-        await SplashScreen.hideAsync();
       }
     }
 
     prepare();
   }, []);
 
+  useEffect(() => {
+    if (appIsReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
+
   if (!appIsReady) {
     return <LoadingSpinner />;
   }
 
   return (
-    <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <QueryClientProvider client={queryClient}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <ErrorBoundary>
             <ThemeProvider>
               <OfflineProvider>
                 <AppProvider>
                   <AudioContextProvider>
-                    <AppNavigator />
+                    <AppContent />
                     <StatusBar style="auto" />
                   </AudioContextProvider>
                 </AppProvider>
               </OfflineProvider>
             </ThemeProvider>
-          </QueryClientProvider>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
-    </ErrorBoundary>
+          </ErrorBoundary>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

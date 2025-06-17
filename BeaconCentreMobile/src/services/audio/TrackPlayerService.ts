@@ -1,5 +1,5 @@
 // src/services/audio/TrackPlayerService.ts
-import { Audio } from 'expo-av';
+import { AudioPlayer } from 'expo-audio';
 import { AudioSermon } from '@/types/api';
 
 class TrackPlayerService {

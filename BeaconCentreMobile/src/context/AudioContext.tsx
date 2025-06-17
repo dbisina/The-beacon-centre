@@ -1,32 +1,25 @@
-// src/context/AudioContext.tsx
+// src/context/AudioContext.tsx - UPDATED VERSION
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Audio } from 'expo-av';
+import { AudioPlayer } from 'expo-audio';
 import { AudioSermon } from '@/types/api';
 import TrackPlayerService from '@/services/audio/TrackPlayerService';
 
 interface AudioContextType {
   currentSermon: AudioSermon | null;
   isPlaying: boolean;
+  
+  // NEW: Mini player support
+  isPlayerVisible: boolean;
+  showMiniPlayer: () => void;
+  hideMiniPlayer: () => void;
+  
+  // Existing methods
   playSermon: (sermon: AudioSermon) => Promise<void>;
   playPlaylist: (sermons: AudioSermon[], startIndex: number) => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
   skipToNext: () => Promise<void>;
   skipToPrevious: () => Promise<void>;
-  playPause: () => void;           // Toggle play/pause
-    seekTo: (position: number) => void;  // Seek to position in seconds
-    skipForward: () => void;         // Skip 15 seconds forward
-    skipBackward: () => void;        // Skip 15 seconds backward
-
-    // Player visibility control
-    isPlayerVisible: boolean;        // Whether mini player should show
-    showMiniPlayer: () => void;      // Show mini player
-    hideMiniPlayer: () => void;      // Hide mini player  
-    closePlayer: () => void;         // Close player completely
-
-    // Favorites integration
-    toggleFavorite: () => void;      // Toggle current sermon favorite
-    isFavorite: boolean;          
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -34,6 +27,10 @@ const AudioContext = createContext<AudioContextType | undefined>(undefined);
 export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentSermon, setCurrentSermon] = useState<AudioSermon | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  
+  // NEW: Mini player visibility state
+  const [isPlayerVisible, setIsPlayerVisible] = useState(false);
+  
   const audioService = TrackPlayerService.getInstance();
 
   useEffect(() => {
@@ -43,22 +40,29 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const status = await sound.getStatusAsync();
         if (status.isLoaded) {
           setIsPlaying(status.isPlaying);
+          
+          // NEW: Show mini player when audio is playing
+          if (status.isPlaying && currentSermon) {
+            setIsPlayerVisible(true);
+          }
         }
       }
     };
 
     const interval = setInterval(checkPlaybackStatus, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentSermon]);
 
   const playSermon = async (sermon: AudioSermon) => {
     await audioService.playSermon(sermon);
     setCurrentSermon(sermon);
+    setIsPlayerVisible(true); // NEW: Show mini player when playing
   };
 
   const playPlaylist = async (sermons: AudioSermon[], startIndex: number) => {
     await audioService.playPlaylist(sermons, startIndex);
     setCurrentSermon(sermons[startIndex]);
+    setIsPlayerVisible(true); // NEW: Show mini player when playing
   };
 
   const pause = async () => {
@@ -77,26 +81,7 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     await audioService.skipToPrevious();
   };
 
-  const playPause = () => {
-    if (isPlaying) {
-      pause();
-    } else {
-      resume();
-    }
-  };
-
-  const seekTo = (position: number) => {
-    audioService.seekTo(position);
-  };
-
-  const skipForward = () => {
-    audioService.skipForward();
-  };
-
-  const skipBackward = () => {
-    audioService.skipBackward();
-  };
-
+  // NEW: Mini player control methods
   const showMiniPlayer = () => {
     setIsPlayerVisible(true);
   };
@@ -110,22 +95,15 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
       value={{
         currentSermon,
         isPlaying,
+        isPlayerVisible,      // NEW
+        showMiniPlayer,       // NEW  
+        hideMiniPlayer,       // NEW
         playSermon,
         playPlaylist,
         pause,
         resume,
         skipToNext,
         skipToPrevious,
-        playPause,
-        seekTo,
-        skipForward,
-        skipBackward,
-        isPlayerVisible,
-        showMiniPlayer,
-        hideMiniPlayer,
-        closePlayer,
-        toggleFavorite,
-        isFavorite,
       }}
     >
       {children}
