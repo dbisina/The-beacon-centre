@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
   },
   headerRight: {
     flexDirection: 'row',
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginLeft: 4,
   },
   queueList: {
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   },
   queueIndex: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.base,
     marginRight: 12,
     minWidth: 24,
     textAlign: 'center',
@@ -290,12 +290,12 @@ const styles = StyleSheet.create({
   },
   queueItemTitle: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.base,
     marginBottom: 2,
   },
   queueItemArtist: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   queueItemRight: {
     flexDirection: 'row',

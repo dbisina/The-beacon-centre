@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   downloadText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginLeft: 4,
   },
   progressContainer: {
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     minWidth: 40,
   },
   cancelButton: {
@@ -369,13 +369,13 @@ const styles = StyleSheet.create({
   },
   downloadedText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginLeft: 4,
     marginRight: 8,
   },
   downloadDate: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   deleteButton: {
     padding: 4,

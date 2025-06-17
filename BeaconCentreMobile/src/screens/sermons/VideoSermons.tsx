@@ -12,7 +12,7 @@ import {
 import VideoCard from '@/components/video/VideoCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import OfflineBanner from '@/components/common/OfflineBanner';
-import { useVideoSermons, useFeaturedContent } from '@/hooks/useSermons';
+import { useVideoSermons, useFeaturedContent } from '@/hooks/api';
 import { useApp } from '@/context/AppContext';
 import LocalStorageService from '@/services/storage/LocalStorage';
 import { colors } from '@/constants/colors';
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     marginBottom: 8,
     paddingHorizontal: 16,
   },

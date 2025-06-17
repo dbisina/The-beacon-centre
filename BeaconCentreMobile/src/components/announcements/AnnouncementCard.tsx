@@ -193,20 +193,20 @@ const styles = StyleSheet.create({
   },
   priority: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginLeft: 4,
     letterSpacing: typography.letterSpacing.tight,
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     lineHeight: typography.lineHeights.tight,
     letterSpacing: typography.letterSpacing.tight,
     marginBottom: 12,
   },
   content: {
     fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.base,
     lineHeight: typography.lineHeights.normal,
     marginBottom: 16,
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   date: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   actionButton: {
     flexDirection: 'row',
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     color: '#fff',
     marginRight: 4,
     letterSpacing: typography.letterSpacing.tight,

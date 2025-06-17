@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   },
   priorityText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginLeft: 4,
   },
   headerActions: {
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.title,
+    fontSize: typography.sizes.xl,
     lineHeight: 32,
     marginBottom: 16,
   },
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginLeft: 8,
   },
   contentContainer: {
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
   },
   contentText: {
     fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     lineHeight: 28,
   },
   actionButton: {
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.base,
     color: '#fff',
     marginRight: 8,
   },

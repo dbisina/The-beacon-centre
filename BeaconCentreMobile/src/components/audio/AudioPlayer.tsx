@@ -1,171 +1,382 @@
-// src/components/audio/AudioPlayer.tsx
-import React, { useState, useEffect } from 'react';
+// src/components/audio/AudioPlayer.tsx - EXPO-AUDIO COMPATIBLE
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Dimensions,
   Modal,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  Animated,
+  PanResponder,
+  Dimensions,
+  useColorScheme,
   StatusBar,
+  ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Slider from '@react-native-community/slider';
+import { useAudio } from '@/context/AudioContext';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-
-const { width } = Dimensions.get('window');
 
 interface AudioPlayerProps {
   visible: boolean;
   onClose: () => void;
 }
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({
-  visible,
-  onClose
-}) => {
-  const { 
-    currentTrack: currentSermon, 
-    isPlaying, 
-    position, 
+const { height: screenHeight } = Dimensions.get('window');
+
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const { state } = useAudio();
+  const {
+    currentTrack,
+    isPlaying,
+    position,
     duration,
     play,
     pause,
-    seekTo,
     skipToNext,
-    skipToPrevious
+    skipToPrevious,
+    seekTo,
+    toggleRepeat,
+    toggleShuffle,
+    setVolume,
+    setRate,
+    progress,
+    formattedPosition,
+    formattedDuration,
+    canPlay,
+    hasNext,
+    hasPrevious,
+    isRepeating,
+    isRepeatingOne,
+    isShuffling,
+    volume,
+    rate,
+    getRepeatModeIcon,
+    getPlaybackStateText,
+    queueLength,
   } = useAudioPlayer();
 
-  const [localPosition, setLocalPosition] = useState(0);
+  const [showQueue, setShowQueue] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const slideAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    setLocalPosition(position);
-  }, [position]);
+  // Pan responder for swipe down to close
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gestureState) => {
+      return Math.abs(gestureState.dy) > 10 && gestureState.dy > 0;
+    },
+    onPanResponderMove: (_, gestureState) => {
+      if (gestureState.dy > 0) {
+        const progress = Math.min(1, gestureState.dy / 300);
+        slideAnim.setValue(progress);
+      }
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dy > 100) {
+        handleClose();
+      } else {
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+  });
 
-  const formatTime = (milliseconds: number) => {
-    const seconds = Math.floor(milliseconds / 1000);
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const handleClose = () => {
+    Animated.timing(slideAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      onClose();
+      slideAnim.setValue(0);
+    });
+  };
+
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
+    }
   };
 
   const handleSeek = (value: number) => {
-    setLocalPosition(value);
-    seekTo(value);
+    const newPosition = (value / 100) * duration;
+    seekTo(newPosition);
   };
 
-  const progress = duration > 0 ? position / duration : 0;
+  const handleVolumeChange = (value: number) => {
+    setVolume(value / 100);
+  };
 
-  if (!currentSermon) return null;
+  const handleRateChange = () => {
+    const rates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+    const currentIndex = rates.indexOf(rate);
+    const nextIndex = (currentIndex + 1) % rates.length;
+    setRate(rates[nextIndex]);
+  };
+
+  if (!currentTrack) {
+    return null;
+  }
+
+  const transformStyle = {
+    transform: [
+      {
+        translateY: slideAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, screenHeight],
+        }),
+      },
+    ],
+  };
 
   return (
     <Modal
       visible={visible}
       animationType="slide"
       presentationStyle="fullScreen"
-      onRequestClose={onClose}
+      statusBarTranslucent
     >
-      <View style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.headerButton}>
-            <Icon name="keyboard-arrow-down" size={24} color={colors.textGrey} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Now Playing</Text>
-          <TouchableOpacity 
-            onPress={handleToggleFavorite} 
-            style={styles.headerButton}
-          >
-            <Icon 
-              name={isFavorite ? "favorite" : "favorite-border"} 
-              size={24} 
-              color={isFavorite ? colors.red : colors.textGrey} 
-            />
-          </TouchableOpacity>
-        </View>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={isDark ? colors.dark.background : colors.light.background}
+      />
+      
+      <Animated.View 
+        style={[
+          styles.container,
+          {
+            backgroundColor: isDark ? colors.dark.background : colors.light.background,
+          },
+          transformStyle,
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleClose} style={styles.headerButton}>
+              <Icon name="keyboard-arrow-down" size={28} color={isDark ? colors.dark.text : colors.light.text} />
+            </TouchableOpacity>
+            
+            <View style={styles.headerCenter}>
+              <Text style={[
+                styles.headerTitle,
+                { color: isDark ? colors.dark.text : colors.light.text }
+              ]}>
+                Now Playing
+              </Text>
+              {queueLength > 1 && (
+                <Text style={[styles.headerSubtitle, { color: colors.textGrey }]}>
+                  {queueLength} tracks in queue
+                </Text>
+              )}
+            </View>
 
-        {/* Album Art */}
-        <View style={styles.albumContainer}>
-          <View style={styles.albumArt}>
-            {currentSermon.thumbnail_url ? (
-              <Image source={{ uri: currentSermon.thumbnail_url }} style={styles.albumImage} />
-            ) : (
-              <View style={styles.placeholderAlbum}>
-                <Icon name="library-music" size={80} color={colors.textGrey} />
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Track Info */}
-        <View style={styles.trackInfo}>
-          <Text style={styles.trackTitle}>{currentSermon.title}</Text>
-          <Text style={styles.trackArtist}>{currentSermon.speaker}</Text>
-          {currentSermon.category && (
-            <Text style={styles.trackCategory}>{currentSermon.category}</Text>
-          )}
-        </View>
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
             <TouchableOpacity 
-              style={[styles.progressThumb, { left: `${progress * 100}%` }]}
-              onPress={() => {}} // Handle drag here
-            />
+              onPress={() => setShowQueue(!showQueue)} 
+              style={styles.headerButton}
+            >
+              <Icon name="queue-music" size={24} color={isDark ? colors.dark.text : colors.light.text} />
+            </TouchableOpacity>
           </View>
-          <View style={styles.timeContainer}>
-            <Text style={styles.timeText}>{formatTime(position)}</Text>
-            <Text style={styles.timeText}>{formatTime(duration)}</Text>
-          </View>
-        </View>
 
-        {/* Controls */}
-        <View style={styles.controls}>
-          <TouchableOpacity 
-            onPress={handleSkipBackward} 
-            style={styles.controlButton}
-          >
-            <Icon name="replay-15" size={32} color={colors.textGrey} />
-          </TouchableOpacity>
+          {!showQueue ? (
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+              {/* Artwork */}
+              <View style={styles.artworkContainer}>
+                <View style={[
+                  styles.artwork,
+                  {
+                    backgroundColor: colors.primary + '20',
+                    borderColor: colors.primary + '40',
+                  }
+                ]}>
+                  <Icon name="music-note" size={80} color={colors.primary} />
+                </View>
+              </View>
 
-          <TouchableOpacity 
-            onPress={handlePlayPause} 
-            style={styles.playButton}
-          >
-            <Icon 
-              name={isPlaying ? "pause" : "play-arrow"} 
-              size={32} 
-              color="#ffffff" 
-            />
-          </TouchableOpacity>
+              {/* Track Info */}
+              <View style={styles.trackInfo}>
+                <Text style={[
+                  styles.trackTitle,
+                  { color: isDark ? colors.dark.text : colors.light.text }
+                ]}>
+                  {currentTrack.title}
+                </Text>
+                <Text style={[styles.trackArtist, { color: colors.textGrey }]}>
+                  {currentTrack.speaker}
+                </Text>
+                {currentTrack.category && (
+                  <Text style={[styles.trackCategory, { color: colors.textGrey }]}>
+                    {currentTrack.category}
+                  </Text>
+                )}
+              </View>
 
-          <TouchableOpacity 
-            onPress={handleSkipForward} 
-            style={styles.controlButton}
-          >
-            <Icon name="forward-15" size={32} color={colors.textGrey} />
-          </TouchableOpacity>
-        </View>
+              {/* Progress */}
+              <View style={styles.progressContainer}>
+                <Slider
+                  style={styles.progressSlider}
+                  minimumValue={0}
+                  maximumValue={100}
+                  value={progress}
+                  onSlidingComplete={handleSeek}
+                  minimumTrackTintColor={colors.primary}
+                  maximumTrackTintColor={isDark ? colors.dark.border : colors.light.border}
+                  thumbTintColor={colors.primary}
+                />
+                <View style={styles.timeContainer}>
+                  <Text style={[styles.timeText, { color: colors.textGrey }]}>
+                    {formattedPosition}
+                  </Text>
+                  <Text style={[styles.timeText, { color: colors.textGrey }]}>
+                    {formattedDuration}
+                  </Text>
+                </View>
+              </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Icon name="share" size={24} color={colors.textGrey} />
-            <Text style={styles.actionText}>Share</Text>
-          </TouchableOpacity>
+              {/* Main Controls */}
+              <View style={styles.mainControls}>
+                <TouchableOpacity
+                  onPress={skipToPrevious}
+                  style={[styles.controlButton, !hasPrevious && styles.disabledButton]}
+                  disabled={!hasPrevious}
+                >
+                  <Icon name="skip-previous" size={32} color={
+                    hasPrevious 
+                      ? (isDark ? colors.dark.text : colors.light.text)
+                      : colors.textGrey + '60'
+                  } />
+                </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton}>
-            <Icon name="file-download" size={24} color={colors.textGrey} />
-            <Text style={styles.actionText}>Download</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+                <TouchableOpacity
+                  onPress={handlePlayPause}
+                  style={[
+                    styles.playButton,
+                    { backgroundColor: colors.primary }
+                  ]}
+                  disabled={!canPlay}
+                >
+                  <Icon
+                    name={isPlaying ? 'pause' : 'play-arrow'}
+                    size={40}
+                    color="white"
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={skipToNext}
+                  style={[styles.controlButton, !hasNext && styles.disabledButton]}
+                  disabled={!hasNext}
+                >
+                  <Icon name="skip-next" size={32} color={
+                    hasNext 
+                      ? (isDark ? colors.dark.text : colors.light.text)
+                      : colors.textGrey + '60'
+                  } />
+                </TouchableOpacity>
+              </View>
+
+              {/* Secondary Controls */}
+              <View style={styles.secondaryControls}>
+                <TouchableOpacity onPress={toggleShuffle} style={styles.secondaryButton}>
+                  <Icon 
+                    name="shuffle" 
+                    size={24} 
+                    color={isShuffling ? colors.primary : (isDark ? colors.dark.text : colors.light.text)} 
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={toggleRepeat} style={styles.secondaryButton}>
+                  <Icon 
+                    name={getRepeatModeIcon()} 
+                    size={24} 
+                    color={isRepeating ? colors.primary : (isDark ? colors.dark.text : colors.light.text)} 
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={handleRateChange} style={styles.secondaryButton}>
+                  <Text style={[
+                    styles.rateText,
+                    { color: rate !== 1.0 ? colors.primary : (isDark ? colors.dark.text : colors.light.text) }
+                  ]}>
+                    {rate}×
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Volume Control */}
+              <View style={styles.volumeContainer}>
+                <Icon name="volume-down" size={20} color={colors.textGrey} />
+                <Slider
+                  style={styles.volumeSlider}
+                  minimumValue={0}
+                  maximumValue={100}
+                  value={volume * 100}
+                  onValueChange={handleVolumeChange}
+                  minimumTrackTintColor={colors.primary}
+                  maximumTrackTintColor={isDark ? colors.dark.border : colors.light.border}
+                  thumbTintColor={colors.primary}
+                />
+                <Icon name="volume-up" size={20} color={colors.textGrey} />
+              </View>
+
+              {/* Status */}
+              <Text style={[styles.statusText, { color: colors.textGrey }]}>
+                {getPlaybackStateText()}
+              </Text>
+            </ScrollView>
+          ) : (
+            <View style={styles.queueContainer}>
+              <Text style={[
+                styles.queueTitle,
+                { color: isDark ? colors.dark.text : colors.light.text }
+              ]}>
+                Playing Queue
+              </Text>
+              <ScrollView style={styles.queueList}>
+                {state.queue.map((sermon, index) => (
+                  <TouchableOpacity
+                    key={sermon.id}
+                    style={[
+                      styles.queueItem,
+                      index === state.currentIndex && styles.currentQueueItem,
+                      { borderBottomColor: isDark ? colors.dark.border : colors.light.border }
+                    ]}
+                  >
+                    <View style={styles.queueItemInfo}>
+                      <Text style={[
+                        styles.queueItemTitle,
+                        { color: isDark ? colors.dark.text : colors.light.text },
+                        index === state.currentIndex && { color: colors.primary }
+                      ]} numberOfLines={1}>
+                        {sermon.title}
+                      </Text>
+                      <Text style={[styles.queueItemArtist, { color: colors.textGrey }]} numberOfLines={1}>
+                        {sermon.speaker}
+                      </Text>
+                    </View>
+                    {index === state.currentIndex && (
+                      <Icon name="equalizer" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </SafeAreaView>
+      </Animated.View>
     </Modal>
   );
 };
@@ -173,176 +384,179 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    paddingTop: 50, // Account for status bar
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.light.border,
   },
   headerButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerCenter: {
+    flex: 1,
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 16,
+    ...typography.styles.h3,
     fontWeight: '600',
-    color: colors.textGrey,
-    fontFamily: typography.fonts.poppins.semiBold,
   },
-  albumContainer: {
+  headerSubtitle: {
+    ...typography.styles.caption,
+    marginTop: 2,
+  },
+  content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 24,
   },
-  albumArt: {
-    width: width - 80,
-    height: width - 80,
-    maxWidth: 300,
-    maxHeight: 300,
-    borderRadius: 15,
-    elevation: 3,
+  artworkContainer: {
+    alignItems: 'center',
+    marginVertical: 32,
+  },
+  artwork: {
+    width: 280,
+    height: 280,
+    borderRadius: 16,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  albumImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 15,
-  },
-  placeholderAlbum: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
   },
   trackInfo: {
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    marginBottom: 32,
   },
   trackTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#000',
+    ...typography.styles.h2,
     textAlign: 'center',
     marginBottom: 8,
-    fontFamily: typography.fonts.poppins.bold,
   },
   trackArtist: {
-    fontSize: 18,
-    color: colors.primary,
+    ...typography.styles.body1,
     textAlign: 'center',
     marginBottom: 4,
-    fontFamily: typography.fonts.poppins.medium,
   },
   trackCategory: {
-    fontSize: 14,
-    color: colors.textGrey,
+    ...typography.styles.caption,
     textAlign: 'center',
-    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   progressContainer: {
-    paddingHorizontal: 30,
-    marginBottom: 30,
+    marginBottom: 32,
   },
-  progressBar: {
-    height: 4,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 2,
-    position: 'relative',
-    marginBottom: 10,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 2,
-  },
-  progressThumb: {
-    width: 16,
-    height: 16,
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    position: 'absolute',
-    top: -6,
-    transform: [{ translateX: -8 }],
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
+  progressSlider: {
+    height: 40,
   },
   timeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 8,
   },
   timeText: {
-    fontSize: 12,
-    color: colors.textGrey,
-    fontWeight: '500',
+    ...typography.styles.caption,
   },
-  controls: {
+  mainControls: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
-    marginBottom: 40,
+    justifyContent: 'center',
+    marginBottom: 24,
+    gap: 32,
   },
   controlButton: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
+    width: 56,
+    height: 56,
     alignItems: 'center',
-    marginHorizontal: 20,
+    justifyContent: 'center',
+  },
+  disabledButton: {
+    opacity: 0.4,
   },
   playButton: {
-    width: 70,
-    height: 70,
-    backgroundColor: colors.primary,
-    borderRadius: 35,
-    justifyContent: 'center',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    justifyContent: 'center',
   },
-  actionButtons: {
+  secondaryControls: {
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingHorizontal: 40,
-    paddingBottom: 50,
+    marginBottom: 24,
+    gap: 48,
   },
-  actionButton: {
+  secondaryButton: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
-    marginHorizontal: 30,
+    justifyContent: 'center',
   },
-  actionText: {
-    fontSize: 12,
-    color: colors.textGrey,
-    marginTop: 8,
+  rateText: {
+    ...typography.styles.body1,
+    fontWeight: '600',
+  },
+  volumeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    gap: 16,
+  },
+  volumeSlider: {
+    flex: 1,
+    height: 40,
+  },
+  statusText: {
+    ...typography.styles.caption,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  queueContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  queueTitle: {
+    ...typography.styles.h3,
+    marginBottom: 16,
+  },
+  queueList: {
+    flex: 1,
+  },
+  queueItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+  },
+  currentQueueItem: {
+    backgroundColor: colors.primary + '10',
+    borderRadius: 8,
+    marginHorizontal: -4,
+  },
+  queueItemInfo: {
+    flex: 1,
+  },
+  queueItemTitle: {
+    ...typography.styles.body1,
     fontWeight: '500',
-    fontFamily: typography.fonts.poppins.medium,
+    marginBottom: 2,
+  },
+  queueItemArtist: {
+    ...typography.styles.caption,
   },
 });
 

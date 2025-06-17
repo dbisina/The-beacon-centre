@@ -1,20 +1,20 @@
-// App.tsx - FIXED VERSION WITH MINI PLAYER
+// App.tsx - COMPLETE EXPO-AUDIO IMPLEMENTATION
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, View } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 
-// CRITICAL FIX: Import crypto polyfill for UUID
+// CRITICAL: Import crypto polyfills
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 
 // Context Providers
 import { AppProvider } from '@/context/AppContext';
-import { AudioContextProvider } from '@/context/AudioContext';
+import { AudioContextProvider } from '@/context/AudioContext'; // ← Uses expo-audio
 import { ThemeProvider } from '@/context/ThemeContext';
 import { OfflineProvider } from '@/context/OfflineContext';
 
@@ -23,13 +23,11 @@ import AppNavigator from '@/navigation/AppNavigator';
 
 // Services
 import NotificationService from '@/services/notifications/NotificationService';
-import TrackPlayerService from '@/services/audio/TrackPlayerService';
 import OfflineManager from '@/services/storage/OfflineManager';
 
-// NEW: Audio Components
+// Audio Components
 import MiniPlayer from '@/components/audio/MiniPlayer';
 import AudioPlayer from '@/components/audio/AudioPlayer';
-import { useAudio } from '@/context/AudioContext';
 
 // Components
 import ErrorBoundary from '@/components/common/ErrorBoundary';
@@ -70,34 +68,32 @@ const queryClient = new QueryClient({
 const initializeServices = async () => {
   try {
     if (Platform.OS !== 'web') {
+      // Initialize notification service
       const notificationService = NotificationService.getInstance();
       await notificationService.initialize();
-
-      const audioService = TrackPlayerService.getInstance();
-      await audioService.setup();
+      console.log('✅ Notification service initialized');
     }
 
+    // Initialize offline manager
     const offlineManager = OfflineManager.getInstance();
-    console.log('Services initialized successfully');
+    console.log('✅ Offline manager initialized');
+    
+    console.log('🎉 All services initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize services:', error);
+    console.error('❌ Failed to initialize services:', error);
   }
 };
 
-// NEW: Audio Layer Component (inside AudioContext)
+// Audio Layer Component (inside AudioContext)
 const AudioLayer: React.FC = () => {
   const [showFullPlayer, setShowFullPlayer] = useState(false);
-  const { currentSermon, isPlayerVisible } = useAudio();
 
   return (
     <>
-      {/* Mini Player - Shows when audio is playing */}
-      {isPlayerVisible && currentSermon && (
-        <MiniPlayer 
-          onExpandPress={() => setShowFullPlayer(true)}
-          visible={isPlayerVisible}
-        />
-      )}
+      {/* Mini Player - Floats over content when audio is playing */}
+      <MiniPlayer 
+        onExpandPress={() => setShowFullPlayer(true)}
+      />
       
       {/* Full Audio Player Modal */}
       <AudioPlayer
@@ -108,28 +104,27 @@ const AudioLayer: React.FC = () => {
   );
 };
 
-// Main App Component
+// Main App Content Component (inside all providers)
 const AppContent: React.FC = () => {
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <AppNavigator />
-      
-      {/* NEW: Audio Layer with Mini Player */}
       <AudioLayer />
     </View>
   );
 };
 
-export default function App() {
+// Main App Component
+const App: React.FC = () => {
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
     async function prepare() {
       try {
-        // Initialize services
-        await initializeServices();
-
-        // Pre-load fonts
+        console.log('🚀 Initializing The Beacon Centre App...');
+        
+        // Load fonts
+        console.log('📝 Loading fonts...');
         await Font.loadAsync({
           Poppins_400Regular,
           Poppins_500Medium,
@@ -138,10 +133,16 @@ export default function App() {
           NotoSerif_400Regular,
           NotoSerif_700Bold,
         });
+        console.log('✅ Fonts loaded successfully');
 
-        console.log('App initialized successfully');
-      } catch (e) {
-        console.warn('Error during app initialization:', e);
+        // Initialize services
+        console.log('⚙️ Initializing services...');
+        await initializeServices();
+
+        console.log('🎉 App initialized successfully');
+      } catch (error) {
+        console.error('❌ App initialization error:', error);
+        // Don't fail completely - continue with limited functionality
       } finally {
         setAppIsReady(true);
       }
@@ -150,9 +151,10 @@ export default function App() {
     prepare();
   }, []);
 
-  useEffect(() => {
+  const onLayoutRootView = React.useCallback(async () => {
     if (appIsReady) {
-      SplashScreen.hideAsync();
+      console.log('🎬 Hiding splash screen...');
+      await SplashScreen.hideAsync();
     }
   }, [appIsReady]);
 
@@ -161,23 +163,34 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <ErrorBoundary>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={styles.rootContainer} onLayout={onLayoutRootView}>
+        <SafeAreaProvider>
+          <QueryClientProvider client={queryClient}>
             <ThemeProvider>
-              <OfflineProvider>
-                <AppProvider>
-                  <AudioContextProvider>
+              <AppProvider>
+                <OfflineProvider>
+                  <AudioContextProvider> {/* ← expo-audio powered */}
                     <AppContent />
                     <StatusBar style="auto" />
                   </AudioContextProvider>
-                </AppProvider>
-              </OfflineProvider>
+                </OfflineProvider>
+              </AppProvider>
             </ThemeProvider>
-          </ErrorBoundary>
-        </QueryClientProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+          </QueryClientProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
+});
+
+export default App;

@@ -1,10 +1,9 @@
-// src/services/notifications/NotificationService.ts
+// src/services/notifications/NotificationService.ts - FIXED FOR EXPO NOTIFICATIONS
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import LocalStorageService from '@/services/storage/LocalStorage';
-import { NotificationBehavior } from 'expo-notifications';
 
 class NotificationService {
   private static instance: NotificationService;
@@ -17,37 +16,62 @@ class NotificationService {
   }
 
   async initialize(): Promise<void> {
-    // Configure notification handling
+    // FIXED: Use new notification behavior API
     Notifications.setNotificationHandler({
-      handleNotification: async (): Promise<NotificationBehavior> => ({
-        shouldShowAlert: true,
+      handleNotification: async () => ({
+        shouldShowBanner: true,  // FIXED: New API
+        shouldShowList: true,    // FIXED: New API
         shouldPlaySound: true,
         shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
       }),
     });
 
-    // Request permissions
-    await this.requestPermissions();
-
-    // Schedule daily devotional reminder
-    await this.scheduleDailyDevotionalReminder();
+    // Only request permissions on physical devices
+    if (Device.isDevice) {
+      await this.requestPermissions();
+      await this.scheduleDailyDevotionalReminder();
+    } else {
+      console.log('Must use physical device for Push Notifications');
+    }
   }
 
   async requestPermissions(): Promise<boolean> {
-    let token;
+    try {
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'Default',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#41BBAC',
+          description: 'Default notification channel for The Beacon Centre',
+        });
 
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#41BBAC',
-      });
-    }
+        // Create specific channels for different notification types
+        await Notifications.setNotificationChannelAsync('devotional', {
+          name: 'Daily Devotionals',
+          importance: Notifications.AndroidImportance.DEFAULT,
+          vibrationPattern: [0, 200, 200, 200],
+          lightColor: '#41BBAC',
+          description: 'Daily devotional reminders',
+        });
 
-    if (Device.isDevice) {
+        await Notifications.setNotificationChannelAsync('sermons', {
+          name: 'New Sermons',
+          importance: Notifications.AndroidImportance.DEFAULT,
+          vibrationPattern: [0, 100, 100, 100],
+          lightColor: '#41BBAC',
+          description: 'New sermon notifications',
+        });
+
+        await Notifications.setNotificationChannelAsync('announcements', {
+          name: 'Church Announcements',
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 300, 300, 300],
+          lightColor: '#41BBAC',
+          description: 'Important church announcements',
+        });
+      }
+
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
       
@@ -60,153 +84,219 @@ class NotificationService {
         console.log('Failed to get push token for push notification!');
         return false;
       }
-      
-      token = (await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig?.extra?.eas?.projectId,
-      })).data;
-    } else {
-      console.log('Must use physical device for Push Notifications');
+
+      // Get push token (only works in development builds, not Expo Go)
+      try {
+        const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+        if (projectId) {
+          const token = await Notifications.getExpoPushTokenAsync({ projectId });
+          console.log('Push token obtained:', token.data);
+          // You can send this token to your backend for targeted notifications
+        }
+      } catch (tokenError) {
+        console.log('Push token not available in Expo Go. Use development build for push notifications.');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error requesting notification permissions:', error);
       return false;
     }
-
-    // Save token for backend analytics (optional)
-    if (token) {
-      console.log('Push token:', token);
-      // You can send this to your backend for targeted notifications
-    }
-
-    return true;
   }
 
   async scheduleDailyDevotionalReminder(): Promise<void> {
-    const userData = await LocalStorageService.getUserData();
-    
-    if (!userData.appSettings.notifications) {
-      return;
+    try {
+      const userData = await LocalStorageService.getUserData();
+      
+      if (!userData.appSettings.notifications) {
+        return;
+      }
+
+      // Cancel existing notifications
+      await Notifications.cancelAllScheduledNotificationsAsync();
+
+      // Schedule daily reminder at 7 AM
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Daily Devotional Ready! 📖',
+          body: "Start your day with God's Word. Your daily devotional is waiting for you.",
+          data: { 
+            type: 'daily_devotional',
+            screen: 'DevotionalHome'
+          },
+        },
+        trigger: {
+          hour: 7,
+          minute: 0,
+          repeats: true,
+          type: 'daily',
+        },
+      });
+
+      console.log('Daily devotional reminder scheduled');
+    } catch (error) {
+      console.error('Error scheduling daily reminder:', error);
     }
-
-    // Cancel existing notifications
-    await Notifications.cancelAllScheduledNotificationsAsync();
-
-    // Schedule daily reminder at 7 AM
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Daily Devotional Ready! 📖',
-        body: "Start your day with God's Word. Your daily devotional is waiting for you.",
-        data: { type: 'daily_devotional' },
-      },
-      trigger: null,
-    });
-
-    // Schedule weekly sermon reminder
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'New Sermons Available! 🎵',
-        body: 'Check out the latest video and audio sermons from The Beacon Centre.',
-        data: { type: 'weekly_sermons' },
-      },
-      trigger: null,
-    });
   }
 
-  async scheduleStreakCelebration(streakDays: number): Promise<void> {
-    const userData = await LocalStorageService.getUserData();
-    
-    if (!userData.appSettings.notifications || streakDays < 7) {
-      return;
+  async scheduleStreakCelebration(days: number): Promise<void> {
+    try {
+      let title = '';
+      let body = '';
+      
+      if (days === 7) {
+        title = '🎉 7-Day Reading Streak!';
+        body = 'Amazing! You\'ve read devotionals for a full week. Keep it up!';
+      } else if (days === 30) {
+        title = '🏆 30-Day Reading Streak!';
+        body = 'Incredible! A full month of daily devotions. You\'re building a strong spiritual habit!';
+      } else if (days === 100) {
+        title = '👑 100-Day Reading Streak!';
+        body = 'Phenomenal! 100 days of consistent devotional reading. You\'re a spiritual champion!';
+      } else {
+        title = `🔥 ${days}-Day Streak!`;
+        body = `Congratulations on ${days} consecutive days of devotional reading!`;
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          data: { 
+            type: 'streak_celebration',
+            days,
+            screen: 'DevotionalHome'
+          },
+        },
+        trigger: null, // Immediate notification
+      });
+    } catch (error) {
+      console.error('Error scheduling streak celebration:', error);
     }
-
-    let title: string;
-    let body: string;
-
-    if (streakDays === 7) {
-      title = 'One Week Streak! 🔥';
-      body = "Congratulations! You've read devotionals for 7 days straight!";
-    } else if (streakDays === 30) {
-      title = 'One Month Streak! 🏆';
-      body = 'Amazing! A whole month of daily devotional reading!';
-    } else if (streakDays === 100) {
-      title = '100 Day Streak! 🎉';
-      body = 'Incredible dedication! 100 days of spiritual growth!';
-    } else if (streakDays % 365 === 0) {
-      const years = streakDays / 365;
-      title = `${years} Year${years > 1 ? 's' : ''} Streak! 🌟`;
-      body = `Phenomenal! ${years} year${years > 1 ? 's' : ''} of consistent devotional reading!`;
-    } else {
-      return; // Don't notify for other milestones
-    }
-
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body,
-        data: { type: 'streak_celebration', days: streakDays },
-      },
-      trigger: null,
-    });
   }
 
-  async scheduleNewContentNotification(contentType: 'devotional' | 'video' | 'audio' | 'announcement', title: string): Promise<void> {
-    const userData = await LocalStorageService.getUserData();
-    
-    if (!userData.appSettings.notifications) {
-      return;
+  async scheduleNewContentNotification(
+    contentType: 'devotional' | 'video' | 'audio' | 'announcement',
+    title: string
+  ): Promise<void> {
+    try {
+      let notificationTitle = '';
+      let notificationBody = '';
+      let channelId = 'default';
+
+      switch (contentType) {
+        case 'devotional':
+          notificationTitle = 'New Devotional Available! 📖';
+          notificationBody = `"${title}" is now available to read.`;
+          channelId = 'devotional';
+          break;
+        case 'video':
+          notificationTitle = 'New Video Sermon! 🎥';
+          notificationBody = `Watch "${title}" now.`;
+          channelId = 'sermons';
+          break;
+        case 'audio':
+          notificationTitle = 'New Audio Sermon! 🎵';
+          notificationBody = `Listen to "${title}" now.`;
+          channelId = 'sermons';
+          break;
+        case 'announcement':
+          notificationTitle = 'Church Announcement! 📢';
+          notificationBody = title;
+          channelId = 'announcements';
+          break;
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: notificationTitle,
+          body: notificationBody,
+          data: { 
+            type: 'new_content', 
+            contentType,
+            screen: contentType === 'devotional' ? 'DevotionalHome' : 'SermonsHome'
+          },
+        },
+        trigger: null, // Immediate notification
+      });
+    } catch (error) {
+      console.error('Error scheduling new content notification:', error);
     }
+  }
 
-    let notificationTitle: string;
-    let notificationBody: string;
+  async scheduleWeeklySermonReminder(): Promise<void> {
+    try {
+      const userData = await LocalStorageService.getUserData();
+      
+      if (!userData.appSettings.notifications) {
+        return;
+      }
 
-    switch (contentType) {
-      case 'devotional':
-        notificationTitle = 'New Devotional Available! 📖';
-        notificationBody = `"${title}" is now available to read.`;
-        break;
-      case 'video':
-        notificationTitle = 'New Video Sermon! 🎥';
-        notificationBody = `Watch "${title}" now.`;
-        break;
-      case 'audio':
-        notificationTitle = 'New Audio Sermon! 🎵';
-        notificationBody = `Listen to "${title}" now.`;
-        break;
-      case 'announcement':
-        notificationTitle = 'Church Announcement! 📢';
-        notificationBody = title;
-        break;
+      // Schedule weekly reminder on Sundays at 9 AM
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'New Sermons Available! 🎙️',
+          body: 'Check out the latest video and audio sermons from The Beacon Centre.',
+          data: { 
+            type: 'weekly_sermons',
+            screen: 'SermonsHome'
+          },
+        },
+        trigger: {
+          seconds: 1,
+          repeats: true,
+          type: 'timeInterval'
+        },
+      });
+    } catch (error) {
+      console.error('Error scheduling weekly sermon reminder:', error);
     }
-
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: notificationTitle,
-        body: notificationBody,
-        data: { type: 'new_content', contentType },
-      },
-      trigger: null,
-    });
   }
 
   async cancelAllNotifications(): Promise<void> {
-    await Notifications.cancelAllScheduledNotificationsAsync();
+    try {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      console.log('All notifications cancelled');
+    } catch (error) {
+      console.error('Error cancelling notifications:', error);
+    }
   }
 
   async handleNotificationResponse(response: Notifications.NotificationResponse): Promise<void> {
     const data = response.notification.request.content.data;
     
-    // Handle different notification types
+    console.log('Notification response received:', data);
+    
+    // You can implement deep linking here to navigate to specific screens
+    // For now, we'll just log the response
     switch (data.type) {
       case 'daily_devotional':
-        // Navigate to devotional screen
-        // You'll need to implement deep linking here
+        console.log('Navigate to devotional screen');
         break;
       case 'weekly_sermons':
-        // Navigate to sermons screen
+        console.log('Navigate to sermons screen');
         break;
       case 'new_content':
-        // Navigate to specific content
+        console.log(`Navigate to ${data.contentType} content`);
         break;
       case 'streak_celebration':
-        // Show celebration modal or navigate to profile
+        console.log('Show streak celebration');
         break;
+    }
+  }
+
+  async sendTestNotification(): Promise<void> {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Test Notification 🧪',
+          body: 'This is a test notification from The Beacon Centre app.',
+          data: { type: 'test' },
+        },
+        trigger: null,
+      });
+    } catch (error) {
+      console.error('Error sending test notification:', error);
     }
   }
 }

@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     color: '#fff',
     marginLeft: 8,
   },

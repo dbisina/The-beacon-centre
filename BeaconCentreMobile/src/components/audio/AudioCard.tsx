@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     padding: 16,
     elevation: 2,
-    shadowColor: colors.shadow,
+    shadowColor: colors.textGrey,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -53,13 +53,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
-    color: colors.text,
+    fontSize: typography.sizes.base,
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   speaker: {
     fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     color: colors.textGrey,
   },
 });

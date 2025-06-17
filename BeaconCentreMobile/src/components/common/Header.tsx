@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
   },
   rightButton: {
     position: 'absolute',
