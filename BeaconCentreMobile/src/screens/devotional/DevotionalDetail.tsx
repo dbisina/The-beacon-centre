@@ -271,13 +271,13 @@ const styles = StyleSheet.create({
   },
   date: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
     marginTop: 16,
     marginBottom: 8,
   },
   title: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     lineHeight: 36,
     marginBottom: 20,
   },
@@ -289,12 +289,12 @@ const styles = StyleSheet.create({
   },
   verseReference: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
     marginBottom: 8,
   },
   verseText: {
     fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     lineHeight: 28,
     fontStyle: 'italic',
   },
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   },
   contentText: {
     fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.large,
+      fontSize: typography.sizes.lg,
     lineHeight: 28,
   },
   prayerContainer: {
@@ -318,12 +318,12 @@ const styles = StyleSheet.create({
   },
   prayerTitle: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     marginLeft: 8,
   },
   prayerText: {
     fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     lineHeight: 28,
     fontStyle: 'italic',
   },
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   },
   markReadText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
     color: '#fff',
     marginLeft: 8,
   },
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   },
   readStatusText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
     marginLeft: 8,
   },
 });

@@ -18,6 +18,7 @@ import Octicons from '@expo/vector-icons/Octicons';
 import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
 import { useVideoSermons, useAudioSermons } from '@/hooks/api';
+import { VideoSermon } from '@/types/api';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import SearchBar from '@/components/search/SearchBar';
 
@@ -134,7 +135,7 @@ const FeaturedContent = ({ navigation }: any) => {
               sermon={sermon}
               onPress={() => navigation.navigate('SermonDetail', { 
                 sermon, 
-                type: videos?.includes(sermon) ? 'video' : 'audio'
+                type: videos?.includes(sermon as VideoSermon) ? 'video' : 'audio'
               })}
             />
           ))}
@@ -179,7 +180,7 @@ const SermonsContent = ({ navigation }: any) => {
               sermon={sermon}
               onPress={() => navigation.navigate('SermonDetail', { 
                 sermon, 
-                type: videos?.includes(sermon) ? 'video' : 'audio'
+                type: videos?.includes(sermon as VideoSermon) ? 'video' : 'audio'
               })}
             />
           ))}

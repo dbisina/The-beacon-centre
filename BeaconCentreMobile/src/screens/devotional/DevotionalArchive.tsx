@@ -98,7 +98,8 @@ export default function DevotionalArchive() {
   const renderHeader = () => (
     <View style={styles.header}>
       <SearchBar
-        onSearch={setSearchQuery}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
         placeholder="Search devotionals..."
       />
       
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
   },
   filterButtonText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   listContent: {
     paddingBottom: 20,

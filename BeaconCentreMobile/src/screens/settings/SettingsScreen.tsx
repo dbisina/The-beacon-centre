@@ -378,11 +378,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     marginBottom: 12,
     paddingHorizontal: 16,
   },
-  statsContainer: {
+  statsContainer: { 
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: 8,
@@ -401,12 +401,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.title,
+    fontSize: typography.sizes.lg,
     marginVertical: 4,
   },
   statTitle: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     textAlign: 'center',
   },
   settingItem: {
@@ -429,11 +429,11 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
   },
   settingSubtitle: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     marginTop: 2,
   },
   settingRight: {

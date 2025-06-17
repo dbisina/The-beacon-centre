@@ -77,7 +77,7 @@ const DevotionalHome = ({ navigation }: any) => {
             style={styles.featuredCard}
           >
             <LinearGradient
-              colors={colors.gradients.primary}
+              colors={colors.gradients.primary as any}
               style={styles.gradientCard}
             >
               <View style={styles.cardContent}>

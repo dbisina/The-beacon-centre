@@ -14,3 +14,5 @@ export {
   export { 
     useAnnouncements 
   } from '../useAnnouncements';
+
+export { useFeaturedContent } from './useFeaturedContent';

@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-import { useAudioSermons, useFeaturedContent } from '@/hooks/useSermons';
+import { useAudioSermons, useFeaturedContent } from '@/hooks/api';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { colors, typography } from '@/constants';
@@ -199,7 +199,8 @@ export default function AudioSermons() {
   const renderHeader = () => (
     <View style={styles.header}>
       <SearchBar
-        onSearch={setSearchQuery}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
         placeholder="Search audio sermons..."
       />
       
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.large,
+    fontSize: typography.sizes.lg,
     marginBottom: 8,
   },
   listContent: {
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
   sermonTitle: {
     flex: 1,
     fontFamily: typography.fonts.poppins.bold,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
     lineHeight: 20,
     marginRight: 12,
   },
@@ -297,7 +298,7 @@ const styles = StyleSheet.create({
   },
   sermonSpeaker: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
     marginBottom: 8,
   },
   sermonMeta: {
@@ -307,15 +308,15 @@ const styles = StyleSheet.create({
   },
   sermonDate: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   sermonDuration: {
     fontFamily: typography.fonts.poppins.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   sermonDescription: {
     fontFamily: typography.fonts.notoSerif.regular,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     lineHeight: 18,
     marginBottom: 12,
   },
@@ -325,7 +326,7 @@ const styles = StyleSheet.create({
   },
   category: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
   },
   playButton: {
     flexDirection: 'row',
@@ -336,7 +337,7 @@ const styles = StyleSheet.create({
   },
   playButtonText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.medium,
+    fontSize: typography.sizes.sm,
     color: '#fff',
     marginLeft: 4,
   },
@@ -351,7 +352,7 @@ const styles = StyleSheet.create({
   },
   featuredText: {
     fontFamily: typography.fonts.poppins.medium,
-    fontSize: typography.sizes.small,
+    fontSize: typography.sizes.sm,
     color: '#fff',
   },
 });
