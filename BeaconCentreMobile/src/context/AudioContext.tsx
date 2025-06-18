@@ -1,15 +1,15 @@
-// src/context/AudioContext.tsx - IMPROVED WITH BETTER ERROR HANDLING
+// src/context/AudioContext.tsx - RESILIENT IMPLEMENTATION WITH ERROR HANDLING
+
 import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
-import { useAudioPlayer, AudioSource } from 'expo-audio';
-import { Alert } from 'react-native';
 import { AudioSermon } from '@/types/api';
+import TrackPlayerService from '@/services/audio/TrackPlayerService';
 
 // Define complete audio state interface
 interface AudioState {
   currentTrack: AudioSermon | null;
   isPlaying: boolean;
-  position: number;
-  duration: number;
+  position: number; // in seconds
+  duration: number; // in seconds
   queue: AudioSermon[];
   currentIndex: number;
   isLoading: boolean;
@@ -17,10 +17,8 @@ interface AudioState {
   repeatMode: 'off' | 'one' | 'all';
   shuffleMode: boolean;
   volume: number;
-  rate: number;
   isPlayerVisible: boolean;
-  connectionError: boolean; // New: Track connection issues
-  retryCount: number; // New: Track retry attempts
+  isServiceReady: boolean; // Track if the audio service is available
 }
 
 // Define action types
@@ -36,11 +34,9 @@ type AudioAction =
   | { type: 'SET_REPEAT_MODE'; payload: 'off' | 'one' | 'all' }
   | { type: 'SET_SHUFFLE_MODE'; payload: boolean }
   | { type: 'SET_VOLUME'; payload: number }
-  | { type: 'SET_RATE'; payload: number }
   | { type: 'SET_PLAYER_VISIBLE'; payload: boolean }
+  | { type: 'SET_SERVICE_READY'; payload: boolean }
   | { type: 'UPDATE_PLAYBACK_STATUS'; payload: Partial<AudioState> }
-  | { type: 'SET_CONNECTION_ERROR'; payload: boolean }
-  | { type: 'SET_RETRY_COUNT'; payload: number }
   | { type: 'RESET_AUDIO' };
 
 // Initial state
@@ -56,17 +52,15 @@ const initialState: AudioState = {
   repeatMode: 'off',
   shuffleMode: false,
   volume: 1.0,
-  rate: 1.0,
   isPlayerVisible: false,
-  connectionError: false,
-  retryCount: 0,
+  isServiceReady: false,
 };
 
 // Reducer function
 function audioReducer(state: AudioState, action: AudioAction): AudioState {
   switch (action.type) {
     case 'SET_CURRENT_TRACK':
-      return { ...state, currentTrack: action.payload, error: null };
+      return { ...state, currentTrack: action.payload };
     case 'SET_PLAYING':
       return { ...state, isPlaying: action.payload };
     case 'SET_POSITION':
@@ -80,25 +74,21 @@ function audioReducer(state: AudioState, action: AudioAction): AudioState {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'SET_ERROR':
-      return { ...state, error: action.payload, isLoading: false };
+      return { ...state, error: action.payload };
     case 'SET_REPEAT_MODE':
       return { ...state, repeatMode: action.payload };
     case 'SET_SHUFFLE_MODE':
       return { ...state, shuffleMode: action.payload };
     case 'SET_VOLUME':
       return { ...state, volume: action.payload };
-    case 'SET_RATE':
-      return { ...state, rate: action.payload };
     case 'SET_PLAYER_VISIBLE':
       return { ...state, isPlayerVisible: action.payload };
-    case 'SET_CONNECTION_ERROR':
-      return { ...state, connectionError: action.payload };
-    case 'SET_RETRY_COUNT':
-      return { ...state, retryCount: action.payload };
+    case 'SET_SERVICE_READY':
+      return { ...state, isServiceReady: action.payload };
     case 'UPDATE_PLAYBACK_STATUS':
       return { ...state, ...action.payload };
     case 'RESET_AUDIO':
-      return { ...initialState };
+      return { ...initialState, isServiceReady: state.isServiceReady };
     default:
       return state;
   }
@@ -111,20 +101,19 @@ interface AudioContextType {
   // Basic playback controls
   playSermon: (sermon: AudioSermon) => Promise<void>;
   playQueue: (sermons: AudioSermon[], startIndex?: number) => Promise<void>;
-  play: () => void;
-  pause: () => void;
-  stop: () => void;
+  play: () => Promise<void>;
+  pause: () => Promise<void>;
+  stop: () => Promise<void>;
   
   // Navigation controls
   skipToNext: () => Promise<void>;
   skipToPrevious: () => Promise<void>;
-  seekTo: (position: number) => void;
+  seekTo: (position: number) => Promise<void>;
   
   // Mode controls
   toggleRepeat: () => void;
   toggleShuffle: () => void;
-  setVolume: (volume: number) => void;
-  setRate: (rate: number) => void;
+  setVolume: (volume: number) => Promise<void>;
   
   // UI controls
   showMiniPlayer: () => void;
@@ -135,13 +124,12 @@ interface AudioContextType {
   removeFromQueue: (index: number) => void;
   clearQueue: () => void;
   
-  // Error handling
-  retryPlayback: () => Promise<void>;
-  clearError: () => void;
-  
   // Utility methods
-  formatTime: (milliseconds: number) => string;
+  formatTime: (seconds: number) => string;
   getProgress: () => number;
+  
+  // Service status
+  isAudioServiceAvailable: () => boolean;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -149,132 +137,91 @@ const AudioContext = createContext<AudioContextType | undefined>(undefined);
 export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(audioReducer, initialState);
   
-  // expo-audio player hook
-  const player = useAudioPlayer();
-  const currentSource = useRef<string | null>(null);
-  const positionInterval = useRef<number | NodeJS.Timeout | null>(null);
-  const playbackStartTime = useRef<number>(0);
-  const maxRetries = 3;
+  // Get singleton instance safely
+  const trackPlayerService = useRef<TrackPlayerService | null>(null);
+  const statusUpdateInterval = useRef<NodeJS.Timeout | null>(null);
+  const initializationAttempted = useRef(false);
 
-  // Validate audio URL before playing
-  const validateAudioUrl = async (url: string): Promise<boolean> => {
-    try {
-      console.log('🔍 Validating audio URL:', url);
-      const response = await fetch(url, { 
-        method: 'HEAD',
-        timeout: 5000 // 5 second timeout
-      });
-      
-      const contentType = response.headers.get('content-type');
-      const isValid = response.ok && (
-        contentType?.startsWith('audio/') || 
-        contentType?.startsWith('application/octet-stream') ||
-        url.endsWith('.mp3') ||
-        url.endsWith('.wav') ||
-        url.endsWith('.m4a')
-      );
-      
-      console.log(`✅ URL validation result: ${isValid}`, { 
-        status: response.status, 
-        contentType 
-      });
-      
-      return isValid;
-    } catch (error) {
-      console.error('❌ Audio URL validation failed:', error);
-      return false;
-    }
-  };
-
-  // Enhanced error handling
-  const handlePlaybackError = (error: any, sermon: AudioSermon) => {
-    console.error('🚨 Playback error:', error);
-    
-    const errorMessage = error?.message || 'Unknown playback error';
-    let userFriendlyMessage = 'Unable to play audio';
-    
-    if (errorMessage.includes('Network') || errorMessage.includes('network')) {
-      userFriendlyMessage = 'Network error. Please check your connection.';
-      dispatch({ type: 'SET_CONNECTION_ERROR', payload: true });
-    } else if (errorMessage.includes('format') || errorMessage.includes('codec')) {
-      userFriendlyMessage = 'Audio format not supported';
-    } else if (errorMessage.includes('404') || errorMessage.includes('not found')) {
-      userFriendlyMessage = 'Audio file not found';
-    } else if (errorMessage.includes('timeout')) {
-      userFriendlyMessage = 'Connection timeout. Please try again.';
-    }
-    
-    dispatch({ type: 'SET_ERROR', payload: userFriendlyMessage });
-    dispatch({ type: 'SET_LOADING', payload: false });
-    
-    // Show user-friendly alert
-    Alert.alert(
-      'Playback Error',
-      `${userFriendlyMessage}\n\nSermon: "${sermon.title}"`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Retry', 
-          onPress: () => retryPlayback(),
-          style: 'default'
-        }
-      ]
-    );
-  };
-
-  // Update state based on player status
+  // Initialize the service safely
   useEffect(() => {
-    if (player) {
-      // Update playing state
-      dispatch({ type: 'SET_PLAYING', payload: player.playing || false });
-      
-      // Update duration (convert seconds to milliseconds)
-      if (player.duration && player.duration > 0) {
-        dispatch({ type: 'SET_DURATION', payload: player.duration * 1000 });
-      }
-      
-      // Update loading state based on player status
-      const isLoading = player.duration === 0 && state.currentTrack !== null && !state.error;
-      dispatch({ type: 'SET_LOADING', payload: isLoading });
-    }
-  }, [player.playing, player.duration]);
+    const initializeService = async () => {
+      if (initializationAttempted.current) return;
+      initializationAttempted.current = true;
 
-  // Position tracking interval
-  useEffect(() => {
-    if (player.playing && player.currentTime !== undefined) {
-      positionInterval.current = setInterval(() => {
-        if (player.currentTime !== undefined) {
-          // Convert seconds to milliseconds
-          dispatch({ type: 'SET_POSITION', payload: player.currentTime * 1000 });
-        }
-      }, 1000);
-    } else {
-      if (positionInterval.current) {
-        clearInterval(positionInterval.current);
-        positionInterval.current = null;
-      }
-    }
-
-    return () => {
-      if (positionInterval.current) {
-        clearInterval(positionInterval.current);
+      try {
+        console.log('Initializing TrackPlayerService...');
+        trackPlayerService.current = TrackPlayerService.getInstance();
+        
+        // Test if the service is working
+        const status = await trackPlayerService.current.getPlaybackStatus();
+        console.log('TrackPlayerService initialized successfully:', status);
+        
+        dispatch({ type: 'SET_SERVICE_READY', payload: true });
+        dispatch({ type: 'SET_ERROR', payload: null });
+        
+      } catch (error) {
+        console.error('Failed to initialize TrackPlayerService:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Audio service not available. Some features may not work.' });
+        dispatch({ type: 'SET_SERVICE_READY', payload: false });
       }
     };
-  }, [player.playing, player.currentTime]);
+
+    initializeService();
+  }, []);
+
+  // Setup status polling only if service is ready
+  useEffect(() => {
+    if (!state.isServiceReady || !trackPlayerService.current) {
+      return;
+    }
+
+    const startStatusPolling = () => {
+      statusUpdateInterval.current = setInterval(async () => {
+        try {
+          const status = await trackPlayerService.current!.getPlaybackStatus();
+          
+          // Update state based on current player status
+          dispatch({ type: 'SET_PLAYING', payload: status.isPlaying });
+          dispatch({ type: 'SET_POSITION', payload: status.position });
+          dispatch({ type: 'SET_DURATION', payload: status.duration });
+          dispatch({ type: 'SET_VOLUME', payload: status.volume });
+          
+          // Update loading state
+          const isLoading = state.currentTrack !== null && (!status.isLoaded || status.duration === 0);
+          dispatch({ type: 'SET_LOADING', payload: isLoading });
+          
+        } catch (error) {
+          console.error('Status polling error:', error);
+          // Don't spam errors, just log them
+        }
+      }, 1000); // Update every second
+    };
+
+    startStatusPolling();
+
+    // Cleanup interval on unmount
+    return () => {
+      if (statusUpdateInterval.current) {
+        clearInterval(statusUpdateInterval.current);
+      }
+    };
+  }, [state.isServiceReady, state.currentTrack]);
 
   // Handle playback completion
   useEffect(() => {
-    if (player.currentTime && player.duration && 
-        player.currentTime >= player.duration && 
-        !player.playing && 
+    if (state.position > 0 && state.duration > 0 && 
+        state.position >= state.duration - 1 && // Within 1 second of end
+        !state.isPlaying && 
         state.currentTrack) {
+      
+      console.log('Track completed, handling repeat/next');
       
       // Handle repeat modes
       if (state.repeatMode === 'one') {
         // Repeat current track
-        player.seekTo(0);
-        player.play();
-      } else if (state.repeatMode === 'all' || state.currentIndex < state.queue.length - 1) {
+        seekTo(0);
+        play();
+      } else if (state.repeatMode === 'all' || (trackPlayerService.current?.hasNext())) {
         // Play next track
         skipToNext();
       } else {
@@ -283,142 +230,155 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         dispatch({ type: 'SET_POSITION', payload: 0 });
       }
     }
-  }, [player.currentTime, player.duration, player.playing]);
+  }, [state.position, state.duration, state.isPlaying, state.currentTrack, state.repeatMode]);
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (positionInterval.current) {
-        clearInterval(positionInterval.current);
-      }
-    };
-  }, []);
+  // Utility to check if service is available
+  const isAudioServiceAvailable = (): boolean => {
+    return state.isServiceReady && trackPlayerService.current !== null;
+  };
 
-  // Enhanced playback function with validation and retry logic
+  // Basic playback controls with error handling
   const playSermon = async (sermon: AudioSermon) => {
+    if (!isAudioServiceAvailable()) {
+      dispatch({ type: 'SET_ERROR', payload: 'Audio service is not available. Please restart the app.' });
+      return;
+    }
+
     try {
-      console.log('🎵 Attempting to play sermon:', sermon.title);
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
-      dispatch({ type: 'SET_CONNECTION_ERROR', payload: false });
 
-      // Validate audio URL first
-      const isValidUrl = await validateAudioUrl(sermon.audio_url);
+      console.log('Starting to play sermon:', sermon.title);
+
+      // Validate URL first
+      const isValidUrl = await trackPlayerService.current!.validateAudioUrl(sermon.audio_url);
       if (!isValidUrl) {
-        throw new Error('Invalid or inaccessible audio URL');
+        throw new Error('Invalid audio URL or audio file not accessible');
       }
 
-      // Only replace source if it's different
-      if (currentSource.current !== sermon.audio_url) {
-        console.log('🔄 Loading new audio source:', sermon.audio_url);
-        await player.replace(sermon.audio_url);
-        currentSource.current = sermon.audio_url;
-        
-        // Wait for audio to load with timeout
-        let attempts = 0;
-        const maxAttempts = 10;
-        
-        while (attempts < maxAttempts && player.duration === 0) {
-          await new Promise(resolve => setTimeout(resolve, 300));
-          attempts++;
-        }
-        
-        if (player.duration === 0) {
-          throw new Error('Audio failed to load within timeout period');
-        }
-      }
-
-      await player.play();
-      playbackStartTime.current = Date.now();
+      await trackPlayerService.current!.playSermon(sermon);
 
       dispatch({ type: 'SET_CURRENT_TRACK', payload: sermon });
       dispatch({ type: 'SET_QUEUE', payload: [sermon] });
       dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
       dispatch({ type: 'SET_PLAYER_VISIBLE', payload: true });
-      dispatch({ type: 'SET_LOADING', payload: false });
-      dispatch({ type: 'SET_RETRY_COUNT', payload: 0 });
       
-      console.log('✅ Successfully playing sermon:', sermon.title);
+      console.log('Successfully started playing:', sermon.title);
     } catch (error) {
-      console.error('❌ Failed to play sermon:', error);
-      handlePlaybackError(error, sermon);
+      console.error('Failed to play sermon:', error);
+      dispatch({ type: 'SET_ERROR', payload: `Failed to play audio: ${error}` });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  // Retry playback function
-  const retryPlayback = async () => {
-    if (state.currentTrack && state.retryCount < maxRetries) {
-      dispatch({ type: 'SET_RETRY_COUNT', payload: state.retryCount + 1 });
-      console.log(`🔄 Retrying playback (attempt ${state.retryCount + 1}/${maxRetries})`);
-      await playSermon(state.currentTrack);
-    } else {
-      dispatch({ type: 'SET_ERROR', payload: 'Maximum retry attempts reached' });
+  const playQueue = async (sermons: AudioSermon[], startIndex = 0) => {
+    if (!isAudioServiceAvailable()) {
+      dispatch({ type: 'SET_ERROR', payload: 'Audio service is not available. Please restart the app.' });
+      return;
+    }
+
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      await trackPlayerService.current!.playPlaylist(sermons, startIndex);
+      
+      dispatch({ type: 'SET_QUEUE', payload: sermons });
+      dispatch({ type: 'SET_CURRENT_INDEX', payload: startIndex });
+      dispatch({ type: 'SET_CURRENT_TRACK', payload: sermons[startIndex] });
+      dispatch({ type: 'SET_PLAYER_VISIBLE', payload: true });
+      
+      console.log('Started playing queue from index:', startIndex);
+    } catch (error) {
+      console.error('Failed to play queue:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to play audio queue. Please try again.' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  // Clear error function
-  const clearError = () => {
-    dispatch({ type: 'SET_ERROR', payload: null });
-    dispatch({ type: 'SET_CONNECTION_ERROR', payload: false });
-    dispatch({ type: 'SET_RETRY_COUNT', payload: 0 });
-  };
-
-  // Enhanced play queue function
-  const playQueue = async (sermons: AudioSermon[], startIndex: number = 0) => {
-    if (sermons.length === 0 || startIndex >= sermons.length) return;
+  const play = async () => {
+    if (!isAudioServiceAvailable()) return;
     
-    dispatch({ type: 'SET_QUEUE', payload: sermons });
-    dispatch({ type: 'SET_CURRENT_INDEX', payload: startIndex });
-    await playSermon(sermons[startIndex]);
-  };
-
-  // Basic controls
-  const play = () => {
-    if (state.currentTrack) {
-      player.play();
+    try {
+      await trackPlayerService.current!.play();
+    } catch (error) {
+      console.error('Failed to play:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to play audio.' });
     }
   };
 
-  const pause = () => {
-    player.pause();
+  const pause = async () => {
+    if (!isAudioServiceAvailable()) return;
+    
+    try {
+      await trackPlayerService.current!.pause();
+    } catch (error) {
+      console.error('Failed to pause:', error);
+    }
   };
 
-  const stop = () => {
-    player.pause();
-    player.seekTo(0);
-    dispatch({ type: 'SET_PLAYING', payload: false });
-    dispatch({ type: 'SET_POSITION', payload: 0 });
-    dispatch({ type: 'SET_PLAYER_VISIBLE', payload: false });
+  const stop = async () => {
+    if (!isAudioServiceAvailable()) return;
+    
+    try {
+      await trackPlayerService.current!.stop();
+      dispatch({ type: 'SET_PLAYER_VISIBLE', payload: false });
+      dispatch({ type: 'SET_POSITION', payload: 0 });
+    } catch (error) {
+      console.error('Failed to stop:', error);
+    }
   };
 
-  const seekTo = (position: number) => {
-    const positionInSeconds = position / 1000;
-    player.seekTo(positionInSeconds);
-    dispatch({ type: 'SET_POSITION', payload: position });
-  };
-
-  // Navigation controls
   const skipToNext = async () => {
-    if (state.queue.length > 0 && state.currentIndex < state.queue.length - 1) {
-      const nextIndex = state.currentIndex + 1;
-      dispatch({ type: 'SET_CURRENT_INDEX', payload: nextIndex });
-      await playSermon(state.queue[nextIndex]);
+    if (!isAudioServiceAvailable()) return;
+    
+    try {
+      if (trackPlayerService.current!.hasNext()) {
+        await trackPlayerService.current!.skipToNext();
+        const currentSermon = trackPlayerService.current!.getCurrentSermon();
+        if (currentSermon) {
+          dispatch({ type: 'SET_CURRENT_TRACK', payload: currentSermon });
+          dispatch({ type: 'SET_CURRENT_INDEX', payload: trackPlayerService.current!.getCurrentIndex() });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to skip to next:', error);
     }
   };
 
   const skipToPrevious = async () => {
-    if (state.queue.length > 0 && state.currentIndex > 0) {
-      const prevIndex = state.currentIndex - 1;
-      dispatch({ type: 'SET_CURRENT_INDEX', payload: prevIndex });
-      await playSermon(state.queue[prevIndex]);
+    if (!isAudioServiceAvailable()) return;
+    
+    try {
+      if (trackPlayerService.current!.hasPrevious()) {
+        await trackPlayerService.current!.skipToPrevious();
+        const currentSermon = trackPlayerService.current!.getCurrentSermon();
+        if (currentSermon) {
+          dispatch({ type: 'SET_CURRENT_TRACK', payload: currentSermon });
+          dispatch({ type: 'SET_CURRENT_INDEX', payload: trackPlayerService.current!.getCurrentIndex() });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to skip to previous:', error);
     }
   };
 
-  // Mode controls
+  const seekTo = async (position: number) => {
+    if (!isAudioServiceAvailable()) return;
+    
+    try {
+      await trackPlayerService.current!.seekTo(position);
+    } catch (error) {
+      console.error('Failed to seek:', error);
+    }
+  };
+
   const toggleRepeat = () => {
-    const modes: ('off' | 'one' | 'all')[] = ['off', 'one', 'all'];
-    const currentModeIndex = modes.indexOf(state.repeatMode);
-    const nextMode = modes[(currentModeIndex + 1) % modes.length];
+    const modes: Array<'off' | 'one' | 'all'> = ['off', 'one', 'all'];
+    const currentIndex = modes.indexOf(state.repeatMode);
+    const nextMode = modes[(currentIndex + 1) % modes.length];
     dispatch({ type: 'SET_REPEAT_MODE', payload: nextMode });
   };
 
@@ -426,19 +386,17 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     dispatch({ type: 'SET_SHUFFLE_MODE', payload: !state.shuffleMode });
   };
 
-  const setVolume = (volume: number) => {
-    const clampedVolume = Math.max(0, Math.min(1, volume));
-    dispatch({ type: 'SET_VOLUME', payload: clampedVolume });
-    // Note: expo-audio doesn't have direct volume control, you might need to implement this differently
+  const setVolume = async (volume: number) => {
+    if (!isAudioServiceAvailable()) return;
+    
+    try {
+      await trackPlayerService.current!.setVolume(volume);
+      dispatch({ type: 'SET_VOLUME', payload: volume });
+    } catch (error) {
+      console.error('Failed to set volume:', error);
+    }
   };
 
-  const setRate = (rate: number) => {
-    const clampedRate = Math.max(0.25, Math.min(2, rate));
-    dispatch({ type: 'SET_RATE', payload: clampedRate });
-    // Note: expo-audio doesn't have direct playback rate control
-  };
-
-  // UI controls
   const showMiniPlayer = () => {
     dispatch({ type: 'SET_PLAYER_VISIBLE', payload: true });
   };
@@ -447,7 +405,6 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     dispatch({ type: 'SET_PLAYER_VISIBLE', payload: false });
   };
 
-  // Queue management
   const addToQueue = (sermon: AudioSermon) => {
     const newQueue = [...state.queue, sermon];
     dispatch({ type: 'SET_QUEUE', payload: newQueue });
@@ -457,72 +414,70 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const newQueue = state.queue.filter((_, i) => i !== index);
     dispatch({ type: 'SET_QUEUE', payload: newQueue });
     
-    if (index === state.currentIndex && newQueue.length > 0) {
-      const newIndex = Math.min(state.currentIndex, newQueue.length - 1);
-      playQueue(newQueue, newIndex);
-    } else if (newQueue.length === 0) {
-      stop();
-    } else if (index < state.currentIndex) {
+    // Adjust current index if necessary
+    if (index < state.currentIndex) {
       dispatch({ type: 'SET_CURRENT_INDEX', payload: state.currentIndex - 1 });
+    } else if (index === state.currentIndex && newQueue.length === 0) {
+      stop();
     }
   };
 
   const clearQueue = () => {
     dispatch({ type: 'SET_QUEUE', payload: [] });
+    dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
     stop();
   };
 
-  // Utility methods
-  const formatTime = (milliseconds: number): string => {
-    const totalSeconds = Math.floor(milliseconds / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getProgress = (): number => {
     if (state.duration > 0) {
-      return Math.min(100, (state.position / state.duration) * 100);
+      return state.position / state.duration;
     }
     return 0;
   };
 
+  const contextValue: AudioContextType = {
+    state,
+    playSermon,
+    playQueue,
+    play,
+    pause,
+    stop,
+    skipToNext,
+    skipToPrevious,
+    seekTo,
+    toggleRepeat,
+    toggleShuffle,
+    setVolume,
+    showMiniPlayer,
+    hideMiniPlayer,
+    addToQueue,
+    removeFromQueue,
+    clearQueue,
+    formatTime,
+    getProgress,
+    isAudioServiceAvailable,
+  };
+
   return (
-    <AudioContext.Provider
-      value={{
-        state,
-        playSermon,
-        playQueue,
-        play,
-        pause,
-        stop,
-        skipToNext,
-        skipToPrevious,
-        seekTo,
-        toggleRepeat,
-        toggleShuffle,
-        setVolume,
-        setRate,
-        showMiniPlayer,
-        hideMiniPlayer,
-        addToQueue,
-        removeFromQueue,
-        clearQueue,
-        retryPlayback,
-        clearError,
-        formatTime,
-        getProgress,
-      }}
-    >
+    <AudioContext.Provider value={contextValue}>
       {children}
     </AudioContext.Provider>
   );
 };
 
-export const useAudio = () => {
+export const useAudio = (): AudioContextType => {
   const context = useContext(AudioContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAudio must be used within an AudioContextProvider');
   }
   return context;
 };
+
+// Export the context for testing
+export { AudioContext };
