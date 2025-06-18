@@ -1,90 +1,60 @@
-// src/data/mockData.ts - COMPLETE MOCK DATA FOR THE BEACON CENTRE
+// src/services/api/mockData.ts - FIXED WITH WORKING AUDIO URLs
 import { Devotional, VideoSermon, AudioSermon, Announcement, Category } from '@/types/api';
 
 // DEVOTIONALS MOCK DATA
 export const mockDevotionals: Devotional[] = [
   {
     id: 1,
-    date: new Date().toISOString().split('T')[0], // Today
+    date: "2024-06-18",
     title: "Walking in Divine Purpose",
-    verse_text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future.",
+    verse_text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.",
     verse_reference: "Jeremiah 29:11",
-    content: `God has a unique plan for each of our lives. Sometimes we may feel lost or uncertain about our direction, but we can rest assured that our Heavenly Father knows exactly where He is leading us.
-
-His plans are not to harm us but to prosper us. When we face challenges and difficulties, remember that these are often stepping stones to the greater purpose God has in store for us.
-
-Today, take time to seek God's will for your life. Trust in His timing and His ways, even when they don't make sense to our human understanding. He is preparing you for something beautiful.
-
-Walk boldly in the confidence that you are exactly where God wants you to be in this moment. Your current season is preparing you for your next level of blessing and responsibility.`,
-    prayer: "Dear Lord, help me to trust in Your perfect plan for my life. Give me patience to wait on Your timing and wisdom to understand Your ways. May I walk confidently in the purpose You have designed specifically for me. In Jesus' name, Amen.",
+    content: "God has a specific plan and purpose for your life. Today, remember that every step you take is guided by His loving hand. Trust in His timing and His ways, even when the path seems unclear. Your purpose is not just about what you do, but about who you become in the process of following Him.\n\nWhen we align our hearts with God's will, we discover that His plans far exceed our own limited vision. He sees the bigger picture and knows exactly what we need to flourish. Take time today to seek His direction through prayer and His Word.",
+    prayer: "Heavenly Father, help me to trust in Your perfect plan for my life. Guide my steps and help me to walk in the purpose You have designed for me. Give me patience when I cannot see the way forward, and faith to believe that You are working all things together for my good. Amen.",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 2,
-    date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // Yesterday
-    title: "The Power of Persistent Prayer",
-    verse_text: "Pray without ceasing. In everything give thanks; for this is the will of God in Christ Jesus for you.",
-    verse_reference: "1 Thessalonians 5:17-18",
-    content: `Prayer is not just a religious duty; it's our direct line of communication with our Creator. When we pray without ceasing, we maintain a constant awareness of God's presence in our lives.
-
-Persistent prayer changes us more than it changes our circumstances. As we spend time in God's presence, our hearts align with His will, and we begin to see situations from His perspective.
-
-Don't be discouraged if answers don't come immediately. God's timing is perfect, and sometimes the waiting period is part of His plan to prepare us for what He wants to give us.
-
-Make prayer a lifestyle, not just an emergency hotline. Talk to God throughout your day - in your car, at work, during your quiet moments. He is always listening and always ready to respond.`,
-    prayer: "Father, teach me to pray without ceasing. Help me to make prayer a natural part of my daily rhythm. Strengthen my faith when answers seem delayed, and help me to trust in Your perfect timing. Thank You for always being available to hear from me. Amen.",
+    date: "2024-06-17",
+    title: "The Power of Gratitude",
+    verse_text: "Give thanks in all circumstances; for this is God's will for you in Christ Jesus.",
+    verse_reference: "1 Thessalonians 5:18",
+    content: "Gratitude transforms our perspective and opens our hearts to God's blessings. Even in difficult times, we can find reasons to thank God. Gratitude is not about denying our struggles, but about recognizing God's presence and faithfulness in the midst of them.\n\nWhen we cultivate a heart of thanksgiving, we shift our focus from what we lack to what we have been given. This simple practice can revolutionize our daily experience and deepen our relationship with God.",
+    prayer: "Lord, help me to develop a grateful heart. Open my eyes to see Your blessings in every day, and give me the wisdom to thank You in all circumstances. Let gratitude be my natural response to Your goodness. Amen.",
     created_at: new Date(Date.now() - 86400000).toISOString(),
     updated_at: new Date(Date.now() - 86400000).toISOString(),
   },
   {
     id: 3,
-    date: new Date(Date.now() - 172800000).toISOString().split('T')[0], // 2 days ago
-    title: "Forgiveness: The Key to Freedom",
-    verse_text: "Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you.",
-    verse_reference: "Ephesians 4:32",
-    content: `Forgiveness is one of the most powerful forces in the universe. When we choose to forgive, we don't just free the person who hurt us - we free ourselves from the prison of bitterness and resentment.
-
-Christ's example of forgiveness sets the standard for how we should treat others. He forgave those who crucified Him, showing us that no offense is too great for forgiveness.
-
-Forgiveness doesn't mean forgetting or excusing harmful behavior. It means choosing to release the right to revenge and trusting God to handle justice in His way and time.
-
-Today, ask God to reveal any areas of unforgiveness in your heart. Choose to release those who have hurt you, and experience the freedom that comes with letting go.`,
-    prayer: "Lord Jesus, thank You for forgiving me completely. Help me to extend that same forgiveness to others, even when it's difficult. Show me any areas of unforgiveness in my heart and give me the strength to let go. Fill my heart with Your love and compassion. Amen.",
+    date: "2024-06-16",
+    title: "Overcoming Fear with Faith",
+    verse_text: "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.",
+    verse_reference: "Joshua 1:9",
+    content: "Fear is one of the greatest obstacles to living the abundant life God has planned for us. But God has not given us a spirit of fear, but of power, love, and sound mind. Today, choose faith over fear.\n\nWhen fear whispers 'what if,' faith responds with 'even if.' Even if circumstances seem overwhelming, God is still in control. Even if the future seems uncertain, God holds tomorrow in His hands.",
+    prayer: "Father, when fear tries to grip my heart, remind me of Your promises. Help me to be strong and courageous, knowing that You are always with me. Replace my anxiety with Your peace and my doubt with unwavering faith. Amen.",
     created_at: new Date(Date.now() - 172800000).toISOString(),
     updated_at: new Date(Date.now() - 172800000).toISOString(),
   },
   {
     id: 4,
-    date: new Date(Date.now() - 259200000).toISOString().split('T')[0], // 3 days ago
-    title: "Faith in the Storm",
-    verse_text: "We live by faith, not by sight.",
-    verse_reference: "2 Corinthians 5:7",
-    content: `Life will inevitably bring storms - times of uncertainty, fear, and challenge. But these storms are not meant to destroy us; they're meant to strengthen our faith and reveal God's faithfulness.
-
-When we can't see the way forward, faith becomes our compass. It's not about having all the answers; it's about trusting the One who does.
-
-Faith doesn't eliminate the storm, but it gives us peace in the midst of it. When we anchor our trust in God's character rather than our circumstances, we can have supernatural peace even in chaos.
-
-Remember, every storm you've weathered has made you stronger. God has been faithful before, and He will be faithful again. Trust Him today, even when you can't see tomorrow.`,
-    prayer: "Heavenly Father, when the storms of life rage around me, help me to keep my eyes fixed on You. Strengthen my faith when I can't see the way forward. Remind me of Your past faithfulness and help me to trust You with my future. Be my anchor in every storm. Amen.",
+    date: "2024-06-15",
+    title: "The Gift of New Beginnings",
+    verse_text: "Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!",
+    verse_reference: "2 Corinthians 5:17",
+    content: "Every day with God is an opportunity for a fresh start. No matter what happened yesterday, today offers new possibilities. God's mercies are new every morning, and His grace is sufficient for every challenge we face.\n\nDon't let past mistakes define your future. In Christ, you are a new creation with unlimited potential to grow, change, and impact the world around you.",
+    prayer: "Thank You, Lord, for the gift of new beginnings. Help me to release the past and embrace the future You have prepared for me. Make me new from the inside out, and use me to bring hope to others. Amen.",
     created_at: new Date(Date.now() - 259200000).toISOString(),
     updated_at: new Date(Date.now() - 259200000).toISOString(),
   },
   {
     id: 5,
-    date: new Date(Date.now() - 345600000).toISOString().split('T')[0], // 4 days ago
-    title: "The Joy of Giving",
-    verse_text: "It is more blessed to give than to receive.",
-    verse_reference: "Acts 20:35",
-    content: `True joy is found not in what we can get, but in what we can give. When we adopt a lifestyle of generosity, we reflect the heart of our generous God who gave His only Son for us.
-
-Giving doesn't always have to be monetary. We can give our time, our talents, our encouragement, our presence, and our prayers. Every act of giving, no matter how small, makes a difference.
-
-When we give with a cheerful heart, we experience a joy that money can't buy. We become partners with God in blessing others and advancing His kingdom on earth.
-
-Look for opportunities today to be a blessing to someone else. You'll be amazed at how much joy comes back to you when you focus on giving rather than receiving.`,
-    prayer: "Lord, thank You for Your incredible generosity toward me. Help me to have a generous heart like Yours. Show me opportunities to bless others today, and give me joy in giving. Use me as a vessel of Your love and provision to those around me. Amen.",
+    date: "2024-06-14",
+    title: "Finding Peace in God's Presence",
+    verse_text: "Peace I leave with you; my peace I give you. I do not give to you as the world gives. Do not let your hearts be troubled and do not be afraid.",
+    verse_reference: "John 14:27",
+    content: "In a world filled with chaos and uncertainty, God offers us a peace that surpasses all understanding. This peace is not dependent on our circumstances, but on our relationship with Him.\n\nWhen we rest in God's presence, we find the calm our souls crave. His peace guards our hearts and minds, protecting us from the storms of life.",
+    prayer: "Prince of Peace, fill my heart with Your perfect peace. When the world around me feels chaotic, help me to find my rest in You. Let Your peace rule in my heart and flow through me to others. Amen.",
     created_at: new Date(Date.now() - 345600000).toISOString(),
     updated_at: new Date(Date.now() - 345600000).toISOString(),
   }
@@ -159,13 +129,13 @@ export const mockVideoSermons: VideoSermon[] = [
   }
 ];
 
-// AUDIO SERMONS MOCK DATA
+// AUDIO SERMONS MOCK DATA - WITH WORKING AUDIO URLs
 export const mockAudioSermons: AudioSermon[] = [
   {
     id: 1,
     title: "Breaking Through Barriers",
     speaker: "Pastor John Wesley",
-    audio_url: "https://pixabay.com/music/beats-eona-emotional-ambient-pop-351436",
+    audio_url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     cloudinary_public_id: "beacon-sermons/audio/breaking-through-barriers",
     duration: "48:25",
     file_size: 46750000,
@@ -179,7 +149,7 @@ export const mockAudioSermons: AudioSermon[] = [
     id: 2,
     title: "The Grace Revolution",
     speaker: "Pastor Maria Rodriguez",
-    audio_url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav",
+    audio_url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
     cloudinary_public_id: "beacon-sermons/audio/grace-revolution",
     duration: "52:10",
     file_size: 50240000,
@@ -193,7 +163,7 @@ export const mockAudioSermons: AudioSermon[] = [
     id: 3,
     title: "Financial Stewardship",
     speaker: "Pastor David Miller",
-    audio_url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav",
+    audio_url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
     cloudinary_public_id: "beacon-sermons/audio/financial-stewardship",
     duration: "44:30",
     file_size: 42880000,
@@ -207,7 +177,7 @@ export const mockAudioSermons: AudioSermon[] = [
     id: 4,
     title: "Building Strong Relationships",
     speaker: "Pastor Sarah Johnson",
-    audio_url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav",
+    audio_url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
     cloudinary_public_id: "beacon-sermons/audio/building-relationships",
     duration: "41:15",
     file_size: 39720000,
@@ -221,7 +191,7 @@ export const mockAudioSermons: AudioSermon[] = [
     id: 5,
     title: "The Power of Forgiveness",
     speaker: "Pastor Michael Thompson",
-    audio_url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav",
+    audio_url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
     cloudinary_public_id: "beacon-sermons/audio/power-of-forgiveness",
     duration: "39:45",
     file_size: 38280000,
@@ -251,13 +221,13 @@ Special Speakers:
 - Dr. Joyce Meyer (Faith & Victory)
 - Pastor T.D. Jakes (Purpose & Destiny)
 
-Register now at our website or contact the church office. Don't miss this life-changing experience!`,
+Register now at our website or contact the church office.`,
     priority: "high",
     start_date: "2024-06-01",
-    expiry_date: "2024-07-17",
-    image_url: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=600&fit=crop",
-    cloudinary_public_id: "beacon-announcements/annual-conference-2024",
-    action_url: "https://thebeaconcentre.org/conference2024",
+    expiry_date: "2024-07-20",
+    image_url: "https://picsum.photos/800/600?random=1",
+    cloudinary_public_id: "beacon-announcements/conference-2024",
+    action_url: "https://beaconcentre.ng/conference",
     action_text: "Register Now",
     is_active: true,
     created_at: new Date().toISOString(),
@@ -265,121 +235,117 @@ Register now at our website or contact the church office. Don't miss this life-c
   {
     id: 2,
     title: "Youth Camp Registration Open",
-    content: `Calling all youth ages 13-18! Our summer youth camp is back with more adventure, fun, and spiritual growth than ever before.
+    content: `Calling all teenagers! Our annual Youth Camp is back with an exciting theme: "Generation Next: Rising Up for God"
 
-Camp Highlights:
-🏕️ 5 Days of Adventure & Fun
-⛰️ Outdoor Activities & Sports
-🎵 Worship & Music Sessions
-📖 Bible Study & Life Skills
-🍕 Great Food & Fellowship
+What to Expect:
+🎯 Life-changing workshops
+🏆 Fun competitions and games  
+🎵 Powerful worship sessions
+🤝 New friendships
+🙏 Spiritual breakthrough
 
-Dates: August 10-14, 2024
-Location: Camp Shiloh, Jos
-Cost: ₦25,000 per person
-Early Bird Special: Register before July 1st and save ₦5,000!
+Camp Details:
+📅 August 5-9, 2024
+📍 Camp Galilee, Jos
+💰 ₦25,000 per camper
+🚌 Transportation provided
 
-Contact Pastor Youth Department for more information and registration forms.`,
+Early bird discount: Register before July 1st and save ₦5,000!`,
     priority: "medium",
-    start_date: "2024-05-15",
-    expiry_date: "2024-08-10",
-    image_url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&h=600&fit=crop",
+    start_date: "2024-06-10",
+    expiry_date: "2024-08-01",
+    image_url: "https://picsum.photos/800/600?random=2",
     cloudinary_public_id: "beacon-announcements/youth-camp-2024",
-    action_url: "https://thebeaconcentre.org/youthcamp",
-    action_text: "Learn More",
+    action_url: "https://beaconcentre.ng/youth-camp",
+    action_text: "Register",
     is_active: true,
     created_at: new Date(Date.now() - 86400000).toISOString(),
   },
   {
     id: 3,
-    title: "New Members Class",
-    content: `Are you new to The Beacon Centre? Join our New Members Class to learn more about our church family, vision, and how you can get involved.
+    title: "New Member's Class",
+    content: `Are you new to The Beacon Centre? Join our comprehensive New Member's Class to learn about our vision, values, and how you can become an integral part of our church family.
 
 What You'll Learn:
-✓ Our church history and vision
-✓ Core beliefs and values
-✓ Ministry opportunities
-✓ How to get connected
-✓ Membership benefits and responsibilities
+📖 Our church history and mission
+💒 Core beliefs and values
+🤝 How to get involved
+🎯 Available ministries and programs
+❤️ How to find your place in our community
 
 Class Schedule:
 📅 Every Sunday for 4 weeks
-🕘 2:00 PM - 3:30 PM
+🕐 10:00 AM - 11:00 AM
 📍 Conference Room B
-☕ Light refreshments provided
+📝 Registration required
 
-Next class starts: June 30, 2024
-Registration required - speak to any usher or contact the church office.`,
+Light refreshments will be provided.`,
     priority: "low",
     start_date: "2024-06-15",
-    expiry_date: "2024-06-29",
-    image_url: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&h=600&fit=crop",
+    expiry_date: "2024-12-31",
+    image_url: "https://picsum.photos/800/600?random=3",
     cloudinary_public_id: "beacon-announcements/new-members-class",
-    action_url: null,
-    action_text: null,
+    action_url: "https://beaconcentre.ng/new-members",
+    action_text: "Learn More",
     is_active: true,
     created_at: new Date(Date.now() - 172800000).toISOString(),
   },
   {
     id: 4,
-    title: "Prayer Warriors Needed",
-    content: `Join our dedicated team of prayer warriors! We're looking for committed believers to intercede for our church, community, and nation.
+    title: "Community Outreach Program",
+    content: `Join us as we reach out to our community with God's love! This month, we're organizing a special outreach program to bless families in need.
 
-Prayer Team Commitment:
-🙏 1 hour weekly prayer commitment
-📱 WhatsApp prayer group participation
-📧 Weekly prayer requests updates
-⛪ Monthly prayer team gathering
-🌍 Special prayer assignments
+Activities:
+🥘 Free meal distribution
+👕 Clothing drive
+📚 Educational support for children
+🏥 Free medical checkup
+💇 Free haircuts and beauty services
 
-Benefits:
-- Deeper relationship with God
-- Training in effective intercession
-- Fellowship with like-minded believers
-- Making eternal impact through prayer
+How You Can Help:
+• Volunteer your time
+• Donate clothes, food, or money
+• Spread the word
+• Pray for the outreach
 
-If you feel called to join this vital ministry, contact Pastor Ruth or sign up at the information desk.`,
+Together, we can make a difference!`,
     priority: "medium",
-    start_date: "2024-06-10",
-    expiry_date: "2024-07-31",
-    image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop",
-    cloudinary_public_id: "beacon-announcements/prayer-warriors",
-    action_url: "mailto:prayer@thebeaconcentre.org",
-    action_text: "Contact Us",
+    start_date: "2024-06-20",
+    expiry_date: "2024-07-01",
+    image_url: "https://picsum.photos/800/600?random=4",
+    cloudinary_public_id: "beacon-announcements/community-outreach",
+    action_url: "https://beaconcentre.ng/outreach",
+    action_text: "Volunteer",
     is_active: true,
     created_at: new Date(Date.now() - 259200000).toISOString(),
   },
   {
     id: 5,
-    title: "Community Outreach Program",
-    content: `Be the hands and feet of Jesus in our community! Join our monthly outreach program to serve those in need.
+    title: "Marriage Enrichment Seminar",
+    content: `Strengthen your marriage with biblical principles! Join us for a powerful two-day seminar designed to help couples build stronger, more fulfilling relationships.
 
-This Month's Outreach:
-📍 Location: Utako Market Area
-📅 Date: Last Saturday of every month
-🕘 Time: 9:00 AM - 2:00 PM
+Topics Covered:
+💕 Love languages and communication
+🤝 Conflict resolution God's way
+💰 Financial unity in marriage
+👨‍👩‍👧‍👦 Parenting as a team
+🙏 Praying together as a couple
 
-Activities:
-- Free medical checkups
-- Food distribution
-- Children's activities
-- Prayer and counseling
-- Community clean-up
+Seminar Details:
+📅 July 20-21, 2024
+🕘 9:00 AM - 4:00 PM both days
+📍 Main Auditorium
+💰 ₦10,000 per couple
+🍽️ Lunch included
 
-What to Bring:
-- Willing heart to serve
-- Comfortable clothes
-- Water bottle
-- Any skills you'd like to share
-
-Transportation provided from church. Meet at the main entrance at 8:30 AM.`,
-    priority: "low",
-    start_date: "2024-06-01",
-    expiry_date: "2024-12-31",
-    image_url: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&h=600&fit=crop",
-    cloudinary_public_id: "beacon-announcements/community-outreach",
-    action_url: null,
-    action_text: null,
+Register early as space is limited!`,
+    priority: "medium",
+    start_date: "2024-06-25",
+    expiry_date: "2024-07-19",
+    image_url: "https://picsum.photos/800/600?random=5",
+    cloudinary_public_id: "beacon-announcements/marriage-seminar",
+    action_url: "https://beaconcentre.ng/marriage-seminar",
+    action_text: "Register",
     is_active: true,
     created_at: new Date(Date.now() - 345600000).toISOString(),
   }
@@ -390,28 +356,28 @@ export const mockCategories: Category[] = [
   {
     id: 1,
     name: "Faith",
-    description: "Messages about building and strengthening your faith in God",
+    description: "Building and strengthening your faith in God",
     color: "#3B82F6", // Blue
     created_at: new Date().toISOString(),
   },
   {
     id: 2,
     name: "Prayer",
-    description: "Teaching on the power and practice of prayer",
+    description: "Developing a powerful prayer life",
     color: "#8B5CF6", // Purple
     created_at: new Date().toISOString(),
   },
   {
     id: 3,
-    name: "Worship",
-    description: "Understanding true worship and living a worshipful life",
-    color: "#F59E0B", // Amber
+    name: "Love",
+    description: "Understanding and practicing God's love",
+    color: "#EC4899", // Pink
     created_at: new Date().toISOString(),
   },
   {
     id: 4,
-    name: "Love",
-    description: "God's love for us and our love for others",
+    name: "Worship",
+    description: "True worship and praise to God",
     color: "#EF4444", // Red
     created_at: new Date().toISOString(),
   },
@@ -491,7 +457,8 @@ export const getActiveMockAnnouncements = (): Announcement[] => {
   const today = new Date().toISOString().split('T')[0];
   return mockAnnouncements.filter(announcement => {
     const startDate = new Date(announcement.start_date);
-    const expiryDate = announcement.expiry_date ? new Date(announcement.expiry_date) : null;
+    const expiryDate = announcement.expiry_date ? 
+      new Date(announcement.expiry_date) : null;
     const currentDate = new Date(today);
     
     return announcement.is_active && 
@@ -504,6 +471,55 @@ export const getMockCategoryByName = (name: string): Category | null => {
   return mockCategories.find(category => 
     category.name.toLowerCase() === name.toLowerCase()
   ) || null;
+};
+
+// **MISSING FUNCTION ADDED** - This was causing the error!
+export const getMockDataByEndpoint = (endpoint: string): any => {
+  console.log('🔍 Getting mock data for endpoint:', endpoint);
+  
+  // Remove query parameters and normalize endpoint
+  const cleanEndpoint = endpoint.split('?')[0].toLowerCase();
+  
+  if (cleanEndpoint.includes('devotionals')) {
+    if (cleanEndpoint.includes('today')) {
+      return getTodaysMockDevotional();
+    } else if (cleanEndpoint.includes('date/')) {
+      const dateMatch = endpoint.match(/date\/(.+)/);
+      if (dateMatch) {
+        return getMockDevotionalByDate(dateMatch[1]);
+      }
+    }
+    return mockDevotionals;
+  }
+  
+  if (cleanEndpoint.includes('video-sermons')) {
+    if (cleanEndpoint.includes('featured')) {
+      return mockVideoSermons.filter(sermon => sermon.is_featured);
+    }
+    return mockVideoSermons;
+  }
+  
+  if (cleanEndpoint.includes('audio-sermons')) {
+    if (cleanEndpoint.includes('featured')) {
+      return mockAudioSermons.filter(sermon => sermon.is_featured);
+    }
+    return mockAudioSermons;
+  }
+  
+  if (cleanEndpoint.includes('announcements')) {
+    if (cleanEndpoint.includes('active')) {
+      return getActiveMockAnnouncements();
+    }
+    return mockAnnouncements;
+  }
+  
+  if (cleanEndpoint.includes('categories')) {
+    return mockCategories;
+  }
+  
+  // Default fallback
+  console.log('⚠️ No mock data found for endpoint:', endpoint);
+  return [];
 };
 
 // COMBINED MOCK DATA EXPORT
@@ -521,6 +537,7 @@ export const mockData = {
   getSermonsByCategory: getMockSermonsByCategory,
   getActiveAnnouncements: getActiveMockAnnouncements,
   getCategoryByName: getMockCategoryByName,
+  getDataByEndpoint: getMockDataByEndpoint, // Added this export too
 };
 
 export default mockData;

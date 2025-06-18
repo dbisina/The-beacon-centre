@@ -1,4 +1,4 @@
-// src/hooks/useAudioPlayer.ts - EXPO-AUDIO COMPATIBLE
+// src/hooks/useAudioPlayer.ts - COMPLETE EXPO-AUDIO COMPATIBLE HOOK
 import { useAudio } from '@/context/AudioContext';
 import { AudioSermon } from '@/types/api';
 import { analyticsApi } from '@/services/api/analytics';
@@ -58,9 +58,9 @@ export const useAudioPlayer = () => {
     }
   };
 
-  const seekWithTracking = (position: number) => {
+  const seekWithTracking = async (position: number) => {
     try {
-      seekTo(position);
+      await seekTo(position);
       
       if (state.currentTrack) {
         // Track seek analytics (non-blocking)
@@ -73,9 +73,9 @@ export const useAudioPlayer = () => {
     }
   };
 
-  const pauseWithTracking = () => {
+  const pauseWithTracking = async () => {
     try {
-      pause();
+      await pause();
       
       if (state.currentTrack) {
         // Track pause analytics (non-blocking)
@@ -88,9 +88,9 @@ export const useAudioPlayer = () => {
     }
   };
 
-  const playWithTracking = () => {
+  const playWithTracking = async () => {
     try {
-      play();
+      await play();
       
       if (state.currentTrack) {
         // Track resume analytics (non-blocking)
@@ -103,40 +103,40 @@ export const useAudioPlayer = () => {
     }
   };
 
-  // Computed values and helper methods
+  // Computed properties for convenience
+  const currentTrack = state.currentTrack;
+  const isPlaying = state.isPlaying;
+  const position = state.position;
+  const duration = state.duration;
+  const queue = state.queue;
+  const currentIndex = state.currentIndex;
+  const isLoading = state.isLoading;
+  const error = state.error;
+  const volume = state.volume;
+  const rate = state.rate;
+  const isPlayerVisible = state.isPlayerVisible;
+  
+  // Convenience computed properties
   const progress = getProgress();
-  const hasNext = state.currentIndex < state.queue.length - 1 || state.repeatMode === 'all';
-  const hasPrevious = state.currentIndex > 0 || state.repeatMode === 'all';
-  const canPlay = state.currentTrack !== null && !state.isLoading;
-  const formattedPosition = formatTime(state.position);
-  const formattedDuration = formatTime(state.duration);
-
-  // Player state helpers
-  const isIdle = !state.currentTrack;
-  const isBuffering = state.isLoading;
-  const isReady = state.currentTrack !== null && !state.isLoading && !state.error;
-  const hasError = !!state.error;
+  const formattedPosition = formatTime(position);
+  const formattedDuration = formatTime(duration);
+  const canPlay = currentTrack !== null && !isLoading;
   
-  // Queue helpers
-  const isFirstInQueue = state.currentIndex === 0;
-  const isLastInQueue = state.currentIndex === state.queue.length - 1;
-  const queueLength = state.queue.length;
-  const remainingTracks = state.queue.length - state.currentIndex - 1;
+  // Queue navigation helpers
+  const hasNext = currentIndex < queue.length - 1 || state.repeatMode === 'all';
+  const hasPrevious = currentIndex > 0 || state.repeatMode === 'all';
+  const queueLength = queue.length;
   
-  // Playback mode helpers
-  const isRepeating = state.repeatMode !== 'off';
+  // Repeat mode helpers
+  const isRepeating = state.repeatMode === 'all';
   const isRepeatingOne = state.repeatMode === 'one';
-  const isRepeatingAll = state.repeatMode === 'all';
   const isShuffling = state.shuffleMode;
-
-  // Volume and rate helpers
-  const isMuted = state.volume === 0;
-  const isNormalSpeed = state.rate === 1.0;
-  const volumePercentage = Math.round(state.volume * 100);
-
-  // Helper methods
-  const getRepeatModeIcon = () => {
+  
+  // UI helpers
+  const getRepeatModeIcon = (): string => {
     switch (state.repeatMode) {
+      case 'off':
+        return 'repeat';
       case 'one':
         return 'repeat-one';
       case 'all':
@@ -146,143 +146,181 @@ export const useAudioPlayer = () => {
     }
   };
 
-  const getPlaybackStateText = () => {
-    if (isBuffering) return 'Loading...';
-    if (hasError) return 'Error';
-    if (isIdle) return 'No audio selected';
-    if (state.isPlaying) return 'Playing';
+  const getPlaybackStateText = (): string => {
+    if (isLoading) return 'Loading...';
+    if (error) return 'Error';
+    if (!currentTrack) return 'No track';
+    if (isPlaying) return 'Playing';
     return 'Paused';
   };
 
-  const getCurrentSermonInfo = () => {
-    if (!state.currentTrack) return null;
-    
-    return {
-      id: state.currentTrack.id,
-      title: state.currentTrack.title,
-      speaker: state.currentTrack.speaker,
-      category: state.currentTrack.category,
-      duration: state.currentTrack.duration,
-      description: state.currentTrack.description,
-    };
+  const getPlayButtonIcon = (): string => {
+    if (isLoading) return 'hourglass-empty';
+    return isPlaying ? 'pause' : 'play-arrow';
   };
 
-  const getQueueInfo = () => {
-    return {
-      total: queueLength,
-      current: state.currentIndex + 1,
-      remaining: remainingTracks,
-      tracks: state.queue.map((sermon, index) => ({
-        id: sermon.id,
-        title: sermon.title,
-        speaker: sermon.speaker,
-        isCurrentTrack: index === state.currentIndex,
-        index,
-      })),
-    };
+  const getShuffleIcon = (): string => {
+    return isShuffling ? 'shuffle-on' : 'shuffle';
   };
 
-  // Advanced controls
-  const skipToTrack = async (index: number) => {
-    if (index >= 0 && index < state.queue.length) {
-      await playQueue(state.queue, index);
+  // Enhanced queue management
+  const addToQueueNext = (sermon: AudioSermon) => {
+    if (queue.length === 0) {
+      addToQueue(sermon);
+    } else {
+      const newQueue = [...queue];
+      newQueue.splice(currentIndex + 1, 0, sermon);
+      // Would need to dispatch this to context
+      console.log('Add to queue next:', sermon.title);
     }
   };
 
-  const addToQueueNext = (sermon: AudioSermon) => {
-    const newQueue = [...state.queue];
-    newQueue.splice(state.currentIndex + 1, 0, sermon);
-    // Note: You might need to add this method to AudioContext
-    console.log('Add to queue next:', sermon.title);
-  };
+  const moveQueueItem = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex || 
+        fromIndex < 0 || fromIndex >= queue.length ||
+        toIndex < 0 || toIndex >= queue.length) {
+      return;
+    }
 
-  const reorderQueue = (fromIndex: number, toIndex: number) => {
-    const newQueue = [...state.queue];
+    const newQueue = [...queue];
     const [movedItem] = newQueue.splice(fromIndex, 1);
     newQueue.splice(toIndex, 0, movedItem);
-    // Note: You might need to add this method to AudioContext
-    console.log('Reorder queue:', fromIndex, 'to', toIndex);
+    
+    // Adjust current index if needed
+    let newCurrentIndex = currentIndex;
+    if (fromIndex === currentIndex) {
+      newCurrentIndex = toIndex;
+    } else if (fromIndex < currentIndex && toIndex >= currentIndex) {
+      newCurrentIndex = currentIndex - 1;
+    } else if (fromIndex > currentIndex && toIndex <= currentIndex) {
+      newCurrentIndex = currentIndex + 1;
+    }
+    
+    console.log('Move queue item:', { fromIndex, toIndex, newCurrentIndex });
+    // Would need to dispatch these changes to context
   };
 
-  return {
-    // State from AudioContext
-    currentTrack: state.currentTrack,
-    isPlaying: state.isPlaying,
-    position: state.position,
-    duration: state.duration,
-    queue: state.queue,
-    currentIndex: state.currentIndex,
-    isLoading: state.isLoading,
-    error: state.error,
-    repeatMode: state.repeatMode,
-    shuffleMode: state.shuffleMode,
-    volume: state.volume,
-    rate: state.rate,
-    isPlayerVisible: state.isPlayerVisible,
+  // Playback speed helpers
+  const changePlaybackSpeed = async (newRate: number) => {
+    const validRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+    if (validRates.includes(newRate)) {
+      await setRate(newRate);
+    }
+  };
 
-    // Actions with tracking
+  const cyclePlaybackSpeed = async () => {
+    const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+    const currentSpeedIndex = speeds.indexOf(rate);
+    const nextSpeed = speeds[(currentSpeedIndex + 1) % speeds.length];
+    await changePlaybackSpeed(nextSpeed);
+  };
+
+  // Audio position helpers
+  const skipForward = async (seconds: number = 15) => {
+    const newPosition = Math.min(position + (seconds * 1000), duration);
+    await seekTo(newPosition);
+  };
+
+  const skipBackward = async (seconds: number = 15) => {
+    const newPosition = Math.max(position - (seconds * 1000), 0);
+    await seekTo(newPosition);
+  };
+
+  const seekToPercentage = async (percentage: number) => {
+    const newPosition = (percentage / 100) * duration;
+    await seekTo(newPosition);
+  };
+
+  // Player state helpers
+  const isAtBeginning = position < 1000; // Less than 1 second
+  const isNearEnd = duration > 0 && (position / duration) > 0.95; // More than 95% complete
+  const remainingTime = duration - position;
+  const formattedRemainingTime = `-${formatTime(remainingTime)}`;
+
+  // Exposure of all methods and properties
+  return {
+    // Raw state
+    state,
+    
+    // Basic properties
+    currentTrack,
+    isPlaying,
+    position,
+    duration,
+    queue,
+    currentIndex,
+    isLoading,
+    error,
+    volume,
+    rate,
+    isPlayerVisible,
+    
+    // Computed properties
+    progress,
+    formattedPosition,
+    formattedDuration,
+    formattedRemainingTime,
+    remainingTime,
+    canPlay,
+    
+    // Navigation properties
+    hasNext,
+    hasPrevious,
+    queueLength,
+    
+    // Mode properties
+    isRepeating,
+    isRepeatingOne,
+    isShuffling,
+    
+    // State helpers
+    isAtBeginning,
+    isNearEnd,
+    
+    // Basic playback controls (with tracking)
     playSermon: playSermonWithTracking,
     playQueue: playQueueWithTracking,
     play: playWithTracking,
     pause: pauseWithTracking,
-    seekTo: seekWithTracking,
-
-    // Direct actions
     stop,
+    
+    // Navigation controls
     skipToNext,
     skipToPrevious,
+    seekTo: seekWithTracking,
+    
+    // Advanced seeking
+    skipForward,
+    skipBackward,
+    seekToPercentage,
+    
+    // Mode controls
     toggleRepeat,
     toggleShuffle,
     setVolume,
     setRate,
+    changePlaybackSpeed,
+    cyclePlaybackSpeed,
+    
+    // UI controls
     showMiniPlayer,
     hideMiniPlayer,
+    
+    // Queue management
     addToQueue,
     removeFromQueue,
     clearQueue,
-
-    // Computed values
-    progress,
-    hasNext,
-    hasPrevious,
-    canPlay,
-    formattedPosition,
-    formattedDuration,
-
-    // Player state helpers
-    isIdle,
-    isBuffering,
-    isReady,
-    hasError,
+    addToQueueNext,
+    moveQueueItem,
     
-    // Queue helpers
-    isFirstInQueue,
-    isLastInQueue,
-    queueLength,
-    remainingTracks,
-    
-    // Playback mode helpers
-    isRepeating,
-    isRepeatingOne,
-    isRepeatingAll,
-    isShuffling,
-
-    // Volume and rate helpers
-    isMuted,
-    isNormalSpeed,
-    volumePercentage,
-
     // Utility methods
     formatTime,
     getProgress,
+    
+    // UI helpers
     getRepeatModeIcon,
     getPlaybackStateText,
-    getCurrentSermonInfo,
-    getQueueInfo,
-
-    // Advanced controls
-    skipToTrack,
-    addToQueueNext,
-    reorderQueue,
+    getPlayButtonIcon,
+    getShuffleIcon,
   };
 };

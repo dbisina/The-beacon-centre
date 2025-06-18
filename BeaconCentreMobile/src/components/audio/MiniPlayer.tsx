@@ -1,4 +1,4 @@
-// src/components/audio/MiniPlayer.tsx - EXPO-AUDIO COMPATIBLE
+// src/components/audio/MiniPlayer.tsx - FIXED EXPO-AUDIO COMPATIBLE
 import React from 'react';
 import {
   View,
@@ -11,7 +11,6 @@ import {
   useColorScheme,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useAudio } from '@/context/AudioContext';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
@@ -27,10 +26,10 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpandPress }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
-  const { state } = useAudio();
   const {
     currentTrack,
     isPlaying,
+    isLoading,
     play,
     pause,
     skipToNext,
@@ -39,6 +38,8 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpandPress }) => {
     formattedDuration,
     canPlay,
     isPlayerVisible,
+    hasNext,
+    getPlayButtonIcon,
   } = useAudioPlayer();
 
   // Animated values for slide-up animation
@@ -58,210 +59,169 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpandPress }) => {
   React.useEffect(() => {
     Animated.timing(progressAnim, {
       toValue: progress / 100,
-      duration: 500,
+      duration: 200,
       useNativeDriver: false,
     }).start();
   }, [progress]);
 
-  // Swipe to dismiss gesture
+  // Pan responder for swipe up to expand
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, gestureState) => {
-      return Math.abs(gestureState.dy) > 10;
+      return Math.abs(gestureState.dy) > 10 && gestureState.dy < 0;
     },
     onPanResponderMove: (_, gestureState) => {
-      if (gestureState.dy > 0) {
-        const progress = Math.min(1, gestureState.dy / 100);
-        slideAnim.setValue(1 - progress);
+      if (gestureState.dy < 0) {
+        // Swiping up
+        const progress = Math.min(1, Math.abs(gestureState.dy) / 100);
+        // Could add visual feedback for swipe here
       }
     },
     onPanResponderRelease: (_, gestureState) => {
-      if (gestureState.dy > 50) {
-        // Swipe down to dismiss
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-      } else {
-        // Snap back
-        Animated.timing(slideAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
+      if (gestureState.dy < -50) {
+        onExpandPress();
       }
     },
   });
 
-  const handlePlayPause = () => {
-    if (isPlaying) {
-      pause();
-    } else {
-      play();
+  const handlePlayPause = async () => {
+    try {
+      if (isPlaying) {
+        await pause();
+      } else {
+        await play();
+      }
+    } catch (error) {
+      console.error('Failed to toggle playback:', error);
     }
   };
 
-  const handleNext = () => {
-    skipToNext();
+  const handleNext = async () => {
+    try {
+      if (hasNext) {
+        await skipToNext();
+      }
+    } catch (error) {
+      console.error('Failed to skip to next:', error);
+    }
   };
 
-  const handleExpand = () => {
-    onExpandPress();
-  };
-
-  if (!currentTrack || !isPlayerVisible) {
+  if (!isPlayerVisible || !currentTrack) {
     return null;
   }
 
-  const transformStyle = {
-    transform: [
-      {
-        translateY: slideAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [MINI_PLAYER_HEIGHT + 20, 0],
-        }),
-      },
-    ],
-  };
+  const styles = createStyles(isDark);
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? colors.dark.background : colors.light.background,
-          borderTopColor: isDark ? colors.dark.border : colors.light.border,
+          transform: [
+            {
+              translateY: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [MINI_PLAYER_HEIGHT, 0],
+              }),
+            },
+          ],
         },
-        transformStyle,
       ]}
       {...panResponder.panHandlers}
     >
       {/* Progress Bar */}
       <View style={styles.progressContainer}>
-        <View style={[
-          styles.progressBackground,
-          { backgroundColor: isDark ? colors.dark.border : colors.light.border }
-        ]}>
-          <Animated.View
-            style={[
-              styles.progressFill,
-              {
-                backgroundColor: colors.primary,
-                width: progressAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0%', '100%'],
-                }),
-              },
-            ]}
-          />
-        </View>
+        <Animated.View
+          style={[
+            styles.progressBar,
+            {
+              width: progressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%'],
+              }),
+            },
+          ]}
+        />
       </View>
 
-      {/* Content */}
+      {/* Main Content */}
       <TouchableOpacity
         style={styles.content}
-        onPress={handleExpand}
+        onPress={onExpandPress}
         activeOpacity={0.8}
       >
-        <View style={styles.leftSection}>
-          {/* Thumbnail placeholder */}
-          <View style={[
-            styles.thumbnail,
-            {
-              backgroundColor: colors.primary + '20',
-              borderColor: colors.primary + '40',
-            }
-          ]}>
-            <Icon 
-              name="music-note" 
-              size={20} 
-              color={colors.primary} 
-            />
-          </View>
-
-          {/* Track Info */}
-          <View style={styles.trackInfo}>
-            <Text 
-              style={[
-                styles.title,
-                { color: isDark ? colors.dark.text : colors.light.text }
-              ]}
-              numberOfLines={1}
-            >
-              {currentTrack.title}
-            </Text>
-            <Text 
-              style={[
-                styles.subtitle,
-                { color: colors.textGrey }
-              ]}
-              numberOfLines={1}
-            >
-              {currentTrack.speaker}
-            </Text>
-          </View>
+        {/* Track Info */}
+        <View style={styles.trackInfo}>
+          <Text style={styles.trackTitle} numberOfLines={1}>
+            {currentTrack.title}
+          </Text>
+          <Text style={styles.trackArtist} numberOfLines={1}>
+            {currentTrack.speaker}
+          </Text>
         </View>
 
-        <View style={styles.rightSection}>
-          {/* Time Display */}
-          <Text style={[
-            styles.timeText,
-            { color: colors.textGrey }
-          ]}>
-            {formattedPosition}
-          </Text>
+        {/* Controls */}
+        <View style={styles.controls}>
+          {/* Play/Pause Button */}
+          <TouchableOpacity
+            style={styles.playButton}
+            onPress={handlePlayPause}
+            disabled={!canPlay}
+            activeOpacity={0.7}
+          >
+            <Icon
+              name={getPlayButtonIcon()}
+              size={28}
+              color={isDark ? colors.dark.text : colors.light.text}
+            />
+          </TouchableOpacity>
 
-          {/* Controls */}
-          <View style={styles.controls}>
-            <TouchableOpacity
-              onPress={handlePlayPause}
-              style={[
-                styles.playButton,
-                { backgroundColor: colors.primary }
-              ]}
-              disabled={!canPlay}
-            >
-              <Icon
-                name={isPlaying ? 'pause' : 'play-arrow'}
-                size={24}
-                color="white"
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleNext}
-              style={styles.controlButton}
-            >
-              <Icon
-                name="skip-next"
-                size={20}
-                color={isDark ? colors.dark.text : colors.light.text}
-              />
-            </TouchableOpacity>
-          </View>
+          {/* Next Button */}
+          <TouchableOpacity
+            style={[
+              styles.nextButton,
+              { opacity: hasNext ? 1 : 0.5 }
+            ]}
+            onPress={handleNext}
+            disabled={!hasNext}
+            activeOpacity={0.7}
+          >
+            <Icon
+              name="skip-next"
+              size={24}
+              color={isDark ? colors.dark.text : colors.light.text}
+            />
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
+
+      {/* Time Display */}
+      <View style={styles.timeContainer}>
+        <Text style={styles.timeText}>
+          {formattedPosition} / {formattedDuration}
+        </Text>
+      </View>
     </Animated.View>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     height: MINI_PLAYER_HEIGHT,
+    backgroundColor: isDark ? colors.dark.card : colors.light.card,
     borderTopWidth: 1,
+    borderTopColor: isDark ? colors.dark.border : colors.light.border,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: -2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
-    zIndex: 1000,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   progressContainer: {
     position: 'absolute',
@@ -269,73 +229,64 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
+    backgroundColor: isDark ? colors.dark.border : colors.light.border,
   },
-  progressBackground: {
-    flex: 1,
-  },
-  progressFill: {
+  progressBar: {
     height: '100%',
+    backgroundColor: colors.primary,
   },
   content: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  leftSection: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  thumbnail: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+    paddingTop: 8,
   },
   trackInfo: {
     flex: 1,
-    justifyContent: 'center',
+    marginRight: 16,
   },
-  title: {
-    ...typography.styles.body1,
+  trackTitle: {
+    fontSize: 14,
     fontWeight: '600',
+    color: isDark ? colors.dark.text : colors.light.text,
     marginBottom: 2,
+    fontFamily: typography.fonts.poppins.medium,
   },
-  subtitle: {
-    ...typography.styles.caption,
-  },
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  timeText: {
-    ...typography.styles.caption,
-    minWidth: 40,
-    textAlign: 'center',
+  trackArtist: {
+    fontSize: 12,
+    color: colors.textGrey,
+    fontFamily: typography.fonts.poppins.medium,
   },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   playButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
+    backgroundColor: isDark ? colors.dark.background : colors.light.background,
     justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
-  controlButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
+  nextButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timeContainer: {
+    position: 'absolute',
+    bottom: 4,
+    right: 16,
+  },
+  timeText: {
+    fontSize: 10,
+    color: colors.textGrey,
+    fontFamily: typography.fonts.poppins.regular,
   },
 });
 

@@ -95,6 +95,7 @@ const DevotionalHome = ({ navigation }: any) => {
             </LinearGradient>
           </TouchableOpacity>
         )}
+        
 
         {/* Menu Section */}
         <View style={styles.menuSection}>
