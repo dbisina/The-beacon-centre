@@ -166,18 +166,20 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <GestureHandlerRootView style={styles.rootContainer} onLayout={onLayoutRootView}>
         <SafeAreaProvider>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
-              <AppProvider>
-                <OfflineProvider>
-                  <AudioContextProvider> {/* ← expo-audio powered */}
-                    <AppContent />
-                    <StatusBar style="auto" />
-                  </AudioContextProvider>
-                </OfflineProvider>
-              </AppProvider>
-            </ThemeProvider>
-          </QueryClientProvider>
+          <View style={styles.container}>
+            <QueryClientProvider client={queryClient}>
+              <ThemeProvider>
+                <AppProvider>
+                  <OfflineProvider>
+                    <AudioContextProvider>
+                      <AppContent />
+                      <StatusBar style="auto" />
+                    </AudioContextProvider>
+                  </OfflineProvider>
+                </AppProvider>
+              </ThemeProvider>
+            </QueryClientProvider>
+          </View>
         </SafeAreaProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>

@@ -1,5 +1,5 @@
 // src/services/api/sermons.ts
-import { apiClient } from './client';
+import  apiClient  from './client';
 import { VideoSermon, AudioSermon } from '@/types/api';
 import LocalStorageService from '@/services/storage/LocalStorage';
 

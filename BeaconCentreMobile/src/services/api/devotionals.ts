@@ -1,5 +1,5 @@
 // src/services/api/devotionals.ts
-import { apiClient } from './client';
+import apiClient from './client';
 import { Devotional } from '@/types/api';
 import LocalStorageService from '@/services/storage/LocalStorage';
 
