@@ -20,7 +20,6 @@ import { useDevotionals } from '@/hooks/api';
 import { useApp } from '@/context/AppContext';
 import DevotionalCard from '@/components/devotional/DevotionalCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import SimpleAudioTest from '@/components/debug/SimpleTestAudio';
 
 const { width } = Dimensions.get('window');
 
@@ -96,7 +95,7 @@ const DevotionalHome = ({ navigation }: any) => {
             </LinearGradient>
           </TouchableOpacity>
         )}
-        <SimpleAudioTest />
+
 
         {/* Menu Section */}
         <View style={styles.menuSection}>
@@ -254,7 +253,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   menuText: {
     flex: 1,
@@ -264,9 +263,9 @@ const styles = StyleSheet.create({
   menuIcon: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 100,
+    borderRadius: 8,
     padding: 10,
-    marginRight: 10,
+    marginRight: 8,
   },
   recentSection: {
     paddingHorizontal: 20,

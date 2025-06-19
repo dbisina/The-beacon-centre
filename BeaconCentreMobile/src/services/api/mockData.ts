@@ -5,7 +5,7 @@ import { Devotional, VideoSermon, AudioSermon, Announcement, Category } from '@/
 export const mockDevotionals: Devotional[] = [
   {
     id: 1,
-    date: "2024-06-18",
+    date: "2025-06-19",
     title: "Walking in Divine Purpose",
     verse_text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.",
     verse_reference: "Jeremiah 29:11",
