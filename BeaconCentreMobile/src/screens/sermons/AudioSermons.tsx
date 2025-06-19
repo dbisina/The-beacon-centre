@@ -144,17 +144,19 @@ export default function AudioSermons() {
   const [downloadedAudio, setDownloadedAudio] = useState<number[]>([]);
 
   useEffect(() => {
-    if (userData) {
-      setFavoriteAudio(userData.favoriteAudioSermons);
+    if (userData && userData.downloadedAudio) {
+      setFavoriteAudio(userData.favoriteAudioSermons || []);
       setDownloadedAudio(userData.downloadedAudio.map(item => item.sermonId));
     }
   }, [userData]);
 
   const filteredSermons = (allSermons as AudioSermon[] | undefined)?.filter(sermon =>
-    sermon.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sermon.speaker.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sermon.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sermon.category?.toLowerCase().includes(searchQuery.toLowerCase())
+    sermon && sermon.title && sermon.speaker && (
+      sermon.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sermon.speaker.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sermon.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sermon.category?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
   ) || [];
 
   const handleSermonPress = (sermon: AudioSermon) => {

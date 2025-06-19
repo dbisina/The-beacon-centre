@@ -29,6 +29,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useDownloads } from '@/hooks/useDownloads';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import LocalStorageService from '@/services/storage/LocalStorage';
+import { useAudio } from '@/context/AudioContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,7 +47,7 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
   const isDark = colorScheme === 'dark';
   const { isDownloaded, isDownloading, downloadAudio, getDownloadProgress } = useDownloads();
   const { toggleFavorite } = useFavorites();
-  
+  const { playSermon } = useAudio();
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -106,10 +107,14 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
     }
   };
 
-  const handlePlayAudio = () => {
+  const handlePlayAudio = async () => {
     if (type === 'audio') {
-      // Navigate to audio player or start audio playback
-      navigation.navigate('AudioPlayer', { sermon: sermon as AudioSermon });
+      try {
+        console.log('🎵 Starting immediate playback');
+        await playSermon(sermon as AudioSermon);
+      } catch (error) {
+        console.error('❌ Failed to play sermon:', error);
+      }
     }
   };
 

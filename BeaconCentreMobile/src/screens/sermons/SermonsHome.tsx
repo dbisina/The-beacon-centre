@@ -131,16 +131,26 @@ const FeaturedContent = ({ navigation }: any) => {
       {/* Grid of Sermons */}
       <View style={styles.gridSection}>
         <View style={styles.gridContainer}>
-          {allSermons.slice(0, 6).map((sermon, index) => (
-            <GridSermonCard
-              key={`${sermon.id}-${index}`}
-              sermon={sermon}
-              onPress={() => navigation.navigate('SermonDetail', { 
-                sermon, 
-                type: videos?.includes(sermon as VideoSermon) ? 'video' : 'audio'
-              })}
-            />
-          ))}
+          {allSermons && allSermons.length > 0 ? (
+            allSermons.slice(0, 6).map((sermon, index) => (
+              <GridSermonCard
+                key={`${sermon.id}-${index}`}
+                sermon={sermon}
+                onPress={() => navigation.navigate('SermonDetail', { 
+                  sermon, 
+                  type: videos?.includes(sermon as VideoSermon) ? 'video' : 'audio'
+                })}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Icon name="playlist-play" size={64} color={colors.textGrey} />
+              <Text style={styles.emptyStateTitle}>No Sermons Available</Text>
+              <Text style={styles.emptyStateText}>
+                Check back later for new content
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </ScrollView>
@@ -176,27 +186,27 @@ const SermonsContent = ({ navigation }: any) => {
         </View>
         
         <View style={styles.gridContainer}>
-          {filteredSermons?.map((sermon, index) => (
-            <GridSermonCard
-              key={`${sermon.id}-${index}`}
-              sermon={sermon}
-              onPress={() => navigation.navigate('SermonDetail', { 
-                sermon, 
-                type: videos?.includes(sermon as VideoSermon) ? 'video' : 'audio'
-              })}
-            />
-          ))}
+          {filteredSermons && filteredSermons.length > 0 ? (
+            filteredSermons.map((sermon, index) => (
+              <GridSermonCard
+                key={`${sermon.id}-${index}`}
+                sermon={sermon}
+                onPress={() => navigation.navigate('SermonDetail', { 
+                  sermon, 
+                  type: videos?.includes(sermon as VideoSermon) ? 'video' : 'audio'
+                })}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Icon name="search-off" size={64} color={colors.textGrey} />
+              <Text style={styles.emptyStateTitle}>No Sermons Found</Text>
+              <Text style={styles.emptyStateText}>
+                Try adjusting your search or check back later
+              </Text>
+            </View>
+          )}
         </View>
-
-        {(!filteredSermons || filteredSermons.length === 0) && (
-          <View style={styles.emptyState}>
-            <Icon name="search-off" size={64} color={colors.textGrey} />
-            <Text style={styles.emptyStateTitle}>No Sermons Found</Text>
-            <Text style={styles.emptyStateText}>
-              Try adjusting your search or check back later
-            </Text>
-          </View>
-        )}
       </View>
     </ScrollView>
   );
@@ -229,27 +239,27 @@ const AudioContent = ({ navigation }: any) => {
         </View>
         
         <View style={styles.gridContainer}>
-          {filteredAudios?.map((audio, index) => (
-            <GridSermonCard
-              key={`${audio.id}-${index}`}
-              sermon={audio}
-              onPress={() => navigation.navigate('SermonDetail', { 
-                sermon: audio, 
-                type: 'audio'
-              })}
-            />
-          ))}
+          {filteredAudios && filteredAudios.length > 0 ? (
+            filteredAudios.map((audio, index) => (
+              <GridSermonCard
+                key={`${audio.id}-${index}`}
+                sermon={audio}
+                onPress={() => navigation.navigate('SermonDetail', { 
+                  sermon: audio, 
+                  type: 'audio'
+                })}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Icon name="headphones-off" size={64} color={colors.textGrey} />
+              <Text style={styles.emptyStateTitle}>No Audio Found</Text>
+              <Text style={styles.emptyStateText}>
+                Try adjusting your search or check back later
+              </Text>
+            </View>
+          )}
         </View>
-
-        {(!filteredAudios || filteredAudios.length === 0) && (
-          <View style={styles.emptyState}>
-            <Icon name="headphones-off" size={64} color={colors.textGrey} />
-            <Text style={styles.emptyStateTitle}>No Audio Found</Text>
-            <Text style={styles.emptyStateText}>
-              Try adjusting your search or check back later
-            </Text>
-          </View>
-        )}
       </View>
     </ScrollView>
   );

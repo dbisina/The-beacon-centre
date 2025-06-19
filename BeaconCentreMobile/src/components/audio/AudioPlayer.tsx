@@ -1,5 +1,5 @@
 // src/components/audio/AudioPlayer.tsx - EXPO-AUDIO COMPATIBLE
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -31,8 +31,11 @@ const { height: screenHeight } = Dimensions.get('window');
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { playSermon, state } = useAudio();
 
-  const { state } = useAudio();
+  const audioPlayer = useAudioPlayer();
+  
+  // Destructure with safe defaults
   const {
     currentTrack,
     isPlaying,
@@ -40,32 +43,43 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
     duration,
     play,
     pause,
-    skipToNext,
-    skipToPrevious,
     seekTo,
-    toggleRepeat,
-    toggleShuffle,
-    setVolume,
-    setRate,
     progress,
     formattedPosition,
     formattedDuration,
     canPlay,
     hasNext,
     hasPrevious,
-    isRepeating,
-    isRepeatingOne,
-    isShuffling,
     volume,
-    rate,
-    getRepeatModeIcon,
+    getPlayButtonIcon,
     getPlaybackStateText,
     queueLength,
-  } = useAudioPlayer();
+  } = audioPlayer;
+
+  // Safe access to optional properties with proper typing
+  const skipToNext = 'skipToNext' in audioPlayer ? (audioPlayer as any).skipToNext : (() => {});
+  const skipToPrevious = 'skipToPrevious' in audioPlayer ? (audioPlayer as any).skipToPrevious : (() => {});
+  const toggleRepeat = 'toggleRepeat' in audioPlayer ? (audioPlayer as any).toggleRepeat : (() => {});
+  const toggleShuffle = 'toggleShuffle' in audioPlayer ? (audioPlayer as any).toggleShuffle : (() => {});
+  const setVolume = 'setVolume' in audioPlayer ? (audioPlayer as any).setVolume : (() => {});
+  const setRate = 'setRate' in audioPlayer ? (audioPlayer as any).setRate : (() => {});
+  const isRepeating = 'isRepeating' in audioPlayer ? (audioPlayer as any).isRepeating : false;
+  const isRepeatingOne = 'isRepeatingOne' in audioPlayer ? (audioPlayer as any).isRepeatingOne : false;
+  const isShuffling = 'isShuffling' in audioPlayer ? (audioPlayer as any).isShuffling : false;
+  const rate = 'rate' in audioPlayer ? (audioPlayer as any).rate : 1.0;
+
+  // Helper function for repeat mode icon
+  const getRepeatModeIcon = () => {
+    if (isRepeatingOne) return 'repeat-one';
+    if (isRepeating) return 'repeat';
+    return 'repeat';
+  };
 
   const [showQueue, setShowQueue] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const slideAnim = useRef(new Animated.Value(0)).current;
+
+  const lastPlayedTrackId = useRef<string | number | null>(null);
 
   // Pan responder for swipe down to close
   const panResponder = PanResponder.create({
@@ -124,6 +138,21 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
     const nextIndex = (currentIndex + 1) % rates.length;
     setRate(rates[nextIndex]);
   };
+
+  useEffect(() => {
+    if (currentTrack && visible && lastPlayedTrackId.current !== currentTrack.id) {
+      lastPlayedTrackId.current = currentTrack.id;
+      const startPlayback = async () => {
+        try {
+          console.log('🎵 AudioPlayer screen: Starting playback');
+          await playSermon(currentTrack);
+        } catch (error) {
+          console.error('❌ AudioPlayer screen: Failed to play:', error);
+        }
+      };
+      startPlayback();
+    }
+  }, [currentTrack?.id, visible]);
 
   if (!currentTrack) {
     return null;
@@ -346,12 +375,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
                 Playing Queue
               </Text>
               <ScrollView style={styles.queueList}>
-                {state.queue.map((sermon, index) => (
+                {('queue' in audioPlayer ? (audioPlayer as any).queue : []).map((sermon: any, index: number) => (
                   <TouchableOpacity
                     key={sermon.id}
                     style={[
                       styles.queueItem,
-                      index === state.currentIndex && styles.currentQueueItem,
+                      index === ('currentIndex' in audioPlayer ? (audioPlayer as any).currentIndex : 0) && styles.currentQueueItem,
                       { borderBottomColor: isDark ? colors.dark.border : colors.light.border }
                     ]}
                   >
@@ -359,7 +388,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
                       <Text style={[
                         styles.queueItemTitle,
                         { color: isDark ? colors.dark.text : colors.light.text },
-                        index === state.currentIndex && { color: colors.primary }
+                        index === ('currentIndex' in audioPlayer ? (audioPlayer as any).currentIndex : 0) && { color: colors.primary }
                       ]} numberOfLines={1}>
                         {sermon.title}
                       </Text>
@@ -367,7 +396,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
                         {sermon.speaker}
                       </Text>
                     </View>
-                    {index === state.currentIndex && (
+                    {index === ('currentIndex' in audioPlayer ? (audioPlayer as any).currentIndex : 0) && (
                       <Icon name="equalizer" size={20} color={colors.primary} />
                     )}
                   </TouchableOpacity>

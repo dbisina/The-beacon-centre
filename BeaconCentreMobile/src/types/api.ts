@@ -40,12 +40,12 @@ export interface Devotional {
     id: number;
     title: string;
     speaker: string;
-    audio_url: string;
+    audioUrl: string;
     cloudinary_public_id?: string;
-    duration?: string; // e.g., "35:15"
-    file_size?: number; // in bytes
+    duration?: string;
+    file_size?: number;
     category?: string;
-    sermon_date?: string; // ISO date string
+    sermon_date?: string;
     description?: string;
     is_featured: boolean;
     created_at: string;

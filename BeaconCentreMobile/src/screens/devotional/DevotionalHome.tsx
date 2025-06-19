@@ -20,6 +20,7 @@ import { useDevotionals } from '@/hooks/api';
 import { useApp } from '@/context/AppContext';
 import DevotionalCard from '@/components/devotional/DevotionalCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import SimpleAudioTest from '@/components/debug/SimpleTestAudio';
 
 const { width } = Dimensions.get('window');
 
@@ -95,7 +96,7 @@ const DevotionalHome = ({ navigation }: any) => {
             </LinearGradient>
           </TouchableOpacity>
         )}
-        
+        <SimpleAudioTest />
 
         {/* Menu Section */}
         <View style={styles.menuSection}>

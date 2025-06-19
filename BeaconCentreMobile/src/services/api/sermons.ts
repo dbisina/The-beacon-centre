@@ -3,7 +3,27 @@ import  apiClient  from './client';
 import { VideoSermon, AudioSermon } from '@/types/api';
 import LocalStorageService from '@/services/storage/LocalStorage';
 
+const transformAudioSermon = (backendSermon: any): AudioSermon => ({
+  ...backendSermon,
+  audioUrl: backendSermon.audioUrl,
+});
+
 export const sermonsApi = {
+  audio: {
+    async getAll(): Promise<AudioSermon[]> {
+      try {
+        const sermons = await apiClient.get<any[]>('/audio-sermons');
+        const transformedSermons = sermons.map(transformAudioSermon);
+        await LocalStorageService.cacheData('audio_sermons', transformedSermons);
+        return transformedSermons;
+      } catch (error) {
+        const cached = await LocalStorageService.getCachedData<AudioSermon[]>('audio_sermons');
+        if (cached) return cached;
+        throw error;
+      }
+    },
+  },
+
   video: {
     async getAll(): Promise<VideoSermon[]> {
       try {

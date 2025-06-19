@@ -1,7 +1,7 @@
-// App.tsx - COMPLETE EXPO-AUDIO IMPLEMENTATION
+// App.tsx - SIMPLIFIED WITHOUT TRACKPLAYER
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -14,7 +14,7 @@ import 'react-native-url-polyfill/auto';
 
 // Context Providers
 import { AppProvider } from '@/context/AppContext';
-import { AudioContextProvider } from '@/context/AudioContext'; // ← Uses expo-audio
+import { AudioContextProvider } from '@/context/AudioContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { OfflineProvider } from '@/context/OfflineContext';
 
@@ -52,11 +52,9 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
+      retry: 3,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 24 * 60 * 60 * 1000, // 24 hours
       refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
     },
     mutations: {
       retry: 1,
@@ -64,67 +62,14 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize services
-const initializeServices = async () => {
-  try {
-    if (Platform.OS !== 'web') {
-      // Initialize notification service
-      const notificationService = NotificationService.getInstance();
-      await notificationService.initialize();
-      console.log('✅ Notification service initialized');
-    }
-
-    // Initialize offline manager
-    const offlineManager = OfflineManager.getInstance();
-    console.log('✅ Offline manager initialized');
-    
-    console.log('🎉 All services initialized successfully');
-  } catch (error) {
-    console.error('❌ Failed to initialize services:', error);
-  }
-};
-
-// Audio Layer Component (inside AudioContext)
-const AudioLayer: React.FC = () => {
-  const [showFullPlayer, setShowFullPlayer] = useState(false);
-
-  return (
-    <>
-      {/* Mini Player - Floats over content when audio is playing */}
-      <MiniPlayer 
-        onExpandPress={() => setShowFullPlayer(true)}
-      />
-      
-      {/* Full Audio Player Modal */}
-      <AudioPlayer
-        visible={showFullPlayer}
-        onClose={() => setShowFullPlayer(false)}
-      />
-    </>
-  );
-};
-
-// Main App Content Component (inside all providers)
-const AppContent: React.FC = () => {
-  return (
-    <View style={styles.container}>
-      <AppNavigator />
-      <AudioLayer />
-    </View>
-  );
-};
-
-// Main App Component
-const App: React.FC = () => {
+export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
+  const [audioPlayerVisible, setAudioPlayerVisible] = useState(false);
 
   useEffect(() => {
     async function prepare() {
       try {
-        console.log('🚀 Initializing The Beacon Centre App...');
-        
         // Load fonts
-        console.log('📝 Loading fonts...');
         await Font.loadAsync({
           Poppins_400Regular,
           Poppins_500Medium,
@@ -133,66 +78,67 @@ const App: React.FC = () => {
           NotoSerif_400Regular,
           NotoSerif_700Bold,
         });
-        console.log('✅ Fonts loaded successfully');
 
         // Initialize services
-        console.log('⚙️ Initializing services...');
-        await initializeServices();
+        await NotificationService.getInstance().initialize();
 
-        console.log('🎉 App initialized successfully');
-      } catch (error) {
-        console.error('❌ App initialization error:', error);
-        // Don't fail completely - continue with limited functionality
+        console.log('✅ App initialization completed');
+      } catch (e) {
+        console.warn('⚠️ App initialization error:', e);
       } finally {
         setAppIsReady(true);
+        await SplashScreen.hideAsync();
       }
     }
 
     prepare();
   }, []);
 
-  const onLayoutRootView = React.useCallback(async () => {
-    if (appIsReady) {
-      console.log('🎬 Hiding splash screen...');
-      await SplashScreen.hideAsync();
-    }
-  }, [appIsReady]);
-
   if (!appIsReady) {
-    return <LoadingSpinner />;
+    return (
+      <View style={styles.loadingContainer}>
+        <LoadingSpinner size="large" />
+      </View>
+    );
   }
 
   return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={styles.rootContainer} onLayout={onLayoutRootView}>
+      <GestureHandlerRootView style={styles.container}>
         <SafeAreaProvider>
-          <View style={styles.container}>
-            <QueryClientProvider client={queryClient}>
-              <ThemeProvider>
-                <AppProvider>
-                  <OfflineProvider>
-                    <AudioContextProvider>
-                      <AppContent />
-                      <StatusBar style="auto" />
-                    </AudioContextProvider>
-                  </OfflineProvider>
-                </AppProvider>
-              </ThemeProvider>
-            </QueryClientProvider>
-          </View>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <AppProvider>
+                <OfflineProvider>
+                  <AudioContextProvider>
+                    <StatusBar style="auto" />
+                    <AppNavigator />
+                    
+                    {/* Audio Player Components */}
+                    <MiniPlayer onExpandPress={() => setAudioPlayerVisible(true)} />
+                    <AudioPlayer 
+                      visible={audioPlayerVisible} 
+                      onClose={() => setAudioPlayerVisible(false)} 
+                    />
+                  </AudioContextProvider>
+                </OfflineProvider>
+              </AppProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  rootContainer: {
-    flex: 1,
-  },
   container: {
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
 });
-
-export default App;

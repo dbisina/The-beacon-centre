@@ -1,30 +1,34 @@
-// src/services/audio/TrackPlayerService.ts - FIXED WITH LAZY INITIALIZATION
-
-import { AudioPlayer } from 'expo-audio';
+// src/services/audio/TrackPlayerService.ts
+import TrackPlayer, {
+  AppKilledPlaybackBehavior,
+  Capability,
+  RepeatMode,
+  Event,
+  State,
+  Track,
+  playbackService,
+} from 'react-native-track-player';
 import { AudioSermon } from '@/types/api';
 
-interface PlaybackStatus {
+export interface PlaybackStatus {
+  state: State;
+  position: number;
+  duration: number;
+  track?: Track;
   isLoaded: boolean;
   isPlaying: boolean;
-  position: number; // in seconds
-  duration: number; // in seconds
   volume: number;
   rate: number;
 }
 
 class TrackPlayerService {
   private static instance: TrackPlayerService;
-  private player: AudioPlayer | null = null;
-  private currentSermon: AudioSermon | null = null;
-  private playlist: AudioSermon[] = [];
-  private currentIndex: number = 0;
+  private isSetup = false;
   private statusUpdateCallback: ((status: PlaybackStatus) => void) | null = null;
-  private isInitialized: boolean = false;
+  private currentQueue: AudioSermon[] = [];
+  private currentIndex = 0;
 
-  private constructor() {
-    // Don't initialize player in constructor to avoid import issues
-    console.log('TrackPlayerService constructor called');
-  }
+  private constructor() {}
 
   public static getInstance(): TrackPlayerService {
     if (!TrackPlayerService.instance) {
@@ -33,36 +37,39 @@ class TrackPlayerService {
     return TrackPlayerService.instance;
   }
 
-  private async initializePlayer(): Promise<void> {
-    if (this.isInitialized || this.player) {
-      return;
-    }
+  async setupPlayer(): Promise<void> {
+    if (this.isSetup) return;
 
     try {
-      console.log('Initializing AudioPlayer...');
-      
-      // Check if AudioPlayer is available
-      if (!AudioPlayer) {
-        throw new Error('AudioPlayer is not available. Make sure expo-audio is properly installed.');
-      }
+      await TrackPlayer.setupPlayer({
+        waitForBuffer: true,
+      });
 
-      this.player = new AudioPlayer();
-      this.isInitialized = true;
-      console.log('AudioPlayer initialized successfully');
-      
+      await TrackPlayer.updateOptions({
+        android: {
+          appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
+        },
+        capabilities: [
+          Capability.Play,
+          Capability.Pause,
+          Capability.SkipToNext,
+          Capability.SkipToPrevious,
+          Capability.SeekTo,
+          Capability.Stop,
+        ],
+        compactCapabilities: [
+          Capability.Play,
+          Capability.Pause,
+          Capability.SkipToNext,
+        ],
+        progressUpdateEventInterval: 1,
+      });
+
+      this.isSetup = true;
+      console.log('TrackPlayer setup completed');
     } catch (error) {
-      console.error('Failed to initialize AudioPlayer:', error);
-      throw new Error(`AudioPlayer initialization failed: ${error}`);
-    }
-  }
-
-  private async ensurePlayerReady(): Promise<void> {
-    if (!this.isInitialized || !this.player) {
-      await this.initializePlayer();
-    }
-    
-    if (!this.player) {
-      throw new Error('AudioPlayer is not available');
+      console.error('TrackPlayer setup failed:', error);
+      throw error;
     }
   }
 
@@ -70,36 +77,65 @@ class TrackPlayerService {
     this.statusUpdateCallback = callback;
   }
 
-  public async getPlaybackStatus(): Promise<PlaybackStatus> {
+  async loadSermon(sermon: AudioSermon): Promise<void> {
+    await this.setupPlayer();
+    
     try {
-      await this.ensurePlayerReady();
+      await TrackPlayer.reset();
       
-      return {
-        isLoaded: (this.player?.duration || 0) > 0,
-        isPlaying: this.player?.playing || false,
-        position: this.player?.currentTime || 0,
-        duration: this.player?.duration || 0,
-        volume: this.player?.volume || 1.0,
-        rate: 1.0, // expo-audio doesn't support playback rate yet
+      const track: Track = {
+        id: sermon.id.toString(),
+        url: sermon.audio_url,
+        title: sermon.title,
+        artist: sermon.speaker,
+        duration: sermon.duration ? this.parseDuration(sermon.duration) : undefined,
+        artwork: 'https://res.cloudinary.com/your-cloud/image/upload/v1/beacon-app/default-artwork.jpg',
       };
+
+      await TrackPlayer.add(track);
+      this.currentQueue = [sermon];
+      this.currentIndex = 0;
+      
+      console.log('Sermon loaded:', sermon.title);
     } catch (error) {
-      console.error('Error getting playback status:', error);
-      return {
-        isLoaded: false,
-        isPlaying: false,
-        position: 0,
-        duration: 0,
-        volume: 1.0,
-        rate: 1.0,
-      };
+      console.error('Error loading sermon:', error);
+      throw error;
+    }
+  }
+
+  async loadQueue(sermons: AudioSermon[], startIndex: number = 0): Promise<void> {
+    await this.setupPlayer();
+    
+    try {
+      await TrackPlayer.reset();
+      
+      const tracks: Track[] = sermons.map(sermon => ({
+        id: sermon.id.toString(),
+        url: sermon.audio_url,
+        title: sermon.title,
+        artist: sermon.speaker,
+        duration: sermon.duration ? this.parseDuration(sermon.duration) : undefined,
+        artwork: 'https://res.cloudinary.com/your-cloud/image/upload/v1/beacon-app/default-artwork.jpg',
+      }));
+
+      await TrackPlayer.add(tracks);
+      if (startIndex > 0) {
+        await TrackPlayer.skip(startIndex);
+      }
+      
+      this.currentQueue = sermons;
+      this.currentIndex = startIndex;
+      
+      console.log(`Queue loaded with ${sermons.length} sermons, starting at index ${startIndex}`);
+    } catch (error) {
+      console.error('Error loading queue:', error);
+      throw error;
     }
   }
 
   async play(): Promise<void> {
     try {
-      await this.ensurePlayerReady();
-      this.player!.play();
-      console.log('Audio playing');
+      await TrackPlayer.play();
     } catch (error) {
       console.error('Play error:', error);
       throw error;
@@ -108,9 +144,7 @@ class TrackPlayerService {
 
   async pause(): Promise<void> {
     try {
-      await this.ensurePlayerReady();
-      this.player!.pause();
-      console.log('Audio paused');
+      await TrackPlayer.pause();
     } catch (error) {
       console.error('Pause error:', error);
       throw error;
@@ -119,10 +153,7 @@ class TrackPlayerService {
 
   async stop(): Promise<void> {
     try {
-      await this.ensurePlayerReady();
-      this.player!.pause();
-      this.player!.seekTo(0);
-      console.log('Audio stopped');
+      await TrackPlayer.stop();
     } catch (error) {
       console.error('Stop error:', error);
       throw error;
@@ -131,9 +162,7 @@ class TrackPlayerService {
 
   async seekTo(position: number): Promise<void> {
     try {
-      await this.ensurePlayerReady();
-      this.player!.seekTo(position);
-      console.log('Seeked to:', position);
+      await TrackPlayer.seekTo(position);
     } catch (error) {
       console.error('Seek error:', error);
       throw error;
@@ -141,120 +170,130 @@ class TrackPlayerService {
   }
 
   async skipToNext(): Promise<void> {
-    if (this.playlist.length > 0 && this.currentIndex < this.playlist.length - 1) {
-      this.currentIndex += 1;
-      await this.playSermon(this.playlist[this.currentIndex]);
-    }
-  }
-
-  async skipToPrevious(): Promise<void> {
-    if (this.playlist.length > 0 && this.currentIndex > 0) {
-      this.currentIndex -= 1;
-      await this.playSermon(this.playlist[this.currentIndex]);
-    }
-  }
-
-  async playSermon(sermon: AudioSermon): Promise<void> {
     try {
-      console.log('Loading sermon:', sermon.title, sermon.audio_url);
-      
-      await this.ensurePlayerReady();
-      
-      // Replace the current audio source
-      await this.player!.replace(sermon.audio_url);
-      
-      // Wait a moment for the audio to load
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Start playing
-      this.player!.play();
-      
-      this.currentSermon = sermon;
-      console.log('Successfully loaded and playing:', sermon.title);
-      
+      await TrackPlayer.skipToNext();
+      this.currentIndex = Math.min(this.currentIndex + 1, this.currentQueue.length - 1);
     } catch (error) {
-      console.error('Error playing sermon:', error);
-      throw new Error(`Failed to play sermon: ${error}`);
-    }
-  }
-
-  async playPlaylist(sermons: AudioSermon[], startIndex: number = 0): Promise<void> {
-    try {
-      this.playlist = sermons;
-      this.currentIndex = startIndex;
-      
-      if (sermons.length > 0 && startIndex < sermons.length) {
-        await this.playSermon(sermons[startIndex]);
-      }
-    } catch (error) {
-      console.error('Error playing playlist:', error);
+      console.error('Skip to next error:', error);
       throw error;
     }
   }
 
-  getCurrentSermon(): AudioSermon | null {
-    return this.currentSermon;
+  async skipToPrevious(): Promise<void> {
+    try {
+      await TrackPlayer.skipToPrevious();
+      this.currentIndex = Math.max(this.currentIndex - 1, 0);
+    } catch (error) {
+      console.error('Skip to previous error:', error);
+      throw error;
+    }
   }
 
-  getPlaylist(): AudioSermon[] {
-    return this.playlist;
+  async setVolume(volume: number): Promise<void> {
+    try {
+      await TrackPlayer.setVolume(volume);
+    } catch (error) {
+      console.error('Set volume error:', error);
+      throw error;
+    }
+  }
+
+  async setRate(rate: number): Promise<void> {
+    try {
+      await TrackPlayer.setRate(rate);
+    } catch (error) {
+      console.error('Set rate error:', error);
+      throw error;
+    }
+  }
+
+  async setRepeatMode(mode: RepeatMode): Promise<void> {
+    try {
+      await TrackPlayer.setRepeatMode(mode);
+    } catch (error) {
+      console.error('Set repeat mode error:', error);
+      throw error;
+    }
+  }
+
+  async getPlaybackStatus(): Promise<PlaybackStatus> {
+    try {
+      const [state, position, duration, currentTrack] = await Promise.all([
+        TrackPlayer.getPlaybackState(),
+        TrackPlayer.getPosition(),
+        TrackPlayer.getDuration(),
+        TrackPlayer.getActiveTrack(),
+      ]);
+
+      return {
+        state: state.state,
+        position,
+        duration: duration || 0,
+        track: currentTrack,
+        isLoaded: !!currentTrack,
+        isPlaying: state.state === State.Playing,
+        volume: 1.0, // TrackPlayer doesn't expose volume getter
+        rate: 1.0, // TrackPlayer doesn't expose rate getter
+      };
+    } catch (error) {
+      console.error('Error getting playback status:', error);
+      return {
+        state: State.None,
+        position: 0,
+        duration: 0,
+        isLoaded: false,
+        isPlaying: false,
+        volume: 1.0,
+        rate: 1.0,
+      };
+    }
+  }
+
+  getCurrentSermon(): AudioSermon | null {
+    if (this.currentIndex >= 0 && this.currentIndex < this.currentQueue.length) {
+      return this.currentQueue[this.currentIndex];
+    }
+    return null;
+  }
+
+  getQueue(): AudioSermon[] {
+    return [...this.currentQueue];
   }
 
   getCurrentIndex(): number {
     return this.currentIndex;
   }
 
-  hasNext(): boolean {
-    return this.currentIndex < this.playlist.length - 1;
-  }
-
-  hasPrevious(): boolean {
-    return this.currentIndex > 0;
-  }
-
-  async setVolume(volume: number): Promise<void> {
-    try {
-      await this.ensurePlayerReady();
-      this.player!.volume = Math.max(0, Math.min(1, volume));
-    } catch (error) {
-      console.error('Set volume error:', error);
+  private parseDuration(duration: string): number {
+    // Parse duration string like "45:30" to seconds
+    const parts = duration.split(':');
+    if (parts.length === 2) {
+      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
     }
-  }
-
-  getVolume(): number {
-    return this.player?.volume || 1.0;
-  }
-
-  // Method to check if audio URL is valid
-  async validateAudioUrl(url: string): Promise<boolean> {
-    try {
-      const response = await fetch(url, { method: 'HEAD' });
-      const contentType = response.headers.get('content-type');
-      return response.ok && (contentType?.includes('audio') || contentType?.includes('video'));
-    } catch (error) {
-      console.error('URL validation error:', error);
-      return false;
-    }
-  }
-
-  // Check if the service is properly initialized
-  isReady(): boolean {
-    return this.isInitialized && this.player !== null;
+    return 0;
   }
 
   // Cleanup method
-  cleanup(): void {
+  async destroy(): Promise<void> {
     try {
-      if (this.player) {
-        this.player.pause();
-      }
-      this.currentSermon = null;
-      this.playlist = [];
+      await TrackPlayer.reset();
+      this.isSetup = false;
+      this.currentQueue = [];
       this.currentIndex = 0;
     } catch (error) {
-      console.error('Cleanup error:', error);
+      console.error('Destroy error:', error);
     }
   }
 }
+
+// Playback service for background audio
+export const PlaybackService = async function() {
+  TrackPlayer.addEventListener(Event.RemotePlay, () => TrackPlayer.play());
+  TrackPlayer.addEventListener(Event.RemotePause, () => TrackPlayer.pause());
+  TrackPlayer.addEventListener(Event.RemoteStop, () => TrackPlayer.stop());
+  TrackPlayer.addEventListener(Event.RemoteNext, () => TrackPlayer.skipToNext());
+  TrackPlayer.addEventListener(Event.RemotePrevious, () => TrackPlayer.skipToPrevious());
+  TrackPlayer.addEventListener(Event.RemoteSeek, (event) => TrackPlayer.seekTo(event.position));
+};
 
 export default TrackPlayerService;

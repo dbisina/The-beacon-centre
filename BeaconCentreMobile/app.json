@@ -26,6 +26,7 @@
           "audio",
           "background-processing"
         ],
+        "NSAudioUsageDescription": "Allow access to audio recording for sermon playback.",
         "NSCameraUsageDescription": "This app does not use the camera.",
         "NSMicrophoneUsageDescription": "This app does not use the microphone.",
         "NSUserTrackingUsageDescription": "This app uses anonymous analytics to improve user experience."
@@ -78,7 +79,14 @@
         }
       ],
       "expo-av",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow access to microphone for audio recording.",
+          "audioRecordingPermission": "Allow access to audio recording for sermon playback."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
