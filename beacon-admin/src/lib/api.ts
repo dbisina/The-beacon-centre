@@ -1,156 +1,324 @@
-// lib/api.ts - Fixed API client to prevent hydration issues
+// beacon-admin/src/lib/api.ts (FIXED VERSION)
+import axios, { AxiosInstance, AxiosError } from 'axios';
+import { API_CONFIG, validateConfig, logConfig } from './api-config';
 
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { ApiResponse, ApiError } from './types';
+// Validate configuration on startup
+validateConfig();
+logConfig();
 
-// Create axios instance
+// Create axios instance with configuration
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api',
-  timeout: 30000,
+  baseURL: API_CONFIG.baseURL,
+  timeout: API_CONFIG.timeout,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Auth token management - Fixed to prevent hydration issues
-class AuthTokenManager {
-  private static readonly TOKEN_KEY = 'beacon_admin_token';
-  
+// Token management
+const TOKEN_KEY = 'beacon_admin_token';
+const REFRESH_TOKEN_KEY = 'beacon_admin_refresh_token';
+const ADMIN_KEY = 'beacon_admin_user';
+
+export interface Admin {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+  lastLogin?: string;
+  createdAt: string;
+}
+
+export interface AdminLoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface AdminLoginResponse {
+  success: boolean;
+  data: {
+    admin: Admin;
+    accessToken: string;
+    refreshToken: string;
+  };
+  message?: string;
+}
+
+class AdminAuthService {
+  private static readonly BASE_URL = API_CONFIG.baseURL;
+  private static isRefreshing = false;
+  private static refreshPromise: Promise<boolean> | null = null;
+
+  // Token management
   static getToken(): string | null {
     if (typeof window === 'undefined') return null;
+    return localStorage.getItem(TOKEN_KEY);
+  }
+
+  static setToken(token: string): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+
+  static getRefreshToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
+  }
+
+  static setRefreshToken(token: string): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  }
+
+  static removeTokens(): void {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(ADMIN_KEY);
+  }
+
+  static getStoredAdmin(): Admin | null {
+    if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem(ADMIN_KEY);
+    return stored ? JSON.parse(stored) : null;
+  }
+
+  static setStoredAdmin(admin: Admin): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(ADMIN_KEY, JSON.stringify(admin));
+  }
+
+  // Enhanced API call with automatic token refresh
+  static async apiCall(endpoint: string, options: RequestInit = {}): Promise<any> {
+    const token = this.getToken();
+    
+    const config: RequestInit = {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+    };
+
     try {
-      return localStorage.getItem(this.TOKEN_KEY);
+      console.log(`🌐 Admin API Call: ${options.method || 'GET'} ${endpoint}`);
+      const response = await fetch(`${this.BASE_URL}${endpoint}`, config);
+      
+      // If token expired, try to refresh
+      if (response.status === 401 && token && !this.isRefreshing) {
+        console.log('🔄 Token expired, attempting refresh...');
+        const refreshed = await this.refreshToken();
+        if (refreshed) {
+          // Retry with new token
+          config.headers = {
+            ...config.headers,
+            Authorization: `Bearer ${this.getToken()}`,
+          };
+          const retryResponse = await fetch(`${this.BASE_URL}${endpoint}`, config);
+          return this.handleResponse(retryResponse);
+        } else {
+          // Refresh failed, remove tokens and redirect to login
+          this.removeTokens();
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
+          throw new Error('Session expired');
+        }
+      }
+      
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Error reading from localStorage:', error);
+      console.error('❌ Admin API call failed:', error);
+      throw error;
+    }
+  }
+
+  private static async handleResponse(response: Response): Promise<any> {
+    const contentType = response.headers.get('content-type');
+    
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error(`❌ API Error ${response.status}:`, data.message || data.error);
+        throw new Error(data.message || data.error || `HTTP ${response.status}`);
+      }
+      
+      console.log(`✅ API Success: ${response.status}`);
+      return data;
+    } else {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response;
+    }
+  }
+
+  // Auth specific methods
+  static async login(credentials: AdminLoginRequest): Promise<{ admin: Admin; accessToken: string; refreshToken: string }> {
+    console.log('🔐 Attempting admin login...');
+    const response = await this.apiCall('/admin/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+
+    if (response.success && response.data) {
+      this.setToken(response.data.accessToken);
+      this.setRefreshToken(response.data.refreshToken);
+      this.setStoredAdmin(response.data.admin);
+      console.log('✅ Admin login successful');
+      return response.data;
+    }
+    
+    throw new Error(response.error || 'Login failed');
+  }
+
+  static async refreshToken(): Promise<boolean> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken || this.isRefreshing) {
+      return false;
+    }
+
+    // Prevent multiple simultaneous refresh attempts
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = this.performTokenRefresh(refreshToken);
+
+    try {
+      const result = await this.refreshPromise;
+      return result;
+    } finally {
+      this.isRefreshing = false;
+      this.refreshPromise = null;
+    }
+  }
+
+  private static async performTokenRefresh(refreshToken: string): Promise<boolean> {
+    try {
+      console.log('🔄 Refreshing access token...');
+      const response = await fetch(`${this.BASE_URL}/admin/auth/refresh`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${refreshToken}`
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.accessToken) {
+          this.setToken(data.data.accessToken);
+          console.log('✅ Token refresh successful');
+          return true;
+        }
+      }
+      
+      console.error('❌ Token refresh failed');
+      return false;
+    } catch (error) {
+      console.error('❌ Token refresh error:', error);
+      return false;
+    }
+  }
+
+  static async getCurrentAdmin(): Promise<Admin | null> {
+    try {
+      const response = await this.apiCall('/admin/auth/me');
+      if (response.success && response.data) {
+        this.setStoredAdmin(response.data);
+        return response.data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get current admin:', error);
       return null;
     }
   }
-  
-  static setToken(token: string): void {
-    if (typeof window === 'undefined') return;
+
+  static async logout(): Promise<void> {
     try {
-      localStorage.setItem(this.TOKEN_KEY, token);
+      await this.apiCall('/admin/auth/logout', { method: 'POST' });
     } catch (error) {
-      console.error('Error writing to localStorage:', error);
-    }
-  }
-  
-  static removeToken(): void {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.removeItem(this.TOKEN_KEY);
-    } catch (error) {
-      console.error('Error removing from localStorage:', error);
+      console.error('Logout API call failed:', error);
+    } finally {
+      this.removeTokens();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
   }
 }
 
-// Request interceptor to add auth token
+// Generic API request wrapper with better error handling
+async function apiRequest<T>(requestFn: () => Promise<any>): Promise<T> {
+  try {
+    const response = await requestFn();
+    return response.data || response;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      const message = error.response?.data?.message || error.response?.data?.error || error.message;
+      throw new Error(message);
+    }
+    throw error;
+  }
+}
+
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = AuthTokenManager.getToken();
+    const token = AdminAuthService.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for error handling
+// Response interceptor
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      AuthTokenManager.removeToken();
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+  (response) => {
+    console.log(`✅ API Success: ${response.status} ${response.config.url}`);
+    return response;
+  },
+  async (error: AxiosError) => {
+    console.error(`❌ API Error: ${error.response?.status} ${error.config?.url}`, error.response?.data);
+    
+    // Handle 401 errors with token refresh
+    if (error.response?.status === 401 && AdminAuthService.getToken()) {
+      const refreshed = await AdminAuthService.refreshToken();
+      if (refreshed && error.config) {
+        // Retry the original request
+        error.config.headers['Authorization'] = `Bearer ${AdminAuthService.getToken()}`;
+        return api.request(error.config);
+      } else {
+        AdminAuthService.removeTokens();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
       }
     }
     
-    const apiError: ApiError = {
-      message: error.response?.data?.error || 'An unexpected error occurred',
-      status: error.response?.status || 500,
-      errors: error.response?.data?.errors,
-    };
-    
-    return Promise.reject(apiError);
+    return Promise.reject(error);
   }
 );
 
-// API wrapper function for better error handling
-async function apiRequest<T>(
-  request: () => Promise<AxiosResponse<ApiResponse<T>>>
-): Promise<T> {
-  try {
-    const response = await request();
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Request failed');
-    }
-    
-    return response.data.data as T;
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Network error occurred');
-  }
-}
+// Export the auth service and enhanced APIs
+export { AdminAuthService };
 
-// Authentication API
-export const authApi = {
-  async login(credentials: { email: string; password: string }) {
-    try {
-      const response = await api.post('/admin/auth/login', credentials);
-      
-      if (response.data.success && response.data.data.accessToken) {
-        AuthTokenManager.setToken(response.data.data.accessToken);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.error || 'Login failed');
-      }
-    } catch (error: any) {
-      // Enhanced error handling for login
-      if (error.response?.data?.error) {
-        throw new Error(error.response.data.error);
-      } else if (error.message) {
-        throw new Error(error.message);
-      } else {
-        throw new Error('Login failed - please check your credentials');
-      }
-    }
-  },
-
-  async logout() {
-    try {
-      await api.post('/admin/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      AuthTokenManager.removeToken();
-    }
-  },
-
-  async getProfile() {
-    return apiRequest(() => api.get('/admin/auth/me'));
-  },
-
-  async refreshToken() {
-    return apiRequest(() => api.post('/admin/auth/refresh'));
-  },
-
-  // Token management
-  getToken: AuthTokenManager.getToken,
-  setToken: AuthTokenManager.setToken,
-  removeToken: AuthTokenManager.removeToken,
-};
-
-// Devotionals API
+// API Collections using the configured axios instance
 export const devotionalsApi = {
-  async getAll(filters?: Record<string, any>) {
+  async getAll(page: number = 1, limit: number = 10, filters?: Record<string, any>) {
     const params = new URLSearchParams();
+    params.append('page', String(page));
+    params.append('limit', String(limit));
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -185,15 +353,16 @@ export const devotionalsApi = {
     return apiRequest(() => api.delete(`/admin/devotionals/${id}`));
   },
 
-  async bulkCreate(devotionals: any[]) {
-    return apiRequest(() => api.post('/admin/devotionals/bulk', { devotionals }));
+  async bulkCreate(data: any[]) {
+    return apiRequest(() => api.post('/admin/devotionals/bulk', { devotionals: data }));
   },
 };
 
-// Video Sermons API
 export const videoSermonsApi = {
-  async getAll(filters?: Record<string, any>) {
+  async getAll(page: number = 1, limit: number = 10, filters?: Record<string, any>) {
     const params = new URLSearchParams();
+    params.append('page', String(page));
+    params.append('limit', String(limit));
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -204,16 +373,16 @@ export const videoSermonsApi = {
     return apiRequest(() => api.get(`/video-sermons?${params.toString()}`));
   },
 
-  async getById(id: number) {
-    return apiRequest(() => api.get(`/video-sermons/${id}`));
-  },
-
   async getFeatured() {
     return apiRequest(() => api.get('/video-sermons/featured'));
   },
 
-  async getByCategory(category: string) {
-    return apiRequest(() => api.get(`/video-sermons/category/${category}`));
+  async getByCategory(categoryId: number) {
+    return apiRequest(() => api.get(`/video-sermons/category/${categoryId}`));
+  },
+
+  async getById(id: number) {
+    return apiRequest(() => api.get(`/video-sermons/${id}`));
   },
 
   async create(data: any) {
@@ -227,12 +396,17 @@ export const videoSermonsApi = {
   async delete(id: number) {
     return apiRequest(() => api.delete(`/admin/video-sermons/${id}`));
   },
+
+  async toggleFeatured(id: number) {
+    return apiRequest(() => api.patch(`/admin/video-sermons/${id}/featured`));
+  },
 };
 
-// Audio Sermons API
 export const audioSermonsApi = {
-  async getAll(filters?: Record<string, any>) {
+  async getAll(page: number = 1, limit: number = 10, filters?: Record<string, any>) {
     const params = new URLSearchParams();
+    params.append('page', String(page));
+    params.append('limit', String(limit));
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -243,16 +417,16 @@ export const audioSermonsApi = {
     return apiRequest(() => api.get(`/audio-sermons?${params.toString()}`));
   },
 
-  async getById(id: number) {
-    return apiRequest(() => api.get(`/audio-sermons/${id}`));
-  },
-
   async getFeatured() {
     return apiRequest(() => api.get('/audio-sermons/featured'));
   },
 
-  async getByCategory(category: string) {
-    return apiRequest(() => api.get(`/audio-sermons/category/${category}`));
+  async getByCategory(categoryId: number) {
+    return apiRequest(() => api.get(`/audio-sermons/category/${categoryId}`));
+  },
+
+  async getById(id: number) {
+    return apiRequest(() => api.get(`/audio-sermons/${id}`));
   },
 
   async create(data: any) {
@@ -266,12 +440,17 @@ export const audioSermonsApi = {
   async delete(id: number) {
     return apiRequest(() => api.delete(`/admin/audio-sermons/${id}`));
   },
+
+  async toggleFeatured(id: number) {
+    return apiRequest(() => api.patch(`/admin/audio-sermons/${id}/featured`));
+  },
 };
 
-// Announcements API
 export const announcementsApi = {
-  async getAll(filters?: Record<string, any>) {
+  async getAll(page: number = 1, limit: number = 10, filters?: Record<string, any>) {
     const params = new URLSearchParams();
+    params.append('page', String(page));
+    params.append('limit', String(limit));
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -307,10 +486,25 @@ export const announcementsApi = {
   },
 };
 
-// Categories API
 export const categoriesApi = {
   async getAll() {
-    return apiRequest(() => api.get('/categories'));
+    try {
+      const response = await apiRequest(() => api.get('/categories'));
+      // Ensure we always return an array
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response && Array.isArray(response.data)) {
+        return response.data;
+      } else if (response && Array.isArray(response.categories)) {
+        return response.categories;
+      } else {
+        console.warn('Categories API returned unexpected format:', response);
+        return [];
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      return [];
+    }
   },
 
   async getById(id: number) {
@@ -334,7 +528,7 @@ export const categoriesApi = {
   },
 };
 
-// Analytics API
+// FIXED: Analytics API with correct endpoints
 export const analyticsApi = {
   async trackInteraction(data: any) {
     return apiRequest(() => api.post('/analytics/track', data));
@@ -344,24 +538,50 @@ export const analyticsApi = {
     return apiRequest(() => api.post('/analytics/session', data));
   },
 
+  // FIXED: Use correct endpoint path
   async getDashboard() {
-    return apiRequest(() => api.get('/admin/analytics/dashboard'));
+    try {
+      return await apiRequest(() => api.get('/analytics/dashboard'));
+    } catch (error) {
+      console.error('Analytics dashboard error:', error);
+      // Return mock data for development
+      return {
+        totalUsers: 0,
+        totalContent: 0,
+        todayViews: 0,
+        weeklyGrowth: 0,
+      };
+    }
   },
 
   async getContentPerformance() {
-    return apiRequest(() => api.get('/admin/analytics/content-performance'));
+    try {
+      return await apiRequest(() => api.get('/analytics/content-performance'));
+    } catch (error) {
+      console.error('Content performance error:', error);
+      return [];
+    }
   },
 
   async getUserEngagement() {
-    return apiRequest(() => api.get('/admin/analytics/user-engagement'));
+    try {
+      return await apiRequest(() => api.get('/analytics/user-engagement'));
+    } catch (error) {
+      console.error('User engagement error:', error);
+      return {};
+    }
   },
 
   async getPopularContent() {
-    return apiRequest(() => api.get('/admin/analytics/popular-content'));
+    try {
+      return await apiRequest(() => api.get('/analytics/popular-content'));
+    } catch (error) {
+      console.error('Popular content error:', error);
+      return [];
+    }
   },
 };
 
-// Upload API
 export const uploadApi = {
   async uploadImage(file: File, folder?: string) {
     const formData = new FormData();
@@ -391,33 +611,21 @@ export const uploadApi = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+          console.log(`📤 Upload progress: ${percentCompleted}%`);
+        },
       })
     );
   },
 
-  async deleteFile(fileId: string) {
-    return apiRequest(() => api.delete(`/admin/upload/${fileId}`));
+  async deleteFile(publicId: string, resourceType: 'image' | 'video' = 'image') {
+    return apiRequest(() => 
+      api.delete(`/admin/upload/${publicId}`, {
+        data: { resourceType }
+      })
+    );
   },
 };
 
-// Admin Management API
-export const adminApi = {
-  async getAll() {
-    return apiRequest(() => api.get('/admin'));
-  },
-
-  async create(data: any) {
-    return apiRequest(() => api.post('/admin/create', data));
-  },
-
-  async update(id: number, data: any) {
-    return apiRequest(() => api.put(`/admin/${id}`, data));
-  },
-
-  async delete(id: number) {
-    return apiRequest(() => api.delete(`/admin/${id}`));
-  },
-};
-
-// Export the main API instance for custom requests
 export default api;

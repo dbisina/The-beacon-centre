@@ -1,60 +1,4 @@
-// src/lib/youtube.ts - YouTube API client and utilities
-
-interface YouTubeVideoSnippet {
-  title: string;
-  description: string;
-  channelId: string;
-  channelTitle: string;
-  publishedAt: string;
-  thumbnails: {
-    default: { url: string; width: number; height: number };
-    medium: { url: string; width: number; height: number };
-    high: { url: string; width: number; height: number };
-    standard?: { url: string; width: number; height: number };
-    maxres?: { url: string; width: number; height: number };
-  };
-  tags?: string[];
-  categoryId: string;
-  defaultLanguage?: string;
-  defaultAudioLanguage?: string;
-}
-
-interface YouTubeVideoContentDetails {
-  duration: string; // ISO 8601 format (PT4M13S)
-  dimension: string;
-  definition: string;
-  caption: string;
-  licensedContent: boolean;
-  regionRestriction?: {
-    allowed?: string[];
-    blocked?: string[];
-  };
-}
-
-interface YouTubeVideoStatistics {
-  viewCount: string;
-  likeCount?: string;
-  dislikeCount?: string;
-  favoriteCount: string;
-  commentCount?: string;
-}
-
-interface YouTubeVideoResponse {
-  kind: string;
-  etag: string;
-  items: {
-    kind: string;
-    etag: string;
-    id: string;
-    snippet: YouTubeVideoSnippet;
-    contentDetails: YouTubeVideoContentDetails;
-    statistics: YouTubeVideoStatistics;
-  }[];
-  pageInfo: {
-    totalResults: number;
-    resultsPerPage: number;
-  };
-}
+// beacon-admin/src/lib/youtube.ts
 
 export interface YouTubeVideoInfo {
   id: string;
@@ -63,8 +7,8 @@ export interface YouTubeVideoInfo {
   channelTitle: string;
   channelId: string;
   publishedAt: string;
-  duration: string; // Formatted duration (e.g., "4:13")
-  durationISO: string; // ISO 8601 format
+  duration: string; 
+  durationISO: string;
   thumbnails: {
     default: string;
     medium: string;
@@ -79,13 +23,27 @@ export interface YouTubeVideoInfo {
   isLiveBroadcast: boolean;
   isPrivate: boolean;
   isEmbeddable: boolean;
-  error?: string;
 }
 
-class YouTubeAPIError extends Error {
+export interface YouTubeChannelInfo {
+  id: string;
+  title: string;
+  description: string;
+  customUrl?: string;
+  subscriberCount: number;
+  videoCount: number;
+  viewCount: number;
+  thumbnails: {
+    default: string;
+    medium: string;
+    high: string;
+  };
+}
+
+export class YouTubeAPIError extends Error {
   constructor(
     message: string,
-    public code?: string,
+    public code: string,
     public status?: number
   ) {
     super(message);
@@ -93,16 +51,73 @@ class YouTubeAPIError extends Error {
   }
 }
 
+interface YouTubeVideoResponse {
+  items: Array<{
+    id: string;
+    snippet: {
+      title: string;
+      description: string;
+      channelTitle: string;
+      channelId: string;
+      publishedAt: string;
+      thumbnails: {
+        default: { url: string };
+        medium: { url: string };
+        high: { url: string };
+        standard?: { url: string };
+        maxres?: { url: string };
+      };
+      tags?: string[];
+      categoryId: string;
+    };
+    contentDetails: {
+      duration: string;
+      regionRestriction?: {
+        blocked?: string[];
+      };
+    };
+    statistics: {
+      viewCount: string;
+      likeCount?: string;
+      tags?: string[];
+    };
+  }>;
+}
+
+interface YouTubeChannelResponse {
+  items: Array<{
+    id: string;
+    snippet: {
+      title: string;
+      description: string;
+      customUrl?: string;
+      thumbnails: {
+        default: { url: string };
+        medium: { url: string };
+        high: { url: string };
+      };
+    };
+    statistics: {
+      subscriberCount: string;
+      videoCount: string;
+      viewCount: string;
+    };
+  }>;
+}
+
 export class YouTubeAPI {
-  private apiKey: string;
-  private baseURL = 'https://www.googleapis.com/youtube/v3';
+  private readonly apiKey: string;
+  private readonly baseURL = 'https://www.googleapis.com/youtube/v3';
 
   constructor(apiKey: string) {
+    if (!apiKey) {
+      throw new YouTubeAPIError('YouTube API key is required', 'MISSING_API_KEY');
+    }
     this.apiKey = apiKey;
   }
 
   /**
-   * Extract video ID from various YouTube URL formats
+   * Extract YouTube video ID from various URL formats
    */
   static extractVideoId(url: string): string | null {
     const patterns = [
@@ -121,18 +136,11 @@ export class YouTubeAPI {
   }
 
   /**
-   * Validate if a string is a valid YouTube video ID
-   */
-  static isValidVideoId(id: string): boolean {
-    return /^[a-zA-Z0-9_-]{11}$/.test(id);
-  }
-
-  /**
-   * Convert ISO 8601 duration to readable format
+   * Convert ISO 8601 duration to human readable format
    */
   static formatDuration(isoDuration: string): string {
     const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-    if (!match) return '0:00';
+    if (!match) return '00:00';
 
     const hours = parseInt(match[1] || '0');
     const minutes = parseInt(match[2] || '0');
@@ -140,25 +148,38 @@ export class YouTubeAPI {
 
     if (hours > 0) {
       return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
   /**
-   * Get video information from YouTube API
+   * Validate if the API key works
    */
-  async getVideoInfo(videoUrl: string): Promise<YouTubeVideoInfo> {
-    const videoId = YouTubeAPI.extractVideoId(videoUrl);
-    
+  async validateApiKey(): Promise<boolean> {
+    try {
+      const response = await fetch(
+        `${this.baseURL}/videos?part=snippet&id=dQw4w9WgXcQ&key=${this.apiKey}`
+      );
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get detailed information about a YouTube video
+   */
+  async getVideoInfo(videoId: string): Promise<YouTubeVideoInfo> {
     if (!videoId) {
-      throw new YouTubeAPIError('Invalid YouTube URL or video ID');
+      throw new YouTubeAPIError('Video ID is required', 'MISSING_VIDEO_ID');
     }
 
     try {
       const response = await fetch(
         `${this.baseURL}/videos?` +
         new URLSearchParams({
-          part: 'snippet,contentDetails,statistics,status',
+          part: 'snippet,contentDetails,statistics',
           id: videoId,
           key: this.apiKey,
         })
@@ -166,32 +187,41 @@ export class YouTubeAPI {
 
       if (!response.ok) {
         if (response.status === 403) {
-          throw new YouTubeAPIError('API quota exceeded or invalid API key', 'QUOTA_EXCEEDED', 403);
+          throw new YouTubeAPIError(
+            'YouTube API key is invalid or quota exceeded. Please check your API credentials.',
+            'INVALID_API_KEY',
+            403
+          );
         }
-        if (response.status === 400) {
-          throw new YouTubeAPIError('Bad request - check your API key', 'BAD_REQUEST', 400);
+        if (response.status === 404) {
+          throw new YouTubeAPIError(
+            'Video not found. The video may be private, deleted, or the ID is incorrect.',
+            'VIDEO_NOT_FOUND',
+            404
+          );
         }
-        throw new YouTubeAPIError(`HTTP ${response.status}: ${response.statusText}`, 'HTTP_ERROR', response.status);
+        throw new YouTubeAPIError(
+          `YouTube API request failed: ${response.statusText}`,
+          'API_ERROR',
+          response.status
+        );
       }
 
       const data: YouTubeVideoResponse = await response.json();
-
+      
       if (!data.items || data.items.length === 0) {
-        throw new YouTubeAPIError('Video not found or is private/deleted', 'VIDEO_NOT_FOUND');
+        throw new YouTubeAPIError(
+          'Video not found or is not publicly available',
+          'VIDEO_NOT_FOUND',
+          404
+        );
       }
 
       const video = data.items[0];
-      const snippet = video.snippet;
-      const contentDetails = video.contentDetails;
-      const statistics = video.statistics;
-
-      // Check if video is available
-      if (snippet.title === 'Private video' || snippet.title === 'Deleted video') {
-        throw new YouTubeAPIError('Video is private or has been deleted', 'VIDEO_UNAVAILABLE');
-      }
+      const { snippet, contentDetails, statistics } = video;
 
       return {
-        id: videoId,
+        id: video.id,
         title: snippet.title,
         description: snippet.description,
         channelTitle: snippet.channelTitle,
@@ -224,6 +254,71 @@ export class YouTubeAPI {
         'Failed to fetch video information. Please check your internet connection.',
         'NETWORK_ERROR'
       );
+    }
+  }
+
+  /**
+   * Get information about a YouTube video from URL
+   */
+  async getVideoInfoFromUrl(url: string): Promise<YouTubeVideoInfo> {
+    const videoId = YouTubeAPI.extractVideoId(url);
+    
+    if (!videoId) {
+      throw new YouTubeAPIError(
+        'Invalid YouTube URL. Please provide a valid YouTube video URL.',
+        'INVALID_URL'
+      );
+    }
+
+    return this.getVideoInfo(videoId);
+  }
+
+  /**
+   * Get channel information
+   */
+  async getChannelInfo(channelId: string): Promise<YouTubeChannelInfo> {
+    try {
+      const response = await fetch(
+        `${this.baseURL}/channels?` +
+        new URLSearchParams({
+          part: 'snippet,statistics',
+          id: channelId,
+          key: this.apiKey,
+        })
+      );
+
+      if (!response.ok) {
+        throw new YouTubeAPIError(`Channel request failed: ${response.statusText}`, 'API_ERROR', response.status);
+      }
+
+      const data: YouTubeChannelResponse = await response.json();
+      
+      if (!data.items || data.items.length === 0) {
+        throw new YouTubeAPIError('Channel not found', 'CHANNEL_NOT_FOUND', 404);
+      }
+
+      const channel = data.items[0];
+      const { snippet, statistics } = channel;
+
+      return {
+        id: channel.id,
+        title: snippet.title,
+        description: snippet.description,
+        customUrl: snippet.customUrl,
+        subscriberCount: parseInt(statistics.subscriberCount || '0'),
+        videoCount: parseInt(statistics.videoCount || '0'),
+        viewCount: parseInt(statistics.viewCount || '0'),
+        thumbnails: {
+          default: snippet.thumbnails.default.url,
+          medium: snippet.thumbnails.medium.url,
+          high: snippet.thumbnails.high.url,
+        },
+      };
+    } catch (error) {
+      if (error instanceof YouTubeAPIError) {
+        throw error;
+      }
+      throw new YouTubeAPIError('Failed to fetch channel information', 'NETWORK_ERROR');
     }
   }
 
@@ -300,200 +395,151 @@ export class YouTubeAPI {
   }
 
   /**
-   * Get channel information
+   * Get videos from a specific channel
    */
-  async getChannelInfo(channelId: string) {
+  async getChannelVideos(channelId: string, maxResults = 10): Promise<YouTubeVideoInfo[]> {
     try {
-      const response = await fetch(
+      // First get the uploads playlist ID
+      const channelResponse = await fetch(
         `${this.baseURL}/channels?` +
         new URLSearchParams({
-          part: 'snippet,statistics',
+          part: 'contentDetails',
           id: channelId,
           key: this.apiKey,
         })
       );
 
-      if (!response.ok) {
-        throw new YouTubeAPIError(`Failed to fetch channel info: ${response.statusText}`);
+      const channelData = await channelResponse.json();
+      const uploadsPlaylistId = channelData.items[0]?.contentDetails?.relatedPlaylists?.uploads;
+
+      if (!uploadsPlaylistId) {
+        throw new YouTubeAPIError('Channel uploads not found', 'UPLOADS_NOT_FOUND');
       }
 
-      const data = await response.json();
-      
-      if (!data.items || data.items.length === 0) {
-        throw new YouTubeAPIError('Channel not found');
+      // Get videos from uploads playlist
+      const playlistResponse = await fetch(
+        `${this.baseURL}/playlistItems?` +
+        new URLSearchParams({
+          part: 'snippet',
+          playlistId: uploadsPlaylistId,
+          maxResults: maxResults.toString(),
+          key: this.apiKey,
+        })
+      );
+
+      const playlistData = await playlistResponse.json();
+      const videoIds = playlistData.items.map((item: any) => item.snippet.resourceId.videoId).join(',');
+
+      // Get detailed info
+      if (videoIds) {
+        const detailsResponse = await fetch(
+          `${this.baseURL}/videos?` +
+          new URLSearchParams({
+            part: 'snippet,contentDetails,statistics',
+            id: videoIds,
+            key: this.apiKey,
+          })
+        );
+
+        const detailsData: YouTubeVideoResponse = await detailsResponse.json();
+        
+        return detailsData.items.map(video => ({
+          id: video.id,
+          title: video.snippet.title,
+          description: video.snippet.description,
+          channelTitle: video.snippet.channelTitle,
+          channelId: video.snippet.channelId,
+          publishedAt: video.snippet.publishedAt,
+          duration: YouTubeAPI.formatDuration(video.contentDetails.duration),
+          durationISO: video.contentDetails.duration,
+          thumbnails: {
+            default: video.snippet.thumbnails.default.url,
+            medium: video.snippet.thumbnails.medium.url,
+            high: video.snippet.thumbnails.high.url,
+            standard: video.snippet.thumbnails.standard?.url,
+            maxres: video.snippet.thumbnails.maxres?.url,
+          },
+          viewCount: parseInt(video.statistics.viewCount || '0'),
+          likeCount: video.statistics.likeCount ? parseInt(video.statistics.likeCount) : undefined,
+          tags: video.snippet.tags,
+          categoryId: video.snippet.categoryId,
+          isLiveBroadcast: video.contentDetails.duration === 'P0D',
+          isPrivate: false,
+          isEmbeddable: true,
+        }));
       }
 
-      const channel = data.items[0];
-      
-      return {
-        id: channel.id,
-        title: channel.snippet.title,
-        description: channel.snippet.description,
-        customUrl: channel.snippet.customUrl,
-        thumbnails: channel.snippet.thumbnails,
-        subscriberCount: parseInt(channel.statistics.subscriberCount || '0'),
-        videoCount: parseInt(channel.statistics.videoCount || '0'),
-        viewCount: parseInt(channel.statistics.viewCount || '0'),
-      };
+      return [];
     } catch (error) {
       if (error instanceof YouTubeAPIError) {
         throw error;
       }
-      throw new YouTubeAPIError('Failed to fetch channel information');
+      throw new YouTubeAPIError('Failed to fetch channel videos', 'NETWORK_ERROR');
     }
   }
 }
 
-// Create YouTube API instance
-const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || '';
+// Singleton instance
+let youtubeAPI: YouTubeAPI | null = null;
 
-export const youtubeAPI = new YouTubeAPI(YOUTUBE_API_KEY);
+export const getYouTubeAPI = (): YouTubeAPI => {
+  const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+  
+  if (!apiKey) {
+    throw new YouTubeAPIError(
+      'YouTube API key not configured. Please set NEXT_PUBLIC_YOUTUBE_API_KEY in your environment variables.',
+      'MISSING_API_KEY'
+    );
+  }
 
-// Hook for using YouTube API in React components
-export const useYouTubeAPI = () => {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  if (!youtubeAPI) {
+    youtubeAPI = new YouTubeAPI(apiKey);
+  }
 
-  const getVideoInfo = React.useCallback(async (url: string): Promise<YouTubeVideoInfo | null> => {
-    if (!YOUTUBE_API_KEY) {
-      setError('YouTube API key not configured');
-      return null;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const videoInfo = await youtubeAPI.getVideoInfo(url);
-      return videoInfo;
-    } catch (error) {
-      const errorMessage = error instanceof YouTubeAPIError 
-        ? error.message 
-        : 'Failed to fetch video information';
-      setError(errorMessage);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const searchVideos = React.useCallback(async (query: string, maxResults = 10): Promise<YouTubeVideoInfo[]> => {
-    if (!YOUTUBE_API_KEY) {
-      setError('YouTube API key not configured');
-      return [];
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const videos = await youtubeAPI.searchVideos(query, maxResults);
-      return videos;
-    } catch (error) {
-      const errorMessage = error instanceof YouTubeAPIError 
-        ? error.message 
-        : 'Failed to search videos';
-      setError(errorMessage);
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return {
-    getVideoInfo,
-    searchVideos,
-    isLoading,
-    error,
-    clearError: () => setError(null),
-  };
+  return youtubeAPI;
 };
 
-// Utility functions for frontend use
-export const YouTubeUtils = {
-  extractVideoId: YouTubeAPI.extractVideoId,
-  isValidVideoId: YouTubeAPI.isValidVideoId,
-  formatDuration: YouTubeAPI.formatDuration,
-  
+// Utility functions for the admin dashboard
+export const youtubeUtils = {
   /**
-   * Get the best thumbnail URL for a given size preference
+   * Check if YouTube API is configured
    */
-  getBestThumbnail: (thumbnails: YouTubeVideoInfo['thumbnails'], preferredSize: 'small' | 'medium' | 'large' = 'medium'): string => {
-    switch (preferredSize) {
-      case 'large':
-        return thumbnails.maxres || thumbnails.standard || thumbnails.high || thumbnails.medium || thumbnails.default;
-      case 'medium':
-        return thumbnails.high || thumbnails.medium || thumbnails.standard || thumbnails.default;
-      case 'small':
-        return thumbnails.medium || thumbnails.default || thumbnails.high;
-      default:
-        return thumbnails.medium || thumbnails.default;
-    }
+  isConfigured(): boolean {
+    return !!process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+  },
+
+  /**
+   * Get video thumbnail URL (with fallback)
+   */
+  getThumbnailUrl(videoId: string, quality: 'default' | 'medium' | 'high' | 'standard' | 'maxres' = 'high'): string {
+    return `https://img.youtube.com/vi/${videoId}/${quality === 'high' ? 'hqdefault' : quality}.jpg`;
   },
 
   /**
    * Generate YouTube embed URL
    */
-  getEmbedUrl: (videoId: string, options?: {
-    autoplay?: boolean;
-    start?: number; // Start time in seconds
-    end?: number; // End time in seconds
-    loop?: boolean;
-    controls?: boolean;
-    modestbranding?: boolean;
-    rel?: boolean; // Show related videos
-  }): string => {
-    const params = new URLSearchParams();
-    
-    if (options?.autoplay) params.append('autoplay', '1');
-    if (options?.start) params.append('start', options.start.toString());
-    if (options?.end) params.append('end', options.end.toString());
-    if (options?.loop) params.append('loop', '1');
-    if (options?.controls === false) params.append('controls', '0');
-    if (options?.modestbranding) params.append('modestbranding', '1');
-    if (options?.rel === false) params.append('rel', '0');
+  getEmbedUrl(videoId: string, autoplay = false, controls = true): string {
+    const params = new URLSearchParams({
+      ...(autoplay && { autoplay: '1' }),
+      ...(controls && { controls: '1' }),
+      rel: '0', // Don't show related videos
+      modestbranding: '1', // Modest YouTube branding
+    });
 
-    const queryString = params.toString();
-    return `https://www.youtube.com/embed/${videoId}${queryString ? `?${queryString}` : ''}`;
+    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
   },
 
   /**
    * Generate YouTube watch URL
    */
-  getWatchUrl: (videoId: string, startTime?: number): string => {
-    const baseUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    return startTime ? `${baseUrl}&t=${startTime}s` : baseUrl;
+  getWatchUrl(videoId: string): string {
+    return `https://www.youtube.com/watch?v=${videoId}`;
   },
 
   /**
-   * Format view count for display
+   * Validate video ID format
    */
-  formatViewCount: (count: number): string => {
-    if (count >= 1000000) {
-      return `${(count / 1000000).toFixed(1)}M views`;
-    }
-    if (count >= 1000) {
-      return `${(count / 1000).toFixed(1)}K views`;
-    }
-    return `${count} views`;
-  },
-
-  /**
-   * Format publish date for display
-   */
-  formatPublishDate: (publishedAt: string): string => {
-    const date = new Date(publishedAt);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-    if (diffDays < 365) return `${Math.ceil(diffDays / 30)} months ago`;
-    return `${Math.ceil(diffDays / 365)} years ago`;
+  isValidVideoId(videoId: string): boolean {
+    return /^[a-zA-Z0-9_-]{11}$/.test(videoId);
   },
 };
-
-// React import for the hook
-import React from 'react';
