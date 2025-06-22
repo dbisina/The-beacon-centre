@@ -380,6 +380,7 @@ export interface EnvironmentConfig {
 // Middleware types - FIXED: Properly extend Express Request
 export interface AuthenticatedRequest extends Request {
   admin?: Omit<Admin, 'passwordHash'>;
+  adminId?: number; // Add this line
 }
 
 export interface MulterFile extends Express.Multer.File {
