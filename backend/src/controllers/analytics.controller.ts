@@ -1,4 +1,4 @@
-// backend/src/controllers/analytics.controller.ts - FIXED with proper dashboard data
+// backend/src/controllers/analytics.controller.ts - ORIGINAL WORKING VERSION
 import { Request, Response } from 'express';
 import { AnalyticsService } from '../services/analytics.service';
 import { sendSuccess, sendError } from '../utils/responses';
@@ -50,66 +50,26 @@ export class AnalyticsController {
     }
   }
 
-  // FIXED: Protected endpoint for admin dashboard with proper data structure
+  // Protected endpoint for admin dashboard - ORIGINAL WORKING VERSION
   static async getDashboard(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      console.log('Dashboard request from admin:', req.admin?.email);
+      console.log('📊 Dashboard request from admin:', req.admin?.email || 'Unknown');
       
       const result = await AnalyticsService.getDashboardData();
 
       if (result.success) {
-        // FIXED: Ensure the data structure matches what the dashboard expects
-        const dashboardData = {
-          totalDevices: result.data?.totalDevices || 0,
-          totalSessions: result.data?.totalSessions || 0,
-          totalInteractions: result.data?.totalInteractions || 0,
-          totalDevotionsRead: result.data?.totalDevotionsRead || 0,
-          totalVideosWatched: result.data?.totalVideosWatched || 0,
-          totalAudioPlayed: result.data?.totalAudioPlayed || 0,
-          activeDevicesLast30Days: result.data?.activeDevicesLast30Days || 0,
-          popularContent: result.data?.popularContent || [],
-          devicePlatforms: result.data?.devicePlatforms || { ios: 0, android: 0 },
-          weeklyStats: result.data?.weeklyStats || [],
-          monthlyGrowth: result.data?.monthlyGrowth || { current: 0, previous: 0, growth: 0 },
-          topCategories: result.data?.topCategories || [],
-          engagementMetrics: result.data?.engagementMetrics || {
-            averageSessionDuration: 0,
-            returnUserRate: 0,
-            contentCompletionRate: 0
-          }
-        };
-
-        sendSuccess(res, 'Dashboard data retrieved successfully', dashboardData);
+        console.log('✅ Dashboard data retrieved successfully');
+        sendSuccess(res, 'Dashboard data retrieved successfully', result.data);
       } else {
-        // Return default data structure if service fails
-        const defaultData = {
-          totalDevices: 0,
-          totalSessions: 0,
-          totalInteractions: 0,
-          totalDevotionsRead: 0,
-          totalVideosWatched: 0,
-          totalAudioPlayed: 0,
-          activeDevicesLast30Days: 0,
-          popularContent: [],
-          devicePlatforms: { ios: 0, android: 0 },
-          weeklyStats: [],
-          monthlyGrowth: { current: 0, previous: 0, growth: 0 },
-          topCategories: [],
-          engagementMetrics: {
-            averageSessionDuration: 0,
-            returnUserRate: 0,
-            contentCompletionRate: 0
-          }
-        };
-
-        console.warn('Analytics service failed, returning default data:', result.error);
-        sendSuccess(res, 'Dashboard data retrieved (defaults)', defaultData);
+        console.warn('⚠️ Analytics service failed, but we should never reach here due to fallbacks');
+        // This should never happen because service always returns success with mock data
+        sendError(res, result.error, 500, result.details);
       }
     } catch (error) {
-      console.error('Dashboard endpoint error:', error);
+      console.error('❌ Dashboard endpoint error:', error);
       
-      // Return default data even on error to prevent dashboard crashes
-      const defaultData = {
+      // Emergency fallback - return minimal data structure
+      const emergencyData = {
         totalDevices: 0,
         totalSessions: 0,
         totalInteractions: 0,
@@ -129,7 +89,7 @@ export class AnalyticsController {
         }
       };
 
-      sendSuccess(res, 'Dashboard data retrieved (error fallback)', defaultData);
+      sendSuccess(res, 'Dashboard data retrieved (emergency fallback)', emergencyData);
     }
   }
 
@@ -148,87 +108,51 @@ export class AnalyticsController {
       if (result.success) {
         sendSuccess(res, 'Content performance data retrieved successfully', result.data);
       } else {
-        sendError(res, result.error, 500, result.details);
+        sendError(res, result.error, 400, result.details);
       }
     } catch (error) {
-      sendError(res, 'Failed to retrieve content performance', 500, error);
+      sendError(res, 'Failed to get content performance', 500, error);
     }
   }
 
   // Protected endpoint for user engagement metrics
   static async getUserEngagement(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { period, platform } = req.query;
+      const { startDate, endDate } = req.query;
       
       const result = await AnalyticsService.getUserEngagement({
-        period: period as string,
-        platform: platform as string,
-      });
-
-      if (result.success) {
-        sendSuccess(res, 'User engagement data retrieved successfully', result.data);
-      } else {
-        sendError(res, result.error, 500, result.details);
-      }
-    } catch (error) {
-      sendError(res, 'Failed to retrieve user engagement', 500, error);
-    }
-  }
-
-  // Protected endpoint for popular content
-  static async getPopularContent(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const { contentType, period, limit } = req.query;
-      
-      const result = await AnalyticsService.getPopularContent({
-        contentType: contentType as string,
-        period: period as string,
-        limit: limit ? parseInt(limit as string) : 10,
-      });
-
-      if (result.success) {
-        sendSuccess(res, 'Popular content data retrieved successfully', result.data);
-      } else {
-        sendError(res, result.error, 500, result.details);
-      }
-    } catch (error) {
-      sendError(res, 'Failed to retrieve popular content', 500, error);
-    }
-  }
-
-  // Protected endpoint for analytics export
-  static async exportAnalytics(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const { format, startDate, endDate } = req.query;
-      
-      if (!['csv', 'json'].includes(format as string)) {
-        sendError(res, 'Invalid export format. Use csv or json', 400);
-        return;
-      }
-
-      const result = await AnalyticsService.exportAnalytics({
-        format: format as 'csv' | 'json',
         startDate: startDate as string,
         endDate: endDate as string,
       });
 
       if (result.success) {
-        const filename = `beacon-analytics-${new Date().toISOString().split('T')[0]}.${format}`;
-        
-        if (format === 'csv') {
-          res.setHeader('Content-Type', 'text/csv');
-          res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-          res.send(result.data);
-        } else {
-          res.setHeader('Content-Type', 'application/json');
-          res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-          res.json(result.data);
-        }
+        sendSuccess(res, 'User engagement data retrieved successfully', result.data);
       } else {
-        sendError(res, result.error, 500, result.details);
+        sendError(res, result.error, 400, result.details);
       }
     } catch (error) {
-      sendError(res, 'Failed to export analytics', 500, error);
+      sendError(res, 'Failed to get user engagement', 500, error);
+    }
+  }
+
+  // Protected endpoint for popular content metrics
+  static async getPopularContent(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { contentType, timeframe, limit } = req.query;
+      
+      const result = await AnalyticsService.getPopularContent({
+        contentType: contentType as string,
+        timeframe: timeframe as string,
+        limit: limit ? parseInt(limit as string) : undefined,
+      });
+
+      if (result.success) {
+        sendSuccess(res, 'Popular content data retrieved successfully', result.data);
+      } else {
+        sendError(res, result.error, 400, result.details);
+      }
+    } catch (error) {
+      sendError(res, 'Failed to get popular content', 500, error);
     }
   }
 }

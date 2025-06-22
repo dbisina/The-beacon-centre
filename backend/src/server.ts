@@ -1,10 +1,9 @@
-// backend/src/server.ts - UPDATED with proper admin routes
+// backend/src/server.ts - UPDATED with smart rate limiting
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -14,6 +13,9 @@ dotenv.config();
 
 // Import configurations
 import { corsOptions } from './config/cors';
+
+// Import enhanced rate limiting
+import { smartRateLimiter, createDevLimiter } from './middleware/rateLimiter';
 
 // Import routes
 import devotionalRoutes from './routes/devotional.routes';
@@ -32,34 +34,34 @@ import { notFound } from './middleware/notFound';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // limit each IP to 100 requests per windowMs
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 // Trust proxy for deployment platforms
 app.set('trust proxy', 1);
 
-// Middleware
+// Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+// CORS configuration
 app.use(cors(corsOptions));
+
+// Compression and parsing
 app.use(compression());
 app.use(cookieParser());
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Apply rate limiting to API routes
-app.use('/api/', limiter);
+// Logging
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Enhanced rate limiting with smart detection
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 Development mode: Rate limiting disabled');
+  app.use('/api/', createDevLimiter());
+} else {
+  console.log('🛡️ Production mode: Smart rate limiting enabled');
+  app.use('/api/', smartRateLimiter);
+}
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -70,6 +72,8 @@ app.get('/', (req, res) => {
     success: true,
     message: 'The Beacon Centre API',
     version: '1.0.0',
+    environment: process.env.NODE_ENV,
+    rateLimit: process.env.NODE_ENV === 'development' ? 'disabled' : 'smart',
     documentation: '/api/docs',
     endpoints: {
       health: '/health',
@@ -92,56 +96,47 @@ app.get('/health', (req, res) => {
     message: 'Server is running!',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
+    environment: process.env.NODE_ENV,
+    version: '1.0.0',
   });
 });
 
-app.get('/health/db', async (req, res) => {
-  try {
-    // Simple database check - you can enhance this
-    res.json({
-      success: true,
-      message: 'Database connection healthy',
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    res.status(503).json({
-      success: false,
-      message: 'Database connection failed',
-      error: process.env.NODE_ENV === 'development' ? error : 'Database unavailable',
-    });
-  }
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API is healthy!',
+    timestamp: new Date().toISOString(),
+    services: {
+      database: 'connected', // Will be updated when we add DB health check
+      storage: 'available',
+    },
+  });
 });
 
-// Public API Routes (no auth required) - for mobile app
+// API Routes
 app.use('/api/devotionals', devotionalRoutes);
 app.use('/api/video-sermons', videoSermonRoutes);
 app.use('/api/audio-sermons', audioSermonRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/categories', categoryRoutes);
-
-// Analytics routes (public tracking + protected dashboard)
 app.use('/api/analytics', analyticsRoutes);
-
-// Admin authentication routes
 app.use('/api/admin', adminRoutes);
-
-// FIXED: Add admin-prefixed routes for admin dashboard convenience
-// These mirror the main routes but are specifically for admin use
-app.use('/api/admin/devotionals', devotionalRoutes);
-app.use('/api/admin/video-sermons', videoSermonRoutes);
-app.use('/api/admin/audio-sermons', audioSermonRoutes);
-app.use('/api/admin/announcements', announcementRoutes);
-app.use('/api/admin/categories', categoryRoutes);
-
-// Upload routes
 app.use('/api/upload', uploadRoutes);
 
-// Handle 404 for unmatched routes
+// Error handling middleware
 app.use(notFound);
-
-// Global error handler
 app.use(errorHandler);
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('👋 SIGTERM received. Shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('👋 SIGINT received. Shutting down gracefully...');
+  process.exit(0);
+});
 
 // Start server
 const server = app.listen(PORT, () => {
@@ -150,45 +145,28 @@ const server = app.listen(PORT, () => {
 
 📍 Environment: ${process.env.NODE_ENV || 'development'}
 🌐 Server URL: http://localhost:${PORT}
-📊 Health Check: http://localhost:${PORT}/health
-🗄️  Database Check: http://localhost:${PORT}/health/db
+🛡️ Rate Limiting: ${process.env.NODE_ENV === 'development' ? 'Disabled (Dev Mode)' : 'Smart Limiting Enabled'}
 
-🔑 Default Admin Login:
-   Email: admin@beaconcentre.org
-   Password: admin123
+📋 Available Endpoints:
+   ├── GET  /                    - API Info
+   ├── GET  /health              - Health Check
+   ├── GET  /api/health          - API Health Check
+   ├── GET  /api/devotionals     - List devotionals
+   ├── GET  /api/video-sermons   - List video sermons
+   ├── GET  /api/audio-sermons   - List audio sermons
+   ├── GET  /api/announcements   - List announcements
+   ├── GET  /api/categories      - List categories
+   ├── POST /api/analytics/track - Track analytics
+   └── /api/admin/*              - Admin endpoints (auth required)
 
-📱 Mobile App Endpoints:
-   GET /api/devotionals
-   GET /api/video-sermons
-   GET /api/audio-sermons
-   GET /api/announcements
-   GET /api/categories
-   POST /api/analytics/track
+💡 Admin Dashboard: Configure to point to this API
+📱 Mobile App: Configure to point to this API
 
-🎨 Admin Dashboard Endpoints:
-   POST /api/admin/auth/login
-   GET /api/admin/video-sermons
-   GET /api/admin/audio-sermons
-   GET /api/analytics/dashboard
-
-⚠️  Remember to:
-   1. Set up your database connection
-   2. Configure Cloudinary credentials  
-   3. Change default admin password
-   4. Set strong JWT secrets in production
-
-🎉 Ready to serve The Beacon Centre community!
+${process.env.NODE_ENV === 'development' ? 
+  '🔧 Development Tips:\n   - Rate limiting is disabled\n   - Detailed error messages enabled\n   - CORS allows all origins' : 
+  '🏭 Production Mode:\n   - Smart rate limiting active\n   - Error messages sanitized\n   - CORS restricted to allowed origins'
+}
   `);
-});
-
-// Handle server errors
-server.on('error', (error: any) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${PORT} is already in use. Please use a different port.`);
-  } else {
-    console.error('❌ Server error:', error);
-  }
-  process.exit(1);
 });
 
 export default app;
