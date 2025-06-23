@@ -175,16 +175,16 @@ interface SearchAndFiltersProps {
 
 function SearchAndFilters({ searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, categories }: SearchAndFiltersProps) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8">
+    <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="flex-1 max-w-md">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="Search videos..."
+              placeholder="Search video sermons..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12 rounded-xl border-gray-200 focus:border-red-300 focus:ring-red-200"
+              className="pl-10 rounded-xl border-gray-200 focus:border-red-300 focus:ring-red-200"
             />
           </div>
         </div>
@@ -196,7 +196,7 @@ function SearchAndFilters({ searchQuery, setSearchQuery, selectedCategory, setSe
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories?.map((category) => (
+              {Array.isArray(categories) && categories.map((category) => (
                 <SelectItem key={category.id} value={category.name}>
                   {category.name}
                 </SelectItem>
@@ -414,7 +414,7 @@ export default function VideoSermonsPage() {
   });
 
   
-  const { data: categories } = useQuery({
+  const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: categoriesApi.getAll,
   });
@@ -506,7 +506,7 @@ export default function VideoSermonsPage() {
           setSearchQuery={setSearchQuery}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
-          categories={categories || []}
+          categories={Array.isArray(categories) ? categories : []}
         />
         
         {/* Video Grid */}

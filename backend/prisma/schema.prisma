@@ -115,8 +115,8 @@ model Category {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  videoSermons AudioSermon[]
-  audioSermons VideoSermon[]
+  videoSermons VideoSermon[]
+  audioSermons AudioSermon[]
 
   @@map("categories")
 }

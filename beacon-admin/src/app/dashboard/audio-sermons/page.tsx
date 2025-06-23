@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -63,17 +63,19 @@ function AudioPlayer({ src, title }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [audio] = useState(() => {
-    if (typeof window !== "undefined") {
-      const audioElement = new Audio(src);
-      audioElement.preload = "metadata";
-      return audioElement;
-    }
-    return null;
-  });
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // Initialize audio element on client side only
+  useEffect(() => {
+    setIsClient(true);
+    const audioElement = new Audio(src);
+    audioElement.preload = "metadata";
+    setAudio(audioElement);
+  }, [src]);
 
   React.useEffect(() => {
-    if (!audio) return;
+    if (!audio || !isClient) return;
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
@@ -88,10 +90,10 @@ function AudioPlayer({ src, title }: AudioPlayerProps) {
       audio.removeEventListener("loadedmetadata", updateDuration);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [audio]);
+  }, [audio, isClient]);
 
   const togglePlay = () => {
-    if (!audio) return;
+    if (!audio || !isClient) return;
 
     if (isPlaying) {
       audio.pause();
@@ -108,6 +110,19 @@ function AudioPlayer({ src, title }: AudioPlayerProps) {
   };
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Don't render audio player until client-side
+  if (!isClient) {
+    return (
+      <div className="flex items-center space-x-3 bg-purple-50 rounded-xl p-4 border border-purple-100">
+        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-purple-500 animate-pulse"></div>
+        <div className="flex-1 min-w-0">
+          <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+          <div className="h-2 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center space-x-3 bg-purple-50 rounded-xl p-4 border border-purple-100">

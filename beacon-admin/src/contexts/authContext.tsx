@@ -1,9 +1,9 @@
-
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Admin, AdminLoginRequest } from '@/lib/types';
+import { authApi, setAuthToken, clearAuth, getAuthToken } from '@/lib/api';
 
 interface AuthContextType {
   admin: Admin | null;
@@ -25,166 +25,33 @@ export const useAuth = () => {
   return context;
 };
 
-// API utility with improved token management
-class AuthAPI {
-  private static readonly BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-  private static readonly TOKEN_KEY = 'tbc_admin_token';
-  private static readonly REFRESH_TOKEN_KEY = 'tbc_admin_refresh_token';
-  private static readonly ADMIN_KEY = 'tbc_admin_data';
-
-  // Token management
-  static getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-
-  static setToken(token: string): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(this.TOKEN_KEY, token);
-  }
-
-  static getRefreshToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-  }
-
-  static setRefreshToken(token: string): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, token);
-  }
-
-  static removeTokens(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(this.ADMIN_KEY);
-  }
-
-  static getStoredAdmin(): Admin | null {
-    if (typeof window === 'undefined') return null;
-    const stored = localStorage.getItem(this.ADMIN_KEY);
+// Token management utilities
+const getStoredAdmin = (): Admin | null => {
+  try {
+    const stored = localStorage.getItem('tbc_admin_data');
     return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
   }
+};
 
-  static setStoredAdmin(admin: Admin): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(this.ADMIN_KEY, JSON.stringify(admin));
+const setStoredAdmin = (admin: Admin): void => {
+  try {
+    localStorage.setItem('tbc_admin_data', JSON.stringify(admin));
+  } catch (error) {
+    console.error('Failed to store admin data:', error);
   }
+};
 
-  // API calls with automatic token refresh
-  static async apiCall(endpoint: string, options: RequestInit = {}): Promise<any> {
-    const token = this.getToken();
-    
-    const config: RequestInit = {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-    };
-
-    try {
-      const response = await fetch(`${this.BASE_URL}${endpoint}`, config);
-      
-      // If token expired, try to refresh
-      if (response.status === 401 && token) {
-        const refreshed = await this.refreshToken();
-        if (refreshed) {
-          // Retry with new token
-          config.headers = {
-            ...config.headers,
-            Authorization: `Bearer ${this.getToken()}`,
-          };
-          const retryResponse = await fetch(`${this.BASE_URL}${endpoint}`, config);
-          return this.handleResponse(retryResponse);
-        } else {
-          // Refresh failed, remove tokens
-          this.removeTokens();
-          throw new Error('Session expired');
-        }
-      }
-      
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error('API call failed:', error);
-      throw error;
-    }
+const removeStoredData = (): void => {
+  try {
+    localStorage.removeItem('tbc_admin_token');
+    localStorage.removeItem('tbc_admin_refresh_token');
+    localStorage.removeItem('tbc_admin_data');
+  } catch (error) {
+    console.error('Failed to remove stored data:', error);
   }
-
-  private static async handleResponse(response: Response): Promise<any> {
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || data.error || 'Request failed');
-    }
-    
-    return data;
-  }
-
-  // Auth specific methods
-  static async login(credentials: AdminLoginRequest): Promise<{ admin: Admin; accessToken: string; refreshToken: string }> {
-    const response = await this.apiCall('/admin/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-
-    if (response.success && response.data) {
-      this.setToken(response.data.accessToken);
-      this.setRefreshToken(response.data.refreshToken);
-      this.setStoredAdmin(response.data.admin);
-      return response.data;
-    }
-    
-    throw new Error(response.error || 'Login failed');
-  }
-
-  static async refreshToken(): Promise<boolean> {
-    const refreshToken = this.getRefreshToken();
-    if (!refreshToken) return false;
-
-    try {
-      const response = await fetch(`${this.BASE_URL}/admin/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        this.setToken(data.data.accessToken);
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      return false;
-    }
-  }
-
-  static async getProfile(): Promise<Admin> {
-    const response = await this.apiCall('/admin/auth/me');
-    
-    if (response.success && response.data) {
-      this.setStoredAdmin(response.data);
-      return response.data;
-    }
-    
-    throw new Error(response.error || 'Failed to get profile');
-  }
-
-  static async logout(): Promise<void> {
-    try {
-      await this.apiCall('/admin/auth/logout', { method: 'POST' });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      this.removeTokens();
-    }
-  }
-}
+};
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -194,74 +61,75 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [admin, setAdmin] = useState<Admin | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
   const isAuthenticated = !!admin;
 
+  // Set client flag after mount to avoid hydration issues
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Initialize authentication state
   useEffect(() => {
+    if (!isClient) return;
+
     const initializeAuth = async () => {
       try {
         setIsLoading(true);
+        console.log('🔄 Initializing authentication...');
         
-        // Check for stored admin data
-        const storedAdmin = AuthAPI.getStoredAdmin();
-        const token = AuthAPI.getToken();
+        // Check for stored admin data and token
+        const storedAdmin = getStoredAdmin();
+        const token = getAuthToken();
+        
+        console.log('📦 Stored data:', { 
+          hasAdmin: !!storedAdmin, 
+          hasToken: !!token,
+          adminEmail: storedAdmin?.email 
+        });
         
         if (storedAdmin && token) {
-          // Verify token is still valid
+          // Verify token is still valid by getting current profile
           try {
-            const currentAdmin = await AuthAPI.getProfile();
-            setAdmin(currentAdmin);
+            console.log('🔍 Validating token...');
+            const currentAdmin = await authApi.getProfile();
+            setAdmin(currentAdmin.data);
+            setStoredAdmin(currentAdmin.data);
+            console.log('✅ Token validation successful');
           } catch (error) {
-            // Token invalid, try refresh
-            const refreshed = await AuthAPI.refreshToken();
-            if (refreshed) {
-              const currentAdmin = await AuthAPI.getProfile();
-              setAdmin(currentAdmin);
-            } else {
-              // All tokens invalid, clear storage
-              AuthAPI.removeTokens();
-              setAdmin(null);
-            }
+            console.warn('❌ Token validation failed, clearing auth data:', error);
+            // Token invalid, clear storage
+            clearAuth();
+            removeStoredData();
+            setAdmin(null);
           }
         } else {
+          console.log('📭 No stored auth data found');
           setAdmin(null);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
-        AuthAPI.removeTokens();
+        console.error('💥 Auth initialization error:', error);
+        clearAuth();
+        removeStoredData();
         setAdmin(null);
       } finally {
         setIsLoading(false);
         setIsInitialized(true);
+        console.log('✅ Auth initialization complete');
       }
     };
 
     initializeAuth();
-  }, []);
-
-  // Auto-refresh token every 10 minutes
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const interval = setInterval(async () => {
-      try {
-        await AuthAPI.refreshToken();
-      } catch (error) {
-        console.error('Auto-refresh failed:', error);
-        // Don't logout on auto-refresh failure, let user continue
-      }
-    }, 10 * 60 * 1000); // 10 minutes
-
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  }, [isClient]);
 
   const login = useCallback(async (credentials: AdminLoginRequest) => {
     try {
       setIsLoading(true);
-      const response = await AuthAPI.login(credentials);
+      const response = await authApi.login(credentials);
       setAdmin(response.admin);
+      setStoredAdmin(response.admin);
       router.push('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
@@ -274,11 +142,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = useCallback(async () => {
     try {
       setIsLoading(true);
-      await AuthAPI.logout();
+      await authApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setAdmin(null);
+      removeStoredData();
       setIsLoading(false);
       router.push('/login');
     }
@@ -286,8 +155,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const refreshProfile = useCallback(async () => {
     try {
-      const currentAdmin = await AuthAPI.getProfile();
-      setAdmin(currentAdmin);
+      const response = await authApi.getProfile();
+      setAdmin(response.data);
+      setStoredAdmin(response.data);
     } catch (error) {
       console.error('Failed to refresh profile:', error);
       // On profile refresh failure, logout user
@@ -305,8 +175,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshProfile,
   };
 
-  // Don't render children until auth is initialized
-  if (!isInitialized) {
+  // Don't render children until auth is initialized and we're on client
+  if (!isInitialized || !isClient) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">

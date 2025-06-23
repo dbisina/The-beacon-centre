@@ -87,14 +87,14 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
       title: sermon.title,
       speaker: sermon.speaker,
       description: sermon.description || '',
-      category: sermon.category || '',
+      category: sermon.category || 'none',
       sermonDate: sermon.sermonDate ? new Date(sermon.sermonDate) : undefined,
       isFeatured: sermon.isFeatured,
     } : {
       title: '',
       speaker: '',
       description: '',
-      category: '',
+      category: 'none',
       sermonDate: undefined,
       isFeatured: false,
     },
@@ -103,10 +103,23 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
   const watchedValues = watch();
 
   // Fetch categories
-  const { data: categories } = useQuery({
+  const { data: categories, error: categoriesError, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: categoriesApi.getAll,
+    onError: (error) => {
+      console.error('Failed to fetch categories:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load categories',
+        variant: 'destructive',
+      });
+    },
   });
+
+  // Debug categories data
+  console.log('Categories data:', categories);
+  console.log('Categories type:', typeof categories);
+  console.log('Is categories array?', Array.isArray(categories));
 
   // Audio file handling
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -241,6 +254,7 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
         // Create sermon record
         const sermonData = {
           ...data,
+          category: data.category === 'none' ? undefined : data.category,
           audioUrl: uploadResult.url,
           cloudinaryPublicId: uploadResult.publicId,
           duration: uploadResult.duration || (audioFile.duration ? formatDuration(audioFile.duration) : undefined),
@@ -286,6 +300,7 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
 
       const sermonData = {
         ...data,
+        category: data.category === 'none' ? undefined : data.category,
         ...(uploadResult && {
           audioUrl: uploadResult.url,
           cloudinaryPublicId: uploadResult.publicId,
@@ -517,15 +532,20 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
                 <Label htmlFor="category">Category</Label>
                 <Select value={watchedValues.category} onValueChange={(value) => setValue('category', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category (optional)" />
+                    <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select a category (optional)"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Category</SelectItem>
-                    {categories?.map((category) => (
+                    <SelectItem value="none">No Category</SelectItem>
+                    {Array.isArray(categories) && categories.map((category) => (
                       <SelectItem key={category.id} value={category.name}>
                         {category.name}
                       </SelectItem>
                     ))}
+                    {categoriesError && (
+                      <SelectItem value="error" disabled>
+                        Error loading categories
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

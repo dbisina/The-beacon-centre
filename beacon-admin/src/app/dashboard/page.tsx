@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { format, isToday, isTomorrow, isYesterday } from "date-fns";
@@ -15,17 +15,12 @@ import {
   Calendar,
   Clock,
   Eye,
-  Download,
   BarChart3,
-  Play,
   Star,
   AlertCircle,
   CheckCircle,
   ArrowRight,
   Activity,
-  Globe,
-  Smartphone,
-  RefreshCw,
   Heart,
   Sun,
   Moon,
@@ -545,30 +540,35 @@ function SystemStatus() {
 export default function DashboardPage() {
   const { admin } = useAuth();
 
-  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+  const { data: analytics, isLoading: analyticsLoading, error: analyticsError } = useQuery({
     queryKey: ["analytics-dashboard"],
     queryFn: () => analyticsApi.getDashboard(),
+    retry: 1, // Only retry once to avoid infinite loops
   });
 
   const { data: recentDevotionals } = useQuery({
     queryKey: ["recent-devotionals-count"],
-    queryFn: () => devotionalsApi.getAll(1, 1),
+    queryFn: () => devotionalsApi.getAll(),
   });
 
   const { data: recentVideos } = useQuery({
     queryKey: ["recent-videos-count"],
-    queryFn: () => videoSermonsApi.getAll(1, 1),
+    queryFn: () => videoSermonsApi.getAll(),
   });
 
   const { data: recentAudio } = useQuery({
     queryKey: ["recent-audio-count"],
-    queryFn: () => audioSermonsApi.getAll(1, 1),
+    queryFn: () => audioSermonsApi.getAll(),
   });
 
   const { data: recentAnnouncements } = useQuery({
     queryKey: ["recent-announcements-count"],
-    queryFn: () => announcementsApi.getAll(1, 1),
+    queryFn: () => announcementsApi.getAll(),
   });
+
+  // Debug analytics data
+  console.log('📊 Analytics data:', analytics);
+  console.log('❌ Analytics error:', analyticsError);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 p-6">
@@ -597,7 +597,7 @@ export default function DashboardPage() {
             <>
               <StatsCard
                 title="Total Users"
-                value={analytics?.overview.totalDevices || 0}
+                value={analytics?.data?.totalDevices || analytics?.totalDevices || 0}
                 description="Unique app users"
                 icon={Users}
                 trend={12}
@@ -606,7 +606,12 @@ export default function DashboardPage() {
               />
               <StatsCard
                 title="Total Content"
-                value={analytics?.overview.totalContent.total || 0}
+                value={
+                  (recentDevotionals?.total || 0) + 
+                  (recentVideos?.total || 0) + 
+                  (recentAudio?.total || 0) + 
+                  (recentAnnouncements?.total || 0)
+                }
                 description="Published content pieces"
                 icon={BookOpen}
                 trend={5}
@@ -614,7 +619,7 @@ export default function DashboardPage() {
               />
               <StatsCard
                 title="This Month Views"
-                value="12.4K"
+                value={analytics?.data?.totalInteractions || analytics?.totalInteractions || 0}
                 description="Content views this month"
                 icon={Eye}
                 trend={8}

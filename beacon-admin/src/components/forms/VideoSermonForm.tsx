@@ -158,7 +158,7 @@ export function VideoSermonForm({ sermon }: VideoSermonFormProps) {
       speaker: sermon.speaker,
       youtubeUrl: `https://youtube.com/watch?v=${sermon.youtubeId}`,
       description: sermon.description || '',
-      category: sermon.category || '',
+      category: sermon.category || 'none',
       sermonDate: sermon.sermonDate ? new Date(sermon.sermonDate) : undefined,
       isFeatured: sermon.isFeatured,
     } : {
@@ -166,7 +166,7 @@ export function VideoSermonForm({ sermon }: VideoSermonFormProps) {
       speaker: '',
       youtubeUrl: '',
       description: '',
-      category: '',
+      category: 'none',
       sermonDate: undefined,
       isFeatured: false,
     },
@@ -176,10 +176,23 @@ export function VideoSermonForm({ sermon }: VideoSermonFormProps) {
   const watchedUrl = watch('youtubeUrl');
 
   // Fetch categories
-  const { data: categories } = useQuery({
+  const { data: categories, error: categoriesError, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: categoriesApi.getAll,
+    onError: (error) => {
+      console.error('Failed to fetch categories:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load categories',
+        variant: 'destructive',
+      });
+    },
   });
+
+  // Debug categories data
+  console.log('Categories data:', categories);
+  console.log('Categories type:', typeof categories);
+  console.log('Is categories array?', Array.isArray(categories));
 
   // Auto-fetch YouTube info when URL changes
   useEffect(() => {
@@ -286,7 +299,7 @@ export function VideoSermonForm({ sermon }: VideoSermonFormProps) {
       speaker: data.speaker,
       youtubeId,
       description: data.description || undefined,
-      category: data.category || undefined,
+      category: data.category === 'none' ? undefined : data.category,
       sermonDate: data.sermonDate ? format(data.sermonDate, 'yyyy-MM-dd') : undefined,
       isFeatured: data.isFeatured,
       thumbnailUrl: youtubeInfo ? YouTubeUtils.getBestThumbnail(youtubeInfo.thumbnails, 'large') : undefined,
@@ -538,15 +551,20 @@ export function VideoSermonForm({ sermon }: VideoSermonFormProps) {
                 <Label htmlFor="category">Category</Label>
                 <Select value={watchedValues.category} onValueChange={(value) => setValue('category', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category (optional)" />
+                    <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select a category (optional)"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Category</SelectItem>
-                    {categories?.map((category) => (
+                    <SelectItem value="none">No Category</SelectItem>
+                    {Array.isArray(categories) && categories.map((category) => (
                       <SelectItem key={category.id} value={category.name}>
                         {category.name}
                       </SelectItem>
                     ))}
+                    {categoriesError && (
+                      <SelectItem value="error" disabled>
+                        Error loading categories
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

@@ -12,7 +12,7 @@ const api = axios.create({
   withCredentials: true, // Important for cookie-based refresh tokens
 });
 
-// Auth state management
+// Auth state management - Use same keys as AuthContext
 let accessToken: string | null = null;
 let refreshPromise: Promise<string> | null = null;
 
@@ -26,29 +26,32 @@ export const setAuthToken = (token: string | null) => {
   }
 };
 
-// Get current token
 export const getAuthToken = () => accessToken;
 
-// Clear auth state
 export const clearAuth = () => {
   accessToken = null;
   delete api.defaults.headers.common['Authorization'];
-  localStorage.removeItem('adminToken');
-  localStorage.removeItem('adminUser');
+  // Use same keys as AuthContext
+  try {
+    localStorage.removeItem('tbc_admin_token');
+    localStorage.removeItem('tbc_admin_refresh_token');
+    localStorage.removeItem('tbc_admin_data');
+  } catch (error) {
+    console.error('Failed to clear auth data:', error);
+  }
 };
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+// Initialize token from localStorage on client side
+if (typeof window !== 'undefined') {
+  try {
+    const savedToken = localStorage.getItem('tbc_admin_token');
+    if (savedToken) {
+      setAuthToken(savedToken);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+  } catch (error) {
+    console.error('Failed to initialize token from localStorage:', error);
   }
-);
+}
 
 // Response interceptor for handling token refresh
 api.interceptors.response.use(
@@ -58,6 +61,7 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+      console.log('🔄 Token expired, attempting refresh...');
 
       try {
         // Try to refresh token
@@ -68,14 +72,17 @@ api.interceptors.response.use(
         const newToken = await refreshPromise;
         refreshPromise = null;
         
+        console.log('✅ Token refresh successful');
         setAuthToken(newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         
         return api(originalRequest);
       } catch (refreshError) {
+        console.error('❌ Token refresh failed:', refreshError);
         // Refresh failed, redirect to login
         clearAuth();
         if (typeof window !== 'undefined') {
+          console.log('🔄 Redirecting to login...');
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
@@ -89,36 +96,39 @@ api.interceptors.response.use(
 // Refresh token function
 const refreshToken = async (): Promise<string> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/admin/auth/refresh`, {}, {
+    console.log('🔄 Attempting token refresh...');
+    const storedRefreshToken = localStorage.getItem('tbc_admin_refresh_token');
+    if (!storedRefreshToken) {
+      console.error('❌ No refresh token available');
+      throw new Error('No refresh token available');
+    }
+
+    console.log('📤 Sending refresh request...');
+    const response = await axios.post(`${API_BASE_URL}/admin/auth/refresh`, {
+      refreshToken: storedRefreshToken
+    }, {
       withCredentials: true,
     });
     
     const { accessToken: newToken } = response.data.data;
-    localStorage.setItem('adminToken', newToken);
+    console.log('✅ Received new access token');
+    // Use same key as AuthContext
+    localStorage.setItem('tbc_admin_token', newToken);
     return newToken;
   } catch (error) {
+    console.error('❌ Token refresh failed:', error);
     throw new Error('Token refresh failed');
   }
 };
 
-// Enhanced error handling for API requests
+// Generic API request wrapper with error handling
 const apiRequest = async (requestFn: () => Promise<any>) => {
   try {
     const response = await requestFn();
-    console.log('✅ API Success:', response.config?.url, response.data);
-    return response.data.data; // Return just the data part
+    return response.data;
   } catch (error: any) {
-    const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-    const statusCode = error.response?.status || 0;
-    const url = error.config?.url || 'unknown endpoint';
-    
-    console.error(`❌ API Error: ${statusCode} ${url}`, {
-      message: errorMessage,
-      status: statusCode,
-      data: error.response?.data,
-    });
-    
-    throw new Error(errorMessage);
+    console.error('API request failed:', error.response?.data || error.message);
+    throw error;
   }
 };
 
@@ -128,15 +138,16 @@ export const authApi = {
     console.log('🔐 Attempting login...');
     const response = await api.post('/admin/auth/login', credentials);
     
-    const { admin, accessToken: token } = response.data.data;
+    const { admin, accessToken: token, refreshToken } = response.data.data;
     
-    // Store token and user data
+    // Store token and user data using same keys as AuthContext
     setAuthToken(token);
-    localStorage.setItem('adminToken', token);
-    localStorage.setItem('adminUser', JSON.stringify(admin));
+    localStorage.setItem('tbc_admin_token', token);
+    localStorage.setItem('tbc_admin_refresh_token', refreshToken);
+    localStorage.setItem('tbc_admin_data', JSON.stringify(admin));
     
     console.log('✅ Login successful:', admin.email);
-    return { admin, token };
+    return { admin, token, refreshToken };
   },
 
   async logout() {
@@ -416,13 +427,5 @@ export const uploadApi = {
     return apiRequest(() => api.delete(`/upload/${fileId}`));
   },
 };
-
-// Initialize auth token from localStorage on app start
-if (typeof window !== 'undefined') {
-  const savedToken = localStorage.getItem('adminToken');
-  if (savedToken) {
-    setAuthToken(savedToken);
-  }
-}
 
 export default api;
