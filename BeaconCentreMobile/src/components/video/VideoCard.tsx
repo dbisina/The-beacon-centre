@@ -116,7 +116,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
               { backgroundColor: isDark ? colors.dark.background : colors.light.background }
             ]}>
               <Text style={[styles.category, { color: colors.primary }]}>
-                {sermon.category}
+                {sermon.category.name}
               </Text>
             </View>
           )}

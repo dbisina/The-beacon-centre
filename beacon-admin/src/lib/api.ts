@@ -165,7 +165,7 @@ const refreshToken = async (): Promise<string> => {
 const apiRequest = async (requestFn: () => Promise<any>) => {
   try {
     const response = await requestFn();
-    return response.data;
+    return response.data?.data ?? response.data;
   } catch (error: any) {
     console.error('API request failed:', error.response?.data || error.message);
     throw error;
@@ -273,17 +273,17 @@ export const videoSermonsApi = {
 
   async create(data: any) {
     console.log('➕ Creating video sermon via admin endpoint...');
-    return apiRequest(() => api.post('/admin/video-sermons', data));
+    return apiRequest(() => api.post('/video-sermons', data));
   },
 
   async update(id: number, data: any) {
     console.log('📝 Updating video sermon:', id);
-    return apiRequest(() => api.put(`/admin/video-sermons/${id}`, data));
+    return apiRequest(() => api.put(`/video-sermons/${id}`, data));
   },
 
   async delete(id: number) {
     console.log('🗑️ Deleting video sermon:', id);
-    return apiRequest(() => api.delete(`/admin/video-sermons/${id}`));
+    return apiRequest(() => api.delete(`/video-sermons/${id}`));
   },
 
   async toggleFeatured(id: number) {

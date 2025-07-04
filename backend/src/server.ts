@@ -123,7 +123,6 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/admin/video-sermons', adminVideoSermonRoutes);
 
 // Error handling middleware
 app.use(notFound);

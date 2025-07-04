@@ -324,10 +324,13 @@ function VideoCard({ sermon, onToggleFeatured, onDelete }: VideoCardProps) {
           </p>
         )}
 
-        {sermon.category && (
+        {sermon.category && typeof sermon.category === 'object' && (
           <div className="mb-3">
-            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-              {sermon.category}
+            <Badge 
+              variant="outline" 
+              className="border-red-200"
+              style={sermon.category.color ? { backgroundColor: sermon.category.color, color: '#fff', border: 'none' } : {}}>
+              {sermon.category.name}
             </Badge>
           </div>
         )}
@@ -405,11 +408,12 @@ export default function VideoSermonsPage() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['video-sermons', currentPage, searchQuery, selectedCategory],
-    queryFn: () => videoSermonsApi.getAll(
-      currentPage, 
-      10, 
-      selectedCategory === 'all' ? undefined : selectedCategory
-    ),
+    queryFn: () => videoSermonsApi.getAll({
+      page: currentPage,
+      limit: 10,
+      search: searchQuery || undefined,
+      categoryId: selectedCategory === 'all' ? undefined : parseInt(selectedCategory),
+    }),
     keepPreviousData: true,
   });
 
