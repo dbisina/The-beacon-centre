@@ -30,6 +30,7 @@ import uploadRoutes from './routes/upload.routes';
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
+import adminVideoSermonRoutes from './routes/admin.videoSermon.routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -122,6 +123,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/admin/video-sermons', adminVideoSermonRoutes);
 
 // Error handling middleware
 app.use(notFound);

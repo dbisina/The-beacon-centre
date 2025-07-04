@@ -235,7 +235,7 @@ export class AudioSermonService {
           speaker: sermonData.speaker,
           audioUrl: sermonData.audioUrl,
           cloudinaryPublicId: sermonData.cloudinaryPublicId,
-          duration: sermonData.duration || null,
+          duration: sermonData.duration != null ? String(sermonData.duration) : null,
           fileSize: sermonData.fileSize || null,
           categoryId: sermonData.categoryId || null,
           sermonDate: sermonData.sermonDate ? new Date(sermonData.sermonDate) : null,

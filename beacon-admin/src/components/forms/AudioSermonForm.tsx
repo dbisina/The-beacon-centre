@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -46,6 +46,7 @@ type AudioSermonFormData = z.infer<typeof audioSermonSchema>;
 
 interface AudioSermonFormProps {
   sermon?: AudioSermon;
+  onSuccess?: (result: any) => void;
 }
 
 interface AudioFile {
@@ -54,7 +55,7 @@ interface AudioFile {
   duration?: number;
 }
 
-export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
+export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
   const [audioFile, setAudioFile] = useState<AudioFile | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -76,6 +77,7 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
 
   const {
     register,
+    reset,
     handleSubmit,
     formState: { errors, isDirty },
     watch,
@@ -106,15 +108,19 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
   const { data: categories, error: categoriesError, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: categoriesApi.getAll,
-    onError: (error) => {
-      console.error('Failed to fetch categories:', error);
+  });
+
+  // Then, handle the error in a useEffect:
+  useEffect(() => {
+    if (categoriesError) {
+      console.error('Failed to fetch categories:', categoriesError);
       toast({
         title: 'Error',
         description: 'Failed to load categories',
         variant: 'destructive',
       });
-    },
-  });
+    }
+  }, [categoriesError, toast]);
 
   // Debug categories data
   console.log('Categories data:', categories);
@@ -236,7 +242,15 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
     }
   };
 
-  // Create mutation
+  const onSubmit = async (data: AudioSermonFormData) => {
+    if (sermon?.id) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  // FIXED: Add success handlers to mutations
   const createMutation = useMutation({
     mutationFn: async (data: AudioSermonFormData) => {
       if (!audioFile) {
@@ -259,88 +273,98 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
           cloudinaryPublicId: uploadResult.publicId,
           duration: uploadResult.duration || (audioFile.duration ? formatDuration(audioFile.duration) : undefined),
           fileSize: uploadResult.fileSize,
-          sermonDate: data.sermonDate ? format(data.sermonDate, 'yyyy-MM-dd') : undefined,
+          sermonDate: data.sermonDate ? new Date(data.sermonDate).toISOString() : undefined,
         };
 
-        return audioSermonsApi.create(sermonData);
+        const result = await audioSermonsApi.create(sermonData);
+        return result;
       } finally {
         setIsUploading(false);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['audio-sermons']);
+    onSuccess: (result) => {
       toast({
         title: 'Success',
-        description: 'Audio sermon uploaded successfully',
-        variant: 'success',
+        description: 'Audio sermon created successfully!',
       });
-      router.push('/dashboard/audio-sermons');
+      
+      // Invalidate audio-sermons list so it refreshes
+      queryClient.invalidateQueries({ queryKey: ["audio-sermons"] });
+      
+      // Reset form
+      reset();
+      setAudioFile(null);
+      setAudioPreview({
+        isPlaying: false,
+        currentTime: 0,
+        duration: 0,
+        audio: null,
+      });
+      
+      // Call success callback
+      onSuccess?.(result);
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      console.error('Failed to create audio sermon:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Failed to create audio sermon',
         variant: 'destructive',
       });
     },
   });
 
-  // Update mutation
+  // FIXED: Add update mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: AudioSermonFormData }) => {
-      let uploadResult = null;
+    mutationFn: async (data: AudioSermonFormData) => {
+      if (!sermon?.id) throw new Error('Sermon ID is required for updates');
 
-      // Upload new file if provided
+      const updateData: any = {
+        ...data,
+        category: data.category === 'none' ? undefined : data.category,
+        sermonDate: data.sermonDate ? new Date(data.sermonDate).toISOString() : undefined,
+      };
+
+      // Only upload new audio if file is selected
       if (audioFile) {
         setIsUploading(true);
         setUploadProgress(0);
-        uploadResult = await uploadApi.audio(audioFile.file);
-        setUploadProgress(100);
+
+        try {
+          const uploadResult = await uploadApi.audio(audioFile.file);
+          setUploadProgress(100);
+          
+          updateData.audioUrl = uploadResult.url;
+          updateData.cloudinaryPublicId = uploadResult.publicId;
+          updateData.duration = uploadResult.duration || (audioFile.duration ? formatDuration(audioFile.duration) : undefined);
+          updateData.fileSize = uploadResult.fileSize;
+        } finally {
+          setIsUploading(false);
+        }
       }
 
-      const sermonData = {
-        ...data,
-        category: data.category === 'none' ? undefined : data.category,
-        ...(uploadResult && {
-          audioUrl: uploadResult.url,
-          cloudinaryPublicId: uploadResult.publicId,
-          duration: uploadResult.duration || (audioFile?.duration ? formatDuration(audioFile.duration) : undefined),
-          fileSize: uploadResult.fileSize,
-        }),
-        sermonDate: data.sermonDate ? format(data.sermonDate, 'yyyy-MM-dd') : undefined,
-      };
-
-      return audioSermonsApi.update(id, sermonData);
+      return await audioSermonsApi.update(sermon.id, updateData);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['audio-sermons']);
-      queryClient.invalidateQueries(['audio-sermon', sermon?.id]);
+    onSuccess: (result) => {
       toast({
         title: 'Success',
-        description: 'Audio sermon updated successfully',
-        variant: 'success',
+        description: 'Audio sermon updated successfully!',
       });
-      router.push('/dashboard/audio-sermons');
+      onSuccess?.(result);
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      console.error('Failed to update audio sermon:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Failed to update audio sermon',
         variant: 'destructive',
       });
-      setIsUploading(false);
     },
   });
 
-  const isLoading = createMutation.isLoading || updateMutation.isLoading;
 
-  const onSubmit = (data: AudioSermonFormData) => {
-    if (sermon) {
-      updateMutation.mutate({ id: sermon.id, data });
-    } else {
-      createMutation.mutate(data);
-    }
-  };
+  const isLoading = createMutation.isPending || updateMutation.isPending || isUploading;
+
 
   const handleDateSelect = (date: Date | undefined) => {
     setValue('sermonDate', date);
@@ -381,7 +405,7 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!audioFile && !sermon?.audioUrl && (
+              {!audioFile && !sermon?.audio_url && (
                 <div
                   {...getRootProps()}
                   className={cn(
@@ -541,11 +565,6 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
                         {category.name}
                       </SelectItem>
                     ))}
-                    {categoriesError && (
-                      <SelectItem value="error" disabled>
-                        Error loading categories
-                      </SelectItem>
-                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -597,18 +616,20 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                type="submit" 
-                disabled={isLoading || (!audioFile && !sermon)} 
-                className="w-full"
-              >
-                {isLoading ? (
+            <Button 
+              type="submit" 
+              disabled={createMutation.isPending || updateMutation.isPending || isUploading}
+              className="min-w-[120px]"
+            >
+              {createMutation.isPending || updateMutation.isPending || isUploading ? (
+                <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
-                {sermon ? 'Update Sermon' : 'Save Sermon'}
-              </Button>
+                  {sermon ? 'Updating...' : 'Creating...'}
+                </>
+              ) : (
+                sermon ? 'Update Sermon' : 'Create Sermon'
+              )}
+            </Button>
 
               <Button
                 type="button"
@@ -657,7 +678,7 @@ export function AudioSermonForm({ sermon }: AudioSermonFormProps) {
                 <span>Size:</span>
                 <span>
                   {audioFile ? formatFileSize(audioFile.file.size) : 
-                   sermon?.fileSize ? formatFileSize(sermon.fileSize) : 'Unknown'}
+                   sermon?.file_size ? formatFileSize(sermon.file_size) : 'Unknown'}
                 </span>
               </div>
               <div className="flex justify-between">

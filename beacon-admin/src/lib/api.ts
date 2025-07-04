@@ -6,10 +6,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/a
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Important for cookie-based refresh tokens
 });
 
 // Auth state management - Use same keys as AuthContext
@@ -52,6 +52,46 @@ if (typeof window !== 'undefined') {
     console.error('Failed to initialize token from localStorage:', error);
   }
 }
+
+
+api.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        await refreshToken();
+        const token = getAuthToken();
+        if (token) {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        clearAuth();
+        // Redirect to login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login';
+        }
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 // Response interceptor for handling token refresh
 api.interceptors.response.use(
@@ -138,16 +178,17 @@ export const authApi = {
     console.log('🔐 Attempting login...');
     const response = await api.post('/admin/auth/login', credentials);
     
-    const { admin, accessToken: token, refreshToken } = response.data.data;
+    const { admin, accessToken: token, refreshToken: refresh } = response.data.data;
     
-    // Store token and user data using same keys as AuthContext
+    // Store tokens and user data
     setAuthToken(token);
-    localStorage.setItem('tbc_admin_token', token);
-    localStorage.setItem('tbc_admin_refresh_token', refreshToken);
-    localStorage.setItem('tbc_admin_data', JSON.stringify(admin));
+    if (refresh) {
+      localStorage.setItem('refreshToken', refresh);
+    }
+    localStorage.setItem('adminUser', JSON.stringify(admin));
     
     console.log('✅ Login successful:', admin.email);
-    return { admin, token, refreshToken };
+    return { admin, token };
   },
 
   async logout() {
@@ -165,7 +206,18 @@ export const authApi = {
   },
 
   async refreshToken() {
-    return refreshToken();
+    const refresh = localStorage.getItem('refreshToken');
+    if (!refresh) throw new Error('No refresh token available');
+    
+    const response = await api.post('/admin/auth/refresh', { refreshToken: refresh });
+    const { accessToken, refreshToken: newRefresh } = response.data.data;
+    
+    setAuthToken(accessToken);
+    if (newRefresh) {
+      localStorage.setItem('refreshToken', newRefresh);
+    }
+    
+    return response.data;
   },
 };
 
@@ -220,18 +272,18 @@ export const videoSermonsApi = {
   },
 
   async create(data: any) {
-    console.log('➕ Creating video sermon...');
-    return apiRequest(() => api.post('/video-sermons', data));
+    console.log('➕ Creating video sermon via admin endpoint...');
+    return apiRequest(() => api.post('/admin/video-sermons', data));
   },
 
   async update(id: number, data: any) {
     console.log('📝 Updating video sermon:', id);
-    return apiRequest(() => api.put(`/video-sermons/${id}`, data));
+    return apiRequest(() => api.put(`/admin/video-sermons/${id}`, data));
   },
 
   async delete(id: number) {
     console.log('🗑️ Deleting video sermon:', id);
-    return apiRequest(() => api.delete(`/video-sermons/${id}`));
+    return apiRequest(() => api.delete(`/admin/video-sermons/${id}`));
   },
 
   async toggleFeatured(id: number) {
@@ -401,31 +453,50 @@ export const categoriesApi = {
 
 // Upload API
 export const uploadApi = {
-  async uploadImage(file: File) {
-    const formData = new FormData();
-    formData.append('image', file);
+  async audio(file: File) {
+    console.log('🎵 Uploading audio file:', file.name);
     
-    return apiRequest(() => api.post('/upload/image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }));
-  },
-
-  async uploadAudio(file: File) {
     const formData = new FormData();
     formData.append('audio', file);
     
-    return apiRequest(() => api.post('/upload/audio', formData, {
+    const response = await api.post('/upload/audio', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-    }));
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log(`Upload progress: ${progress}%`);
+        }
+      },
+    });
+    
+    return response.data.data;
   },
 
-  async deleteFile(fileId: string) {
-    return apiRequest(() => api.delete(`/upload/${fileId}`));
+  async image(file: File) {
+    console.log('🖼️ Uploading image file:', file.name);
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const response = await api.post('/upload/image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return response.data.data;
+  },
+
+  async extractYouTubeThumbnail(youtubeId: string) {
+    console.log('📺 Extracting YouTube thumbnail for:', youtubeId);
+    
+    const response = await api.post('/upload/youtube-thumbnail', {
+      youtubeId,
+    });
+    
+    return response.data.data;
   },
 };
-
 export default api;
