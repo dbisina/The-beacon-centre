@@ -1,0 +1,276 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DevotionalService = void 0;
+const database_1 = require("../config/database");
+class DevotionalService {
+    static async getAllDevotionals(filters) {
+        try {
+            const { page = 1, limit = 10, search, startDate, endDate, sortBy = 'date', sortOrder = 'desc', } = filters;
+            const skip = (page - 1) * limit;
+            const where = {};
+            if (search) {
+                where.OR = [
+                    { title: { contains: search, mode: 'insensitive' } },
+                    { content: { contains: search, mode: 'insensitive' } },
+                    { verseReference: { contains: search, mode: 'insensitive' } },
+                ];
+            }
+            if (startDate) {
+                where.date = { ...where.date, gte: new Date(startDate) };
+            }
+            if (endDate) {
+                where.date = { ...where.date, lte: new Date(endDate) };
+            }
+            const total = await database_1.prisma.devotional.count({ where });
+            const devotionals = await database_1.prisma.devotional.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: {
+                    [sortBy]: sortOrder,
+                },
+            });
+            const totalPages = Math.ceil(total / limit);
+            return {
+                success: true,
+                data: {
+                    devotionals,
+                    total,
+                    page,
+                    limit,
+                    totalPages,
+                },
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Failed to fetch devotionals',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+    static async getDevotionalById(id) {
+        try {
+            const devotional = await database_1.prisma.devotional.findUnique({
+                where: { id },
+            });
+            if (!devotional) {
+                return {
+                    success: false,
+                    error: 'Devotional not found',
+                };
+            }
+            return {
+                success: true,
+                data: devotional,
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Failed to fetch devotional',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+    static async getDevotionalByDate(date) {
+        try {
+            const devotional = await database_1.prisma.devotional.findUnique({
+                where: { date: new Date(date) },
+            });
+            if (!devotional) {
+                return {
+                    success: false,
+                    error: 'No devotional found for this date',
+                };
+            }
+            return {
+                success: true,
+                data: devotional,
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Failed to fetch devotional',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+    static async getTodaysDevotional() {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const devotional = await database_1.prisma.devotional.findUnique({
+                where: { date: today },
+            });
+            if (!devotional) {
+                return {
+                    success: false,
+                    error: 'No devotional available for today',
+                };
+            }
+            return {
+                success: true,
+                data: devotional,
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Failed to fetch today\'s devotional',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+    static async createDevotional(devotionalData) {
+        try {
+            const existingDevotional = await database_1.prisma.devotional.findUnique({
+                where: { date: new Date(devotionalData.date) },
+            });
+            if (existingDevotional) {
+                return {
+                    success: false,
+                    error: 'A devotional already exists for this date',
+                };
+            }
+            const devotional = await database_1.prisma.devotional.create({
+                data: {
+                    title: devotionalData.title,
+                    date: new Date(devotionalData.date),
+                    verseText: devotionalData.verseText,
+                    verseReference: devotionalData.verseReference,
+                    content: devotionalData.content,
+                    prayer: devotionalData.prayer || null,
+                },
+            });
+            return {
+                success: true,
+                data: devotional,
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Failed to create devotional',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+    static async updateDevotional(id, updateData) {
+        try {
+            const existingDevotional = await database_1.prisma.devotional.findUnique({
+                where: { id },
+            });
+            if (!existingDevotional) {
+                return {
+                    success: false,
+                    error: 'Devotional not found',
+                };
+            }
+            if (updateData.date) {
+                const dateConflict = await database_1.prisma.devotional.findFirst({
+                    where: {
+                        date: new Date(updateData.date),
+                        id: { not: id },
+                    },
+                });
+                if (dateConflict) {
+                    return {
+                        success: false,
+                        error: 'Another devotional already exists for this date',
+                    };
+                }
+            }
+            const updatedDevotional = await database_1.prisma.devotional.update({
+                where: { id },
+                data: {
+                    ...(updateData.title && { title: updateData.title }),
+                    ...(updateData.date && { date: new Date(updateData.date) }),
+                    ...(updateData.verseText && { verseText: updateData.verseText }),
+                    ...(updateData.verseReference && { verseReference: updateData.verseReference }),
+                    ...(updateData.content && { content: updateData.content }),
+                    ...(updateData.prayer !== undefined && { prayer: updateData.prayer }),
+                    updatedAt: new Date(),
+                },
+            });
+            return {
+                success: true,
+                data: updatedDevotional,
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Failed to update devotional',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+    static async deleteDevotional(id) {
+        try {
+            const existingDevotional = await database_1.prisma.devotional.findUnique({
+                where: { id },
+            });
+            if (!existingDevotional) {
+                return {
+                    success: false,
+                    error: 'Devotional not found',
+                };
+            }
+            await database_1.prisma.devotional.delete({
+                where: { id },
+            });
+            return {
+                success: true,
+                data: { id },
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Failed to delete devotional',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+    static async bulkCreateDevotionals(devotionals) {
+        try {
+            const results = {
+                created: 0,
+                skipped: 0,
+                errors: [],
+            };
+            for (const devotionalData of devotionals) {
+                try {
+                    const result = await this.createDevotional(devotionalData);
+                    if (result.success) {
+                        results.created++;
+                    }
+                    else {
+                        results.skipped++;
+                        results.errors.push(`Date ${devotionalData.date}: ${result.error}`);
+                    }
+                }
+                catch (error) {
+                    results.skipped++;
+                    results.errors.push(`Date ${devotionalData.date}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+            }
+            return {
+                success: true,
+                data: results,
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Bulk creation failed',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+}
+exports.DevotionalService = DevotionalService;
+//# sourceMappingURL=devotional.service.js.map

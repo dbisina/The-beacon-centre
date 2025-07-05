@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import {
   CreateAdminRequest,
   UpdateAdminRequest,
@@ -64,12 +64,12 @@ export class AdminService {
 
       const accessToken = jwt.sign(tokenPayload, JWT_SECRET, {
         expiresIn: JWT_EXPIRES_IN
-      });
+      } as SignOptions);
 
       const refreshToken = jwt.sign(
         { adminId: admin.id },
         JWT_REFRESH_SECRET,
-        { expiresIn: JWT_REFRESH_EXPIRES_IN }
+        { expiresIn: JWT_REFRESH_EXPIRES_IN } as SignOptions
       );
 
       // Update login statistics
@@ -131,7 +131,7 @@ export class AdminService {
 
       const accessToken = jwt.sign(tokenPayload, JWT_SECRET, {
         expiresIn: JWT_EXPIRES_IN
-      });
+      } as SignOptions);
 
       return {
         success: true,

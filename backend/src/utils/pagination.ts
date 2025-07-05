@@ -21,14 +21,14 @@ export const createPaginatedResponse = <T>(
   const totalPages = Math.ceil(total / limit);
   
   return {
-    items,
+    data: items,
     pagination: {
-      page,
-      limit,
-      total,
+      currentPage: page,
       totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
+      totalItems: total,
+      itemsPerPage: limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
     },
   };
 };

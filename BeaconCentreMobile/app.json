@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "The Beacon Centre",
-    "slug": "beacon-centre",
+    "slug": "tbc",
     "description": "Daily devotionals, sermons, and church announcements from The Beacon Centre",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -98,7 +98,7 @@
       "apiUrl": "https://your-api-url.com/api",
       "environment": "production",
       "eas": {
-        "projectId": "ec0ef960-07ed-4514-9a79-d3662d515849"
+        "projectId": "03a77278-81a9-4d6f-9d75-d775912db1c2"
       }
     },
     "owner": "bisina"
