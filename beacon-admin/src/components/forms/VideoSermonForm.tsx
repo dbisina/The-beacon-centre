@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { videoSermonsApi, categoriesApi } from '@/lib/api';
 import { VideoSermon } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { useYouTubeAPI, YouTubeUtils, YouTubeVideoInfo } from '@/lib/youtube';
+import { getYouTubeAPI, youtubeUtils, YouTubeVideoInfo } from '@/lib/youtube';
 
 // Form validation schema with real YouTube validation
 const videoSermonSchema = z.object({
