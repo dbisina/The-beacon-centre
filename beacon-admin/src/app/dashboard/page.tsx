@@ -25,17 +25,8 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   analyticsApi,
   devotionalsApi,
@@ -43,11 +34,11 @@ import {
   audioSermonsApi,
   announcementsApi,
 } from "@/lib/api";
-import { useAuth } from "../../contexts/AuthContext";
-import { formatDate, formatDateTime, getInitials } from "@/lib/utils";
+import { useAuth } from "@/contexts/authContext";
+import { Admin } from "@/lib/types";
 
 // Enhanced welcome section
-function WelcomeSection({ admin }: { admin: any }) {
+function WelcomeSection({ admin }: { admin: Admin }) {
   const currentHour = new Date().getHours();
   const greeting =
     currentHour < 12

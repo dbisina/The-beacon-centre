@@ -57,7 +57,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { videoSermonsApi, categoriesApi } from '@/lib/api';
 import { VideoSermon } from '@/lib/types';
-import { formatDate, formatDateTime } from '@/lib/utils';
 
 function PageHeader() {
   return (

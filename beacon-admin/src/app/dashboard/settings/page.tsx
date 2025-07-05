@@ -63,7 +63,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/authContext';
 import { YouTubeAPIStatus } from '@/components/admin/YouTubeAPIStatus';
 
 interface AppSettings {
