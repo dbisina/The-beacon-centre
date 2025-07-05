@@ -43,7 +43,7 @@ import {
   audioSermonsApi,
   announcementsApi,
 } from "@/lib/api";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { formatDate, formatDateTime, getInitials } from "@/lib/utils";
 
 // Enhanced welcome section
