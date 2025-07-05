@@ -13,7 +13,8 @@ const developmentOrigins = [
 
 // Production URLs (update these with your actual domains)
 const productionOrigins = [
-  'https://beacon-admin-sigma.vercel.app/',  // Admin dashboard production
+  'https://beacon-admin-sigma.vercel.app',   // Admin dashboard production
+  'https://beacon-admin-sigma.vercel.app/',  // Admin dashboard production (with trailing slash)
   'https://your-production-domain.com',      // Your main website
   // Add your production mobile app domains if using web build
 ];
@@ -32,13 +33,19 @@ const allowedOrigins = [
 
 export const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
+    // Log all origins for debugging
+    console.log(`🌐 CORS: Request from origin: ${origin}`);
+    console.log(`🌐 CORS: Allowed origins:`, allowedOrigins);
+    
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) {
+      console.log(`✅ CORS: Allowing request with no origin`);
       return callback(null, true);
     }
 
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS: Origin ${origin} is in allowed list`);
       return callback(null, true);
     }
 
@@ -46,20 +53,30 @@ export const corsOptions: CorsOptions = {
     if (process.env.NODE_ENV === 'development') {
       // Allow localhost on any port
       if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        console.log(`✅ CORS: Allowing localhost origin: ${origin}`);
         return callback(null, true);
       }
       // Allow local network IPs (for mobile testing)
       if (/^https?:\/\/192\.168\.\d+\.\d+/.test(origin)) {
+        console.log(`✅ CORS: Allowing local network origin: ${origin}`);
         return callback(null, true);
       }
       // Allow Expo development URLs
       if (origin.startsWith('exp://')) {
+        console.log(`✅ CORS: Allowing Expo origin: ${origin}`);
         return callback(null, true);
       }
     }
 
     // Log rejected origins for debugging
     console.log(`🚫 CORS: Rejected origin: ${origin}`);
+    
+    // TEMPORARY: Allow all origins in production for debugging
+    if (process.env.NODE_ENV === 'production') {
+      console.log(`⚠️ CORS: Temporarily allowing rejected origin: ${origin} (production debug mode)`);
+      return callback(null, true);
+    }
+    
     callback(new Error(`CORS: Origin ${origin} not allowed`), false);
   },
 
@@ -105,3 +122,29 @@ export const corsOptions: CorsOptions = {
 if (process.env.NODE_ENV === 'development') {
   console.log('🌐 CORS: Allowed origins:', allowedOrigins);
 }
+
+// Alternative simple CORS configuration for debugging
+export const simpleCorsOptions: CorsOptions = {
+  origin: true, // Allow all origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'Cache-Control',
+    'X-Device-Platform',
+    'X-App-Version',
+    'X-Device-ID',
+  ],
+  exposedHeaders: [
+    'X-Total-Count',
+    'X-Rate-Limit-Limit',
+    'X-Rate-Limit-Remaining',
+    'X-Rate-Limit-Reset',
+  ],
+  optionsSuccessStatus: 200,
+  maxAge: 86400,
+};

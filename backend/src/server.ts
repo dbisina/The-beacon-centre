@@ -12,7 +12,7 @@ import path from 'path';
 dotenv.config();
 
 // Import configurations
-import { corsOptions } from './config/cors';
+import { corsOptions, simpleCorsOptions } from './config/cors';
 
 // Import enhanced rate limiting
 import { smartRateLimiter, createDevLimiter } from './middleware/rateLimiter';
@@ -43,8 +43,8 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// CORS configuration
-app.use(cors(corsOptions));
+// CORS configuration - Using simple config for debugging
+app.use(cors(simpleCorsOptions));
 
 // Compression and parsing
 app.use(compression());
