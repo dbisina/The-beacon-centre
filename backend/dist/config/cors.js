@@ -10,7 +10,7 @@ const developmentOrigins = [
     'http://192.168.1.100:19006',
 ];
 const productionOrigins = [
-    'https://beacon-centre-admin.vercel.app',
+    'https://beacon-admin-sigma.vercel.app/',
     'https://your-production-domain.com',
 ];
 const envOrigins = process.env.CORS_ORIGIN

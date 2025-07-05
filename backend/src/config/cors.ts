@@ -13,7 +13,7 @@ const developmentOrigins = [
 
 // Production URLs (update these with your actual domains)
 const productionOrigins = [
-  'https://beacon-centre-admin.vercel.app',  // Admin dashboard production
+  'https://beacon-admin-sigma.vercel.app/',  // Admin dashboard production
   'https://your-production-domain.com',      // Your main website
   // Add your production mobile app domains if using web build
 ];
