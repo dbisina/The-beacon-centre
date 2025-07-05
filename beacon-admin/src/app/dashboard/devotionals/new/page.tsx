@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import DevotionalForm from '@/components/Forms/DevotionalForm';
+import DevotionalForm from '@/components/forms/DevotionalForm';
 import { devotionalsApi } from '@/lib/api';
 import { CreateDevotionalForm } from '@/lib/types';
 
