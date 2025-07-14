@@ -94,6 +94,10 @@ export default function App() {
     prepare();
   }, []);
 
+  useEffect(() => {
+    console.log('[App] audioPlayerVisible:', audioPlayerVisible);
+  }, [audioPlayerVisible]);
+
   if (!appIsReady) {
     return (
       <View style={styles.loadingContainer}>
@@ -118,7 +122,10 @@ export default function App() {
                     <MiniPlayer onExpandPress={() => setAudioPlayerVisible(true)} />
                     <AudioPlayer 
                       visible={audioPlayerVisible} 
-                      onClose={() => setAudioPlayerVisible(false)} 
+                      onClose={() => {
+                        console.log('[App] AudioPlayer onClose called');
+                        setAudioPlayerVisible(false);
+                      }} 
                     />
                   </AudioContextProvider>
                 </OfflineProvider>

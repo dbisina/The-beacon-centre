@@ -86,6 +86,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const lastPlayedTrackId = useRef<string | number | null>(null);
+  const isClosingRef = useRef(false);
 
   // Pan responder for swipe down to close
   const panResponder = PanResponder.create({
@@ -132,7 +133,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
     }
   }, [isPlaying]);
 
+  useEffect(() => {
+    if (visible) {
+      isClosingRef.current = false;
+    }
+  }, [visible]);
+
   const handleClose = () => {
+    if (isClosingRef.current) {
+      console.log('[AudioPlayer] handleClose ignored (already closing)');
+      return;
+    }
+    isClosingRef.current = true;
     console.log('[AudioPlayer] handleClose called');
     Animated.timing(slideAnim, {
       toValue: 1,
@@ -142,6 +154,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
       console.log('[AudioPlayer] onClose called from handleClose');
       onClose();
       slideAnim.setValue(0);
+      isClosingRef.current = false;
     });
   };
 
@@ -228,27 +241,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
         {...panResponder.panHandlers}
       >
         <SafeAreaView style={styles.modernSafeArea}>
-          {/* Thumbnail artwork */}
-          <View style={{ alignItems: 'center', marginTop: 32, marginBottom: 24, elevation: 8 }}>
-            <Image
-              source={{ uri: currentTrack.thumbnail_url || DEFAULT_THUMBNAIL }}
-              style={{
-                width: 220,
-                height: 220,
-                borderRadius: 24,
-                backgroundColor: isDark ? '#222' : '#eee',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.18,
-                shadowRadius: 8,
-                borderWidth: 2,
-                borderColor: isDark ? '#444' : '#fff',
-              }}
-              resizeMode="cover"
-              onError={() => console.log('[AudioPlayer] Failed to load thumbnail:', currentTrack.thumbnail_url)}
-            />
-          </View>
-          {/* Modern Header */}
+          {/* Modern Header - Close button at the very top */}
           <BlurView 
             intensity={isDark ? 30 : 40} 
             style={[
@@ -256,13 +249,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
               { 
                 backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)',
                 borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                marginBottom: 8,
               }
             ]}
           >
             <TouchableOpacity onPress={handleClose} style={styles.modernHeaderButton}>
               <Icon name="keyboard-arrow-down" size={28} color={isDark ? colors.dark.text : colors.light.text} />
             </TouchableOpacity>
-            
             <View style={styles.modernHeaderCenter}>
               <Text style={[
                 styles.modernHeaderTitle,
@@ -271,12 +264,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
                 Now Playing
               </Text>
               {queueLength > 1 && (
-                <Text style={[styles.modernHeaderSubtitle, { color: colors.textGrey }]}>
-                  {queueLength} tracks in queue
-                </Text>
+                <Text style={[styles.modernHeaderSubtitle, { color: colors.textGrey }]}> {queueLength} tracks in queue </Text>
               )}
             </View>
-
             <TouchableOpacity 
               onPress={() => setShowQueue(!showQueue)} 
               style={styles.modernHeaderButton}
@@ -287,7 +277,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
 
           {!showQueue ? (
             <ScrollView style={styles.modernContent} showsVerticalScrollIndicator={false}>
-              {/* Modern Artwork */}
+              {/* Modern Artwork - Animated pulsing thumbnail */}
               <View style={styles.modernArtworkContainer}>
                 <Animated.View 
                   style={[
@@ -296,15 +286,24 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
                       backgroundColor: colors.primary + '20',
                       borderColor: colors.primary + '40',
                       transform: [{ scale: pulseAnim }],
+                      justifyContent: 'center',
+                      alignItems: 'center',
                     }
                   ]}
                 >
-                  <LinearGradient
-                    colors={[colors.primary, colors.primary + '80']}
-                    style={styles.modernArtworkGradient}
-                  >
-                    <Icon name="music-note" size={80} color="#fff" />
-                  </LinearGradient>
+                  <Image
+                    source={{ uri: currentTrack.thumbnail_url || DEFAULT_THUMBNAIL }}
+                    style={{
+                      width: 180,
+                      height: 180,
+                      borderRadius: 90,
+                      backgroundColor: isDark ? '#222' : '#eee',
+                      borderWidth: 2,
+                      borderColor: isDark ? '#444' : '#fff',
+                    }}
+                    resizeMode="cover"
+                    onError={() => console.log('[AudioPlayer] Failed to load thumbnail:', currentTrack.thumbnail_url)}
+                  />
                 </Animated.View>
               </View>
 
