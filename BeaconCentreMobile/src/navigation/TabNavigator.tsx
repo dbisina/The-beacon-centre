@@ -1,7 +1,7 @@
 // src/navigation/TabNavigator.tsx - ULTRA MODERN DESIGN
 import React, { useRef, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useColorScheme, View, StyleSheet, Animated, Dimensions } from 'react-native';
+import { useColorScheme, View, StyleSheet, Animated, Dimensions, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -203,6 +203,17 @@ const UltraModernTabIcon = ({ route, focused, color, size }: any) => {
   );
 };
 
+// Custom tab bar button to remove Android ripple/circle effect
+const NoRippleTabBarButton = (props: any) => (
+  <TouchableOpacity
+    {...props}
+    activeOpacity={0.7}
+    style={[props.style, { overflow: 'visible' }]}
+  >
+    {props.children}
+  </TouchableOpacity>
+);
+
 export default function TabNavigator() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -272,6 +283,7 @@ export default function TabNavigator() {
           letterSpacing: 0.5,
         },
         headerShown: false,
+        tabBarButton: (props) => <NoRippleTabBarButton {...props} />,
       })}
     >
       <Tab.Screen 

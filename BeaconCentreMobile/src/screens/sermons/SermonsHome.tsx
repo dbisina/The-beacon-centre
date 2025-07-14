@@ -599,9 +599,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     gap: 8,
   },
-  modernTabActive: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
+ 
   modernTabText: {
     fontSize: 14,
     fontFamily: typography.fonts.poppins.medium,
