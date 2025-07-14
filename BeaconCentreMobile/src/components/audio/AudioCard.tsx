@@ -15,6 +15,9 @@ const AudioCard = ({ sermon, onPress, isFavorite = false }: AudioCardProps) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  // Debug log
+  console.log('AudioCard sermon object:', sermon);
+
   return (
     <TouchableOpacity style={[
       styles.container,
@@ -22,9 +25,17 @@ const AudioCard = ({ sermon, onPress, isFavorite = false }: AudioCardProps) => {
     ]} onPress={onPress}>
       <View style={styles.content}>
         <View style={styles.thumbnailContainer}>
-          <View style={styles.audioThumbnail}>
-            <Icon name="audiotrack" size={48} color={colors.primary} />
-          </View>
+          {(sermon.thumbnail_url || sermon.thumbnailUrl) ? (
+            <Image
+              source={{ uri: sermon.thumbnail_url || sermon.thumbnailUrl }}
+              style={styles.audioThumbnail}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.audioThumbnail}>
+              <Icon name="audiotrack" size={48} color={colors.primary} />
+            </View>
+          )}
         </View>
         <View style={styles.info}>
           <Text style={[

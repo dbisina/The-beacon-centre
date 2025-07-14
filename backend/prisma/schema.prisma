@@ -74,6 +74,10 @@ model AudioSermon {
   tags                String[] @default([])
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
+  
+  // New fields for thumbnail support
+  thumbnailUrl        String?  @map("thumbnail_url") @db.VarChar(500)
+  thumbnailCloudinaryPublicId String? @map("thumbnail_cloudinary_public_id") @db.VarChar(255)
 
   // Relations
   category            Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)

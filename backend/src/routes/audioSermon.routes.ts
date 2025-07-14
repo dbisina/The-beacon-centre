@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { AudioSermonController } from '../controllers/audioSermon.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { uploadAudio } from '../config/multer';
+import { uploadAudio, uploadImage } from '../config/multer';
 
 const router = Router();
 
@@ -15,6 +15,8 @@ router.get('/:id', AudioSermonController.getAudioSermonById);
 // Protected admin routes
 router.post('/', authenticate, AudioSermonController.createAudioSermon);
 router.post('/upload', authenticate, uploadAudio.single('audio'), AudioSermonController.createAudioSermonWithUpload);
+// New route for thumbnail upload
+router.post('/upload-thumbnail', authenticate, uploadImage.single('thumbnail'), require('../controllers/upload.controller').UploadController.uploadThumbnail);
 router.put('/:id', authenticate, AudioSermonController.updateAudioSermon);
 router.delete('/:id', authenticate, AudioSermonController.deleteAudioSermon);
 router.patch('/:id/featured', authenticate, AudioSermonController.toggleFeatured);

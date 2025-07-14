@@ -193,6 +193,13 @@ export const useAudioSermons = () => {
       try {
         console.log('🎵 Fetching audio sermons...');
         const data = await audioSermonsApi.getAll();
+        // Debug: log the thumbnail_url for each sermon
+        if (Array.isArray(data)) {
+          data.forEach((sermon, idx) => {
+            // @ts-expect-error: thumbnail_url may not be in the type but is present in the API response
+            console.log(`AudioSermon[${idx}] id=${sermon.id} title="${sermon.title}" thumbnail_url=`, sermon.thumbnail_url);
+          });
+        }
         console.log(`✅ Audio sermons fetched: ${data?.length || 0} items`);
         
         if (!data || !Array.isArray(data)) {

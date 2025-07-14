@@ -1,4 +1,4 @@
-// src/components/audio/AudioPlayer.tsx - EXPO-AUDIO COMPATIBLE
+// src/components/audio/AudioPlayer.tsx - MODERN DESIGN
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -16,6 +16,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Slider from '@react-native-community/slider';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAudio } from '@/context/AudioContext';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { colors } from '@/constants/colors';
@@ -26,7 +28,7 @@ interface AudioPlayerProps {
   onClose: () => void;
 }
 
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
   const colorScheme = useColorScheme();
@@ -78,6 +80,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
   const [showQueue, setShowQueue] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const lastPlayedTrackId = useRef<string | number | null>(null);
 
@@ -103,6 +106,28 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
       }
     },
   });
+
+  // Pulse animation for play button
+  useEffect(() => {
+    if (isPlaying) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isPlaying]);
 
   const handleClose = () => {
     Animated.timing(slideAnim, {
@@ -178,12 +203,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
     >
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={isDark ? colors.dark.background : colors.light.background}
+        backgroundColor="transparent"
+        translucent
       />
       
       <Animated.View 
         style={[
-          styles.container,
+          styles.modernContainer,
           {
             backgroundColor: isDark ? colors.dark.background : colors.light.background,
           },
@@ -191,22 +217,31 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
         ]}
         {...panResponder.panHandlers}
       >
-        <SafeAreaView style={styles.safeArea}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleClose} style={styles.headerButton}>
+        <SafeAreaView style={styles.modernSafeArea}>
+          {/* Modern Header */}
+          <BlurView 
+            intensity={isDark ? 30 : 40} 
+            style={[
+              styles.modernHeader,
+              { 
+                backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)',
+                borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+              }
+            ]}
+          >
+            <TouchableOpacity onPress={handleClose} style={styles.modernHeaderButton}>
               <Icon name="keyboard-arrow-down" size={28} color={isDark ? colors.dark.text : colors.light.text} />
             </TouchableOpacity>
             
-            <View style={styles.headerCenter}>
+            <View style={styles.modernHeaderCenter}>
               <Text style={[
-                styles.headerTitle,
+                styles.modernHeaderTitle,
                 { color: isDark ? colors.dark.text : colors.light.text }
               ]}>
                 Now Playing
               </Text>
               {queueLength > 1 && (
-                <Text style={[styles.headerSubtitle, { color: colors.textGrey }]}>
+                <Text style={[styles.modernHeaderSubtitle, { color: colors.textGrey }]}>
                   {queueLength} tracks in queue
                 </Text>
               )}
@@ -214,72 +249,100 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
 
             <TouchableOpacity 
               onPress={() => setShowQueue(!showQueue)} 
-              style={styles.headerButton}
+              style={styles.modernHeaderButton}
             >
               <Icon name="queue-music" size={24} color={isDark ? colors.dark.text : colors.light.text} />
             </TouchableOpacity>
-          </View>
+          </BlurView>
 
           {!showQueue ? (
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-              {/* Artwork */}
-              <View style={styles.artworkContainer}>
-                <View style={[
-                  styles.artwork,
-                  {
-                    backgroundColor: colors.primary + '20',
-                    borderColor: colors.primary + '40',
-                  }
-                ]}>
-                  <Icon name="music-note" size={80} color={colors.primary} />
-                </View>
+            <ScrollView style={styles.modernContent} showsVerticalScrollIndicator={false}>
+              {/* Modern Artwork */}
+              <View style={styles.modernArtworkContainer}>
+                <Animated.View 
+                  style={[
+                    styles.modernArtwork,
+                    {
+                      backgroundColor: colors.primary + '20',
+                      borderColor: colors.primary + '40',
+                      transform: [{ scale: pulseAnim }],
+                    }
+                  ]}
+                >
+                  <LinearGradient
+                    colors={[colors.primary, colors.primary + '80']}
+                    style={styles.modernArtworkGradient}
+                  >
+                    <Icon name="music-note" size={80} color="#fff" />
+                  </LinearGradient>
+                </Animated.View>
               </View>
 
-              {/* Track Info */}
-              <View style={styles.trackInfo}>
+              {/* Modern Track Info */}
+              <BlurView 
+                intensity={isDark ? 20 : 30} 
+                style={[
+                  styles.modernTrackInfoCard,
+                  { 
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                  }
+                ]}
+              >
                 <Text style={[
-                  styles.trackTitle,
+                  styles.modernTrackTitle,
                   { color: isDark ? colors.dark.text : colors.light.text }
                 ]}>
                   {currentTrack.title}
                 </Text>
-                <Text style={[styles.trackArtist, { color: colors.textGrey }]}>
+                <Text style={[styles.modernTrackArtist, { color: colors.textGrey }]}>
                   {currentTrack.speaker}
                 </Text>
                 {currentTrack.category && (
-                  <Text style={[styles.trackCategory, { color: colors.textGrey }]}>
-                    {currentTrack.category}
-                  </Text>
+                  <View style={styles.modernCategoryBadge}>
+                    <Text style={styles.modernCategoryText}>
+                      {currentTrack.category}
+                    </Text>
+                  </View>
                 )}
-              </View>
+              </BlurView>
 
-              {/* Progress */}
-              <View style={styles.progressContainer}>
-                <Slider
-                  style={styles.progressSlider}
-                  minimumValue={0}
-                  maximumValue={100}
-                  value={progress}
-                  onSlidingComplete={handleSeek}
-                  minimumTrackTintColor={colors.primary}
-                  maximumTrackTintColor={isDark ? colors.dark.border : colors.light.border}
-                  thumbTintColor={colors.primary}
-                />
-                <View style={styles.timeContainer}>
-                  <Text style={[styles.timeText, { color: colors.textGrey }]}>
+              {/* Modern Progress */}
+              <BlurView 
+                intensity={isDark ? 20 : 30} 
+                style={[
+                  styles.modernProgressCard,
+                  { 
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                  }
+                ]}
+              >
+                                  <Slider
+                    style={styles.modernProgressSlider}
+                    minimumValue={0}
+                    maximumValue={100}
+                    value={progress}
+                    onSlidingComplete={handleSeek}
+                    minimumTrackTintColor={colors.primary}
+                    maximumTrackTintColor={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}
+                    thumbTintColor={colors.primary}
+                  />
+                <View style={styles.modernTimeContainer}>
+                  <Text style={[styles.modernTimeText, { color: colors.textGrey }]}>
                     {formattedPosition}
                   </Text>
-                  <Text style={[styles.timeText, { color: colors.textGrey }]}>
+                  <Text style={[styles.modernTimeText, { color: colors.textGrey }]}>
                     {formattedDuration}
                   </Text>
                 </View>
-              </View>
+              </BlurView>
 
-              {/* Main Controls */}
-              <View style={styles.mainControls}>
+              {/* Modern Main Controls */}
+              <View style={styles.modernMainControls}>
                 <TouchableOpacity
                   onPress={skipToPrevious}
-                  style={[styles.controlButton, !hasPrevious && styles.disabledButton]}
+                  style={[styles.modernControlButton, !hasPrevious && styles.modernDisabledButton]}
                   disabled={!hasPrevious}
                 >
                   <Icon name="skip-previous" size={32} color={
@@ -291,22 +354,24 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
 
                 <TouchableOpacity
                   onPress={handlePlayPause}
-                  style={[
-                    styles.playButton,
-                    { backgroundColor: colors.primary }
-                  ]}
+                  style={styles.modernPlayButton}
                   disabled={!canPlay}
                 >
-                  <Icon
-                    name={isPlaying ? 'pause' : 'play-arrow'}
-                    size={40}
-                    color="white"
-                  />
+                  <LinearGradient
+                    colors={[colors.primary, colors.primary + 'CC']}
+                    style={styles.modernPlayGradient}
+                  >
+                    <Icon
+                      name={isPlaying ? 'pause' : 'play-arrow'}
+                      size={40}
+                      color="white"
+                    />
+                  </LinearGradient>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={skipToNext}
-                  style={[styles.controlButton, !hasNext && styles.disabledButton]}
+                  style={[styles.modernControlButton, !hasNext && styles.modernDisabledButton]}
                   disabled={!hasNext}
                 >
                   <Icon name="skip-next" size={32} color={
@@ -317,9 +382,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
                 </TouchableOpacity>
               </View>
 
-              {/* Secondary Controls */}
-              <View style={styles.secondaryControls}>
-                <TouchableOpacity onPress={toggleShuffle} style={styles.secondaryButton}>
+              {/* Modern Secondary Controls */}
+              <BlurView 
+                intensity={isDark ? 20 : 30} 
+                style={[
+                  styles.modernSecondaryControlsCard,
+                  { 
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                  }
+                ]}
+              >
+                <TouchableOpacity onPress={toggleShuffle} style={styles.modernSecondaryButton}>
                   <Icon 
                     name="shuffle" 
                     size={24} 
@@ -327,7 +401,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
                   />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={toggleRepeat} style={styles.secondaryButton}>
+                <TouchableOpacity onPress={toggleRepeat} style={styles.modernSecondaryButton}>
                   <Icon 
                     name={getRepeatModeIcon()} 
                     size={24} 
@@ -335,64 +409,73 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
                   />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={handleRateChange} style={styles.secondaryButton}>
+                <TouchableOpacity onPress={handleRateChange} style={styles.modernSecondaryButton}>
                   <Text style={[
-                    styles.rateText,
+                    styles.modernRateText,
                     { color: rate !== 1.0 ? colors.primary : (isDark ? colors.dark.text : colors.light.text) }
                   ]}>
                     {rate}×
                   </Text>
                 </TouchableOpacity>
-              </View>
+              </BlurView>
 
-              {/* Volume Control */}
-              <View style={styles.volumeContainer}>
+              {/* Modern Volume Control */}
+              <BlurView 
+                intensity={isDark ? 20 : 30} 
+                style={[
+                  styles.modernVolumeCard,
+                  { 
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                  }
+                ]}
+              >
                 <Icon name="volume-down" size={20} color={colors.textGrey} />
-                <Slider
-                  style={styles.volumeSlider}
-                  minimumValue={0}
-                  maximumValue={100}
-                  value={volume * 100}
-                  onValueChange={handleVolumeChange}
-                  minimumTrackTintColor={colors.primary}
-                  maximumTrackTintColor={isDark ? colors.dark.border : colors.light.border}
-                  thumbTintColor={colors.primary}
-                />
+                                  <Slider
+                    style={styles.modernVolumeSlider}
+                    minimumValue={0}
+                    maximumValue={100}
+                    value={volume * 100}
+                    onValueChange={handleVolumeChange}
+                    minimumTrackTintColor={colors.primary}
+                    maximumTrackTintColor={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}
+                    thumbTintColor={colors.primary}
+                  />
                 <Icon name="volume-up" size={20} color={colors.textGrey} />
-              </View>
+              </BlurView>
 
-              {/* Status */}
-              <Text style={[styles.statusText, { color: colors.textGrey }]}>
+              {/* Modern Status */}
+              <Text style={[styles.modernStatusText, { color: colors.textGrey }]}>
                 {getPlaybackStateText()}
               </Text>
             </ScrollView>
           ) : (
-            <View style={styles.queueContainer}>
+            <View style={styles.modernQueueContainer}>
               <Text style={[
-                styles.queueTitle,
+                styles.modernQueueTitle,
                 { color: isDark ? colors.dark.text : colors.light.text }
               ]}>
                 Playing Queue
               </Text>
-              <ScrollView style={styles.queueList}>
+              <ScrollView style={styles.modernQueueList}>
                 {('queue' in audioPlayer ? (audioPlayer as any).queue : []).map((sermon: any, index: number) => (
                   <TouchableOpacity
                     key={sermon.id}
                     style={[
-                      styles.queueItem,
-                      index === ('currentIndex' in audioPlayer ? (audioPlayer as any).currentIndex : 0) && styles.currentQueueItem,
-                      { borderBottomColor: isDark ? colors.dark.border : colors.light.border }
+                      styles.modernQueueItem,
+                      index === ('currentIndex' in audioPlayer ? (audioPlayer as any).currentIndex : 0) && styles.modernCurrentQueueItem,
+                      { borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
                     ]}
                   >
-                    <View style={styles.queueItemInfo}>
+                    <View style={styles.modernQueueItemInfo}>
                       <Text style={[
-                        styles.queueItemTitle,
+                        styles.modernQueueItemTitle,
                         { color: isDark ? colors.dark.text : colors.light.text },
                         index === ('currentIndex' in audioPlayer ? (audioPlayer as any).currentIndex : 0) && { color: colors.primary }
                       ]} numberOfLines={1}>
                         {sermon.title}
                       </Text>
-                      <Text style={[styles.queueItemArtist, { color: colors.textGrey }]} numberOfLines={1}>
+                      <Text style={[styles.modernQueueItemArtist, { color: colors.textGrey }]} numberOfLines={1}>
                         {sermon.speaker}
                       </Text>
                     </View>
@@ -411,181 +494,218 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  modernContainer: {
     flex: 1,
   },
-  safeArea: {
+  modernSafeArea: {
     flex: 1,
   },
-  header: {
+  modernHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.light.border,
   },
-  headerButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+  modernHeaderButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  headerCenter: {
-    flex: 1,
+  modernHeaderCenter: {
     alignItems: 'center',
   },
-  headerTitle: {
-    ...typography.styles.h3,
-    fontWeight: '600',
+  modernHeaderTitle: {
+    fontSize: 18,
+    fontFamily: typography.fonts.poppins.bold,
   },
-  headerSubtitle: {
-    ...typography.styles.caption,
+  modernHeaderSubtitle: {
+    fontSize: 12,
+    fontFamily: typography.fonts.poppins.regular,
     marginTop: 2,
   },
-  content: {
+  modernContent: {
     flex: 1,
     paddingHorizontal: 24,
   },
-  artworkContainer: {
+  modernArtworkContainer: {
     alignItems: 'center',
-    marginVertical: 32,
+    marginVertical: 40,
   },
-  artwork: {
-    width: 280,
-    height: 280,
-    borderRadius: 16,
-    borderWidth: 2,
-    alignItems: 'center',
+  modernArtwork: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 12,
-  },
-  trackInfo: {
     alignItems: 'center',
-    marginBottom: 32,
+    borderWidth: 3,
   },
-  trackTitle: {
-    ...typography.styles.h2,
-    textAlign: 'center',
+  modernArtworkGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modernTrackInfoCard: {
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  modernTrackTitle: {
+    fontSize: 22,
+    fontFamily: typography.fonts.poppins.bold,
     marginBottom: 8,
-  },
-  trackArtist: {
-    ...typography.styles.body1,
     textAlign: 'center',
-    marginBottom: 4,
   },
-  trackCategory: {
-    ...typography.styles.caption,
+  modernTrackArtist: {
+    fontSize: 16,
+    fontFamily: typography.fonts.poppins.medium,
     textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    marginBottom: 12,
   },
-  progressContainer: {
-    marginBottom: 32,
+  modernCategoryBadge: {
+    backgroundColor: `${colors.primary}20`,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'center',
   },
-  progressSlider: {
+  modernCategoryText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontFamily: typography.fonts.poppins.medium,
+  },
+  modernProgressCard: {
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  modernProgressSlider: {
+    width: '100%',
     height: 40,
   },
-  timeContainer: {
+  modernTimeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 8,
   },
-  timeText: {
-    ...typography.styles.caption,
+  modernTimeText: {
+    fontSize: 14,
+    fontFamily: typography.fonts.poppins.medium,
   },
-  mainControls: {
+  modernMainControls: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
+    marginBottom: 32,
+  },
+  modernControlButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modernDisabledButton: {
+    opacity: 0.5,
+  },
+  modernPlayButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    elevation: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  modernPlayGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modernSecondaryControlsCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
     marginBottom: 24,
-    gap: 32,
   },
-  controlButton: {
-    width: 56,
-    height: 56,
+  modernSecondaryButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  disabledButton: {
-    opacity: 0.4,
+  modernRateText: {
+    fontSize: 16,
+    fontFamily: typography.fonts.poppins.semiBold,
   },
-  playButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryControls: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 24,
-    gap: 48,
-  },
-  secondaryButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rateText: {
-    ...typography.styles.body1,
-    fontWeight: '600',
-  },
-  volumeContainer: {
+  modernVolumeCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
     marginBottom: 24,
     gap: 16,
   },
-  volumeSlider: {
+  modernVolumeSlider: {
     flex: 1,
     height: 40,
   },
-  statusText: {
-    ...typography.styles.caption,
+  modernStatusText: {
     textAlign: 'center',
-    marginBottom: 24,
+    fontSize: 14,
+    fontFamily: typography.fonts.poppins.regular,
+    marginBottom: 32,
   },
-  queueContainer: {
+  modernQueueContainer: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 24,
   },
-  queueTitle: {
-    ...typography.styles.h3,
-    marginBottom: 16,
+  modernQueueTitle: {
+    fontSize: 20,
+    fontFamily: typography.fonts.poppins.bold,
+    marginBottom: 20,
   },
-  queueList: {
+  modernQueueList: {
     flex: 1,
   },
-  queueItem: {
+  modernQueueItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 4,
+    justifyContent: 'space-between',
+    paddingVertical: 16,
     borderBottomWidth: 1,
   },
-  currentQueueItem: {
-    backgroundColor: colors.primary + '10',
-    borderRadius: 8,
-    marginHorizontal: -4,
+  modernCurrentQueueItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
   },
-  queueItemInfo: {
+  modernQueueItemInfo: {
     flex: 1,
+    marginRight: 16,
   },
-  queueItemTitle: {
-    ...typography.styles.body1,
-    fontWeight: '500',
-    marginBottom: 2,
+  modernQueueItemTitle: {
+    fontSize: 16,
+    fontFamily: typography.fonts.poppins.medium,
+    marginBottom: 4,
   },
-  queueItemArtist: {
-    ...typography.styles.caption,
+  modernQueueItemArtist: {
+    fontSize: 14,
+    fontFamily: typography.fonts.poppins.regular,
   },
 });
 

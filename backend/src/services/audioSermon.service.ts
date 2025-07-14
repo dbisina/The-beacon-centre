@@ -243,6 +243,8 @@ export class AudioSermonService {
           isFeatured: sermonData.isFeatured || false,
           isActive: sermonData.isActive !== undefined ? sermonData.isActive : true,
           tags: sermonData.tags || [],
+          thumbnailUrl: sermonData.thumbnailUrl || null,
+          thumbnailCloudinaryPublicId: sermonData.thumbnailCloudinaryPublicId || null,
         },
       });
 
@@ -302,6 +304,8 @@ export class AudioSermonService {
           ...(updateData.isFeatured !== undefined && { isFeatured: updateData.isFeatured }),
           ...(updateData.isActive !== undefined && { isActive: updateData.isActive }),
           ...(updateData.tags !== undefined && { tags: updateData.tags }),
+          ...(updateData.thumbnailUrl !== undefined && { thumbnailUrl: updateData.thumbnailUrl }),
+          ...(updateData.thumbnailCloudinaryPublicId !== undefined && { thumbnailCloudinaryPublicId: updateData.thumbnailCloudinaryPublicId }),
           updatedAt: new Date(),
         },
       });

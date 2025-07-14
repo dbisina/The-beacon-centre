@@ -47,7 +47,7 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const playSermon = async (sermon: AudioSermon): Promise<void> => {
     try {
       console.log('🎵 AudioContext: Playing sermon:', sermon.title);
-      console.log('🔗 Audio URL:', sermon.audioUrl);
+      console.log('🔗 Audio URL:', sermon.audio_url);
   
       updateState({ isLoading: true, error: null });
   
@@ -66,10 +66,10 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         soundRef.current = null;
       }
   
-      // Create new sound - USE audioUrl instead of audio_url
+      // Create new sound - USE audio_url (snake_case)
       console.log('📡 Creating sound from URL...');
       const { sound } = await Audio.Sound.createAsync(
-        { uri: sermon.audioUrl },
+        { uri: sermon.audio_url },
         { 
           shouldPlay: false,
           isLooping: false,

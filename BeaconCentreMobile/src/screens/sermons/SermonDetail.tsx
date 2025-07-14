@@ -1,4 +1,4 @@
-// src/screens/sermons/SermonDetail.tsx - COMPLETE IMPLEMENTATION
+// src/screens/sermons/SermonDetail.tsx - MODERN DESIGN
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -19,6 +19,7 @@ import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import YoutubePlayer from 'react-native-youtube-iframe';
 
 import { colors } from '@/constants/colors';
@@ -128,37 +129,41 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
     setIsVideoPlaying(state === 'playing');
   };
 
+  // Add debug log at the top of the component
+  console.log('SermonDetail sermon object:', sermon);
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
   return (
     <SafeAreaView style={[
-      styles.container,
+      styles.modernContainer,
       { backgroundColor: isDark ? colors.dark.background : colors.light.background }
     ]}>
       <StatusBar 
         barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={isDark ? colors.dark.background : colors.light.background}
+        backgroundColor="transparent"
+        translucent
       />
 
-      {/* Header */}
-      <View style={[
-        styles.header,
-        { backgroundColor: isDark ? colors.dark.card : colors.light.card }
-      ]}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color={isDark ? colors.dark.text : colors.light.text} />
-        </TouchableOpacity>
-        
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
+      {/* Modern Header with Glassmorphism */}
+      <BlurView 
+        intensity={isDark ? 30 : 40} 
+        style={[
+          styles.modernHeader,
+          { 
+            backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)',
+            borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          }
+        ]}
+      >
+  
+        <View style={styles.modernHeaderActions}>
+          <TouchableOpacity style={styles.modernHeaderButton} onPress={handleShare}>
             <Icon name="share" size={22} color={isDark ? colors.dark.text : colors.light.text} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={handleFavorite}>
+          <TouchableOpacity style={styles.modernHeaderButton} onPress={handleFavorite}>
             <Icon 
               name={isFavorite ? "favorite" : "favorite-border"} 
               size={22} 
@@ -166,65 +171,89 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
             />
           </TouchableOpacity>
         </View>
-      </View>
+      </BlurView>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Video Player or Audio Thumbnail */}
-        <View style={styles.mediaContainer}>
+      <ScrollView style={styles.modernContent} showsVerticalScrollIndicator={false}>
+        {/* Modern Media Container */}
+        <View style={styles.modernMediaContainer}>
           {type === 'video' && 'youtube_id' in sermon ? (
-            <View style={styles.videoContainer}>
+            <View style={styles.modernVideoContainer}>
               <YoutubePlayer
-                height={200}
-                width={width - 32}
+                height={220}
+                width={width - 48}
                 videoId={sermon.youtube_id}
                 onChangeState={handleVideoStateChange}
                 onReady={() => setVideoReady(true)}
               />
               {!videoReady && (
-                <View style={styles.videoPlaceholder}>
+                <View style={styles.modernVideoPlaceholder}>
                   <LoadingSpinner />
                 </View>
               )}
             </View>
           ) : (
-            <View style={styles.audioThumbnail}>
-              <LinearGradient
-                colors={[colors.primary, colors.primary + '80']}
-                style={styles.audioGradient}
-              >
-                <Icon name="music-note" size={80} color="#fff" />
-                <TouchableOpacity 
-                  style={styles.audioPlayButton}
-                  onPress={handlePlayAudio}
+            <View style={styles.modernAudioThumbnail}>
+              {((sermon as any).thumbnail_url || (sermon as any).thumbnailUrl) ? (
+                <Image
+                  source={{ uri: (sermon as any).thumbnail_url || (sermon as any).thumbnailUrl }}
+                  style={styles.thumbnail}
+                  resizeMode="cover"
+                />
+              ) : (
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + '80', colors.primary + '40']}
+                  style={styles.modernAudioGradient}
                 >
-                  <Icon name="play-arrow" size={60} color="#fff" />
-                </TouchableOpacity>
-              </LinearGradient>
+                  <View style={styles.modernAudioIconContainer}>
+                    <Icon name="music-note" size={80} color="#fff" />
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.modernAudioPlayButton}
+                    onPress={handlePlayAudio}
+                  >
+                    <Icon name="play-arrow" size={50} color="#fff" />
+                  </TouchableOpacity>
+                  <View style={styles.modernAudioOverlay}>
+                    <Text style={styles.modernAudioType}>Audio Sermon</Text>
+                  </View>
+                </LinearGradient>
+              )}
             </View>
           )}
         </View>
 
-        {/* Sermon Info */}
-        <View style={styles.sermonInfo}>
+        {/* Modern Sermon Info Card */}
+        <BlurView 
+          intensity={isDark ? 20 : 30} 
+          style={[
+            styles.modernSermonInfoCard,
+            { 
+              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+              borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            }
+          ]}
+        >
           <Text style={[
-            styles.sermonTitle,
+            styles.modernSermonTitle,
             { color: isDark ? colors.dark.text : colors.light.text }
           ]}>
             {sermon.title}
           </Text>
           
           <Text style={[
-            styles.sermonSpeaker,
+            styles.modernSermonSpeaker,
             { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }
           ]}>
             {sermon.speaker}
           </Text>
 
-          <View style={styles.sermonMeta}>
-            <View style={styles.metaItem}>
-              <Icon name="access-time" size={16} color={colors.primary} />
+          <View style={styles.modernSermonMeta}>
+            <View style={styles.modernMetaItem}>
+              <View style={styles.modernMetaIcon}>
+                <Icon name="access-time" size={16} color={colors.primary} />
+              </View>
               <Text style={[
-                styles.metaText,
+                styles.modernMetaText,
                 { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }
               ]}>
                 {sermon.duration}
@@ -232,10 +261,12 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
             </View>
 
             {sermon.sermon_date && (
-              <View style={styles.metaItem}>
-                <Icon name="calendar-today" size={16} color={colors.primary} />
+              <View style={styles.modernMetaItem}>
+                <View style={styles.modernMetaIcon}>
+                  <Icon name="calendar-today" size={16} color={colors.primary} />
+                </View>
                 <Text style={[
-                  styles.metaText,
+                  styles.modernMetaText,
                   { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }
                 ]}>
                   {formatDate(sermon.sermon_date)}
@@ -244,74 +275,90 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
             )}
 
             {sermon.category && (
-              <View style={styles.metaItem}>
-                <Icon name="folder" size={16} color={colors.primary} />
+              <View style={styles.modernMetaItem}>
+                <View style={styles.modernMetaIcon}>
+                  <Icon name="folder" size={16} color={colors.primary} />
+                </View>
                 <Text style={[
-                  styles.metaText,
+                  styles.modernMetaText,
                   { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }
                 ]}>
                   {sermon.category}
                 </Text>
               </View>
             )}
-          </View>
-        </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          {type === 'audio' && (
-            <>
-              <TouchableOpacity 
-                style={[styles.actionButton, styles.playButton]}
-                onPress={handlePlayAudio}
+
+          </View>
+        </BlurView>
+
+        {/* Modern Action Buttons */}
+        {type === 'audio' && (
+          <View style={styles.modernActionButtons}>
+            <TouchableOpacity 
+              style={[styles.modernActionButton, styles.modernPlayButton]}
+              onPress={handlePlayAudio}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.primary + 'CC']}
+                style={styles.modernPlayGradient}
               >
                 <Icon name="play-arrow" size={24} color="#fff" />
-                <Text style={styles.actionButtonText}>Play Audio</Text>
-              </TouchableOpacity>
+                <Text style={styles.modernActionButtonText}>Play Audio</Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={[
-                  styles.actionButton, 
-                  styles.downloadButton,
-                  (isDownloaded(sermon.id) || isDownloading(sermon.id)) && styles.downloadedButton
-                ]}
-                onPress={handleDownload}
-                disabled={isDownloaded(sermon.id) || isDownloading(sermon.id)}
-              >
-                <Icon 
-                  name={isDownloaded(sermon.id) ? "download-done" : isDownloading(sermon.id) ? "hourglass-empty" : "download"} 
-                  size={24} 
-                  color={isDownloaded(sermon.id) ? colors.success : isDownloading(sermon.id) ? colors.primary : "#fff"} 
-                />
-                <Text style={[
-                  styles.actionButtonText,
-                  (isDownloaded(sermon.id) || isDownloading(sermon.id)) && { 
-                    color: isDownloaded(sermon.id) ? colors.success : colors.primary 
-                  }
-                ]}>
-                  {isDownloaded(sermon.id) ? 'Downloaded' : isDownloading(sermon.id) ? `${getDownloadProgress(sermon.id)}%` : 'Download'}
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
+            <TouchableOpacity 
+              style={[
+                styles.modernActionButton, 
+                styles.modernDownloadButton,
+                (isDownloaded(sermon.id) || isDownloading(sermon.id)) && styles.modernDownloadedButton
+              ]}
+              onPress={handleDownload}
+              disabled={isDownloaded(sermon.id) || isDownloading(sermon.id)}
+            >
+              <Icon 
+                name={isDownloaded(sermon.id) ? "download-done" : isDownloading(sermon.id) ? "hourglass-empty" : "download"} 
+                size={24} 
+                color={isDownloaded(sermon.id) ? colors.success : isDownloading(sermon.id) ? colors.primary : "#fff"} 
+              />
+              <Text style={[
+                styles.modernActionButtonText,
+                (isDownloaded(sermon.id) || isDownloading(sermon.id)) && { 
+                  color: isDownloaded(sermon.id) ? colors.success : colors.primary 
+                }
+              ]}>
+                {isDownloaded(sermon.id) ? 'Downloaded' : isDownloading(sermon.id) ? `${getDownloadProgress(sermon.id)}%` : 'Download'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-        {/* Description */}
+        {/* Modern Description Card */}
         {sermon.description && (
-          <View style={styles.descriptionContainer}>
+          <BlurView 
+            intensity={isDark ? 20 : 30} 
+            style={[
+              styles.modernDescriptionCard,
+              { 
+                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+                borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+              }
+            ]}
+          >
             <Text style={[
-              styles.descriptionTitle,
+              styles.modernDescriptionTitle,
               { color: isDark ? colors.dark.text : colors.light.text }
             ]}>
               Description
             </Text>
             <Text style={[
-              styles.descriptionText,
+              styles.modernDescriptionText,
               { color: isDark ? colors.dark.textSecondary : colors.light.textSecondary }
             ]}>
               {sermon.description}
             </Text>
-          </View>
+          </BlurView>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -319,40 +366,50 @@ const SermonDetailScreen: React.FC<SermonDetailScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  modernContainer: {
     flex: 1,
   },
-  header: {
+  modernHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.light.border,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
   },
-  backButton: {
+  modernBackButton: {
     padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  headerActions: {
+  modernHeaderActions: {
     flexDirection: 'row',
   },
-  headerButton: {
+  modernHeaderButton: {
     padding: 8,
     marginLeft: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  content: {
+  modernContent: {
     flex: 1,
+    paddingTop: 80, // Account for fixed header
   },
-  mediaContainer: {
-    padding: 16,
+  modernMediaContainer: {
+    padding: 24,
+    paddingBottom: 20,
   },
-  videoContainer: {
-    borderRadius: 12,
+  modernVideoContainer: {
+    borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: '#000',
   },
-  videoPlaceholder: {
+  modernVideoPlaceholder: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -362,96 +419,147 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  audioThumbnail: {
-    height: 200,
-    borderRadius: 12,
+  modernAudioThumbnail: {
+    height: 240,
+    borderRadius: 20,
     overflow: 'hidden',
+    position: 'relative',
   },
-  audioGradient: {
+  modernAudioGradient: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
-  audioPlayButton: {
+  modernAudioIconContainer: {
+    marginBottom: 20,
+  },
+  modernAudioPlayButton: {
     position: 'absolute',
     backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 40,
-    padding: 10,
+    borderRadius: 50,
+    padding: 15,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
-  sermonInfo: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+  modernAudioOverlay: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
-  sermonTitle: {
-    fontSize: 24,
+  modernAudioType: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: typography.fonts.poppins.medium,
+  },
+  modernSermonInfoCard: {
+    marginHorizontal: 24,
+    marginBottom: 24,
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  modernSermonTitle: {
+    fontSize: 26,
     fontFamily: typography.fonts.poppins.bold,
-    marginBottom: 8,
-    lineHeight: 32,
+    marginBottom: 12,
+    lineHeight: 34,
   },
-  sermonSpeaker: {
+  modernSermonSpeaker: {
     fontSize: 18,
     fontFamily: typography.fonts.poppins.medium,
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  sermonMeta: {
+  modernSermonMeta: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
   },
-  metaItem: {
+  modernMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
-  metaText: {
+  modernMetaIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: `${colors.primary}20`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modernMetaText: {
     fontSize: 14,
-    fontFamily: typography.fonts.poppins.regular,
+    fontFamily: typography.fonts.poppins.medium,
   },
-  actionButtons: {
+  modernActionButtons: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 12,
+    paddingHorizontal: 24,
+    gap: 16,
     marginBottom: 24,
   },
-  actionButton: {
+  modernActionButton: {
     flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  modernPlayButton: {
+    elevation: 4,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  modernPlayGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 16,
     gap: 8,
   },
-  playButton: {
-    backgroundColor: colors.primary,
-  },
-  downloadButton: {
+  modernDownloadButton: {
     backgroundColor: colors.secondary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 8,
   },
-  downloadedButton: {
+  modernDownloadedButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
     borderColor: colors.success,
   },
-  actionButtonText: {
+  modernActionButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontFamily: typography.fonts.poppins.medium,
-  },
-  descriptionContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-  },
-  descriptionTitle: {
-    fontSize: 18,
     fontFamily: typography.fonts.poppins.semiBold,
-    marginBottom: 12,
   },
-  descriptionText: {
+  modernDescriptionCard: {
+    marginHorizontal: 24,
+    marginBottom: 32,
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  modernDescriptionTitle: {
+    fontSize: 20,
+    fontFamily: typography.fonts.poppins.bold,
+    marginBottom: 16,
+  },
+  modernDescriptionText: {
     fontSize: 16,
     fontFamily: typography.fonts.poppins.regular,
     lineHeight: 24,
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
   },
 });
 

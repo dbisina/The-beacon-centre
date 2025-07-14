@@ -49,6 +49,9 @@ export interface Devotional {
     description?: string;
     is_featured: boolean;
     created_at: string;
+    // New fields for thumbnail support
+    thumbnail_url?: string;
+    thumbnail_cloudinary_public_id?: string;
   }
   
   export interface Announcement {

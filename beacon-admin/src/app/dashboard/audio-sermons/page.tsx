@@ -346,6 +346,15 @@ function AudioCard({ sermon, onDelete, onToggleFeatured }: AudioCardProps) {
   return (
     <>
       <div className="group bg-white rounded-2xl border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden">
+        {/* Thumbnail */}
+        {sermon.thumbnailUrl || sermon.thumbnail_url ? (
+          <img
+            src={sermon.thumbnailUrl || sermon.thumbnail_url}
+            alt={sermon.title}
+            className="w-full h-48 object-cover border-b border-gray-100"
+            style={{ background: '#f3f4f6' }}
+          />
+        ) : null}
         {/* Header */}
         <div className="p-6 border-b border-gray-50">
           <div className="flex items-start justify-between mb-3">

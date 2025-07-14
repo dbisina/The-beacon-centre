@@ -5,7 +5,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CalendarIcon, Save, Loader2, Upload, FileAudio, X, Play, Pause, Star, StarOff } from 'lucide-react';
@@ -36,10 +36,10 @@ import { cn, formatFileSize, formatDuration } from '@/lib/utils';
 const audioSermonSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters'),
   speaker: z.string().min(1, 'Speaker is required').max(255, 'Speaker name must be less than 255 characters'),
+  isFeatured: z.boolean().default(false),
   description: z.string().optional(),
   category: z.string().optional(),
   sermonDate: z.date().optional(),
-  isFeatured: z.boolean().default(false),
 });
 
 type AudioSermonFormData = z.infer<typeof audioSermonSchema>;
@@ -53,6 +53,11 @@ interface AudioFile {
   file: File;
   url: string;
   duration?: number;
+}
+
+interface ThumbnailFile {
+  file: File;
+  url: string;
 }
 
 export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
@@ -70,6 +75,12 @@ export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
     duration: 0,
     audio: null,
   });
+
+  const [thumbnailFile, setThumbnailFile] = useState<ThumbnailFile | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(sermon?.thumbnail_url || null);
+  const [thumbnailCloudinaryId, setThumbnailCloudinaryId] = useState<string | null>(sermon?.thumbnail_cloudinary_public_id || null);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0);
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -90,8 +101,8 @@ export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
       speaker: sermon.speaker,
       description: sermon.description || '',
       category: sermon.category || 'none',
-      sermonDate: sermon.sermonDate ? new Date(sermon.sermonDate) : undefined,
-      isFeatured: sermon.isFeatured,
+      sermonDate: sermon.sermon_date ? new Date(sermon.sermon_date) : undefined,
+      isFeatured: sermon.is_featured ?? false,
     } : {
       title: '',
       speaker: '',
@@ -187,6 +198,66 @@ export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
     multiple: false,
   });
 
+  // Thumbnail image handling
+  const onThumbnailDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast({
+        title: 'Error',
+        description: 'Please select a valid image file (JPG, PNG, WEBP)',
+        variant: 'destructive',
+      });
+      return;
+    }
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'Error',
+        description: 'Thumbnail must be less than 10MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setThumbnailFile({ file, url });
+  }, [toast]);
+
+  const { getRootProps: getThumbRootProps, getInputProps: getThumbInputProps, isDragActive: isThumbDragActive } = useDropzone({
+    onDrop: onThumbnailDrop,
+    accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.webp'] },
+    multiple: false,
+  });
+
+  // Upload thumbnail to backend
+  const uploadThumbnail = async (file: File) => {
+    setIsUploadingThumbnail(true);
+    setThumbnailUploadProgress(0);
+    try {
+      const response = await uploadApi.image(file);
+      setThumbnailUrl(response.url);
+      setThumbnailCloudinaryId(response.publicId);
+      toast({ title: 'Success', description: 'Thumbnail uploaded!' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to upload thumbnail', variant: 'destructive' });
+      setThumbnailUrl(null);
+      setThumbnailCloudinaryId(null);
+    } finally {
+      setIsUploadingThumbnail(false);
+      setThumbnailUploadProgress(0);
+    }
+  };
+
+  // Auto-upload thumbnail when selected
+  useEffect(() => {
+    if (thumbnailFile?.file) {
+      uploadThumbnail(thumbnailFile.file);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [thumbnailFile]);
+
   // Audio preview controls
   const setupAudioPreview = (audio: HTMLAudioElement) => {
     const updateTime = () => {
@@ -222,7 +293,7 @@ export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
   };
 
   const toggleAudioPreview = () => {
-    const audioSrc = audioFile?.url || sermon?.audioUrl;
+    const audioSrc = audioFile?.url || sermon?.audio_url;
     if (!audioSrc) return;
 
     if (!audioPreview.audio) {
@@ -242,7 +313,7 @@ export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
     }
   };
 
-  const onSubmit = async (data: AudioSermonFormData) => {
+  const onSubmit: SubmitHandler<AudioSermonFormData> = async (data) => {
     if (sermon?.id) {
       updateMutation.mutate(data);
     } else {
@@ -269,11 +340,14 @@ export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
         const sermonData = {
           ...data,
           category: data.category === 'none' ? undefined : data.category,
-          audioUrl: uploadResult.url,
-          cloudinaryPublicId: uploadResult.publicId,
+          audioUrl: uploadResult.url, // camelCase
+          cloudinaryPublicId: uploadResult.publicId, // camelCase
           duration: uploadResult.duration || (audioFile.duration ? formatDuration(audioFile.duration) : undefined),
           fileSize: uploadResult.fileSize,
           sermonDate: data.sermonDate ? new Date(data.sermonDate).toISOString() : undefined,
+          // Thumbnails
+          thumbnailUrl: thumbnailUrl || undefined,
+          thumbnailCloudinaryPublicId: thumbnailCloudinaryId || undefined,
         };
 
         const result = await audioSermonsApi.create(sermonData);
@@ -342,6 +416,9 @@ export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
           setIsUploading(false);
         }
       }
+
+      if (thumbnailUrl) updateData.thumbnailUrl = thumbnailUrl;
+      if (thumbnailCloudinaryId) updateData.thumbnailCloudinaryPublicId = thumbnailCloudinaryId;
 
       return await audioSermonsApi.update(sermon.id, updateData);
     },
@@ -433,7 +510,7 @@ export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
                 </div>
               )}
 
-              {(audioFile || sermon?.audioUrl) && (
+              {(audioFile || sermon?.audio_url) && (
                 <div className="border rounded-lg p-4 bg-gray-50">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
@@ -702,6 +779,39 @@ export function AudioSermonForm({ sermon, onSuccess }: AudioSermonFormProps) {
               <p>• Use descriptive titles for easy discovery</p>
               <p>• Add categories to organize content</p>
               <p>• Featured sermons appear first in the app</p>
+            </CardContent>
+          </Card>
+
+          {/* Thumbnail Image */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Thumbnail Image</CardTitle>
+              <CardDescription>Upload a cover image for this audio sermon (JPG, PNG, WEBP, 16:9 recommended)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {thumbnailUrl && (
+                <div className="mb-4 flex flex-col items-center">
+                  <img src={thumbnailUrl} alt="Thumbnail preview" className="rounded-lg w-full max-w-xs object-cover aspect-video border" />
+                  <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => { setThumbnailUrl(null); setThumbnailCloudinaryId(null); setThumbnailFile(null); }}>
+                    Remove
+                  </Button>
+                </div>
+              )}
+              {!thumbnailUrl && (
+                <div {...getThumbRootProps()} className={cn('border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors', isThumbDragActive ? 'border-teal-500 bg-teal-50' : 'border-gray-300 hover:border-teal-400 hover:bg-gray-50')}> 
+                  <input {...getThumbInputProps()} />
+                  <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-base font-medium text-gray-900 mb-1">{isThumbDragActive ? 'Drop the image here' : 'Drag & drop image here'}</p>
+                  <p className="text-gray-600 mb-2">or click to browse files</p>
+                  <p className="text-xs text-gray-500">Max size: 10MB. JPG, PNG, WEBP. 16:9 ratio recommended.</p>
+                </div>
+              )}
+              {isUploadingThumbnail && (
+                <div className="mt-2">
+                  <Progress value={thumbnailUploadProgress} className="h-2" />
+                  <p className="text-xs text-gray-500 mt-1">Uploading thumbnail...</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

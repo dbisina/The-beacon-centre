@@ -1,5 +1,5 @@
-// src/screens/sermons/SermonsHome.tsx - EXACT UI MATCH
-import React, { useState } from 'react';
+// src/screens/sermons/SermonsHome.tsx - MODERN DESIGN
+import React, { useState, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -12,9 +12,11 @@ import {
   Image,
   Animated,
   Alert,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { colors } from '@/constants/colors';
@@ -24,87 +26,123 @@ import { VideoSermon } from '@/types/api';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import SearchBar from '@/components/search/SearchBar';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 // Tab type - Updated to match reference
 type TabType = 'featured' | 'sermons' | 'audio';
 
-// Main Featured Sermon Card - Matches reference design exactly
-const MainFeaturedCard = ({ sermon, onPress }: any) => (
-  <TouchableOpacity onPress={onPress} style={styles.mainFeaturedCard}>
+// Modern Hero Featured Card with Glassmorphism
+const ModernHeroCard = ({ sermon, onPress, isDark }: any) => (
+  <TouchableOpacity onPress={onPress} style={styles.heroCard}>
     <Image 
       source={{ 
         uri: sermon.thumbnail_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=200&fit=crop'
       }}
-      style={styles.mainFeaturedImage}
+      style={styles.heroImage}
     />
-    <View style={styles.mainFeaturedContent}>
-      <Text style={styles.mainFeaturedTitle} numberOfLines={2}>
+    <LinearGradient
+      colors={isDark ? ['transparent', 'rgba(0,0,0,0.8)'] : ['transparent', 'rgba(0,0,0,0.7)']}
+      style={styles.heroGradient}
+    />
+    <View style={styles.heroContent}>
+      <View style={styles.heroBadge}>
+        <Icon name="play-circle-filled" size={16} color="#fff" />
+        <Text style={styles.heroBadgeText}>Featured</Text>
+      </View>
+      <Text style={styles.heroTitle} numberOfLines={2}>
         {sermon.title}
       </Text>
-      <Text style={styles.mainFeaturedSpeaker}>{sermon.speaker}</Text>
-      <Text style={styles.mainFeaturedDuration}>{sermon.duration}</Text>
+      <Text style={styles.heroSpeaker}>{sermon.speaker}</Text>
+      <View style={styles.heroMeta}>
+        <View style={styles.heroMetaItem}>
+          <Icon name="schedule" size={14} color="#fff" />
+          <Text style={styles.heroMetaText}>{sermon.duration}</Text>
+        </View>
+        <View style={styles.heroMetaItem}>
+          <Icon name="visibility" size={14} color="#fff" />
+          <Text style={styles.heroMetaText}>{sermon.view_count || 0} views</Text>
+        </View>
+      </View>
     </View>
   </TouchableOpacity>
 );
 
-// Grid Sermon Card - For the grid layout below tabs
-const GridSermonCard = ({ sermon, onPress }: any) => (
-  <TouchableOpacity onPress={onPress} style={styles.gridSermonCard}>
-    <Image 
-      source={{ 
-        uri: sermon.thumbnail_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=120&fit=crop'
-      }}
-      style={styles.gridSermonImage}
-    />
-    <View style={styles.gridSermonContent}>
-      <Text style={styles.gridSermonTitle} numberOfLines={2}>
+// Modern Grid Sermon Card with Glassmorphism
+const ModernGridCard = ({ sermon, onPress, isDark }: any) => (
+  <TouchableOpacity onPress={onPress} style={[styles.modernGridCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.9)' }]}>
+    <View style={styles.modernGridImageContainer}>
+      <Image 
+        source={{ 
+          uri: sermon.thumbnail_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=120&fit=crop'
+        }}
+        style={styles.modernGridImage}
+      />
+      <View style={styles.modernGridOverlay}>
+        <View style={styles.playButton}>
+          <Icon name="play-arrow" size={20} color="#fff" />
+        </View>
+      </View>
+    </View>
+    <View style={styles.modernGridContent}>
+      <Text style={[styles.modernGridTitle, { color: isDark ? colors.dark.text : colors.light.text }]} numberOfLines={2}>
         {sermon.title}
       </Text>
-      <Text style={styles.gridSermonSpeaker}>{sermon.speaker}</Text>
+      <Text style={styles.modernGridSpeaker}>{sermon.speaker}</Text>
+      <View style={styles.modernGridMeta}>
+        <View style={styles.modernGridMetaItem}>
+          <Icon name="schedule" size={12} color={colors.textGrey} />
+          <Text style={styles.modernGridMetaText}>{sermon.duration}</Text>
+        </View>
+        {sermon.is_featured && (
+          <View style={styles.featuredBadge}>
+            <Icon name="star" size={10} color={colors.primary} />
+          </View>
+        )}
+      </View>
     </View>
   </TouchableOpacity>
 );
 
-// Custom Tab Header - Updated to match reference
-const CustomTabHeader = ({ 
+// Modern Tab Header with Glassmorphism
+const ModernTabHeader = ({ 
   activeTab, 
   onTabPress, 
-  isDark 
+  isDark,
+  isSticky = false
 }: { 
   activeTab: TabType; 
   onTabPress: (tab: TabType) => void;
   isDark: boolean;
+  isSticky?: boolean;
 }) => {
   const tabs = [
-    { key: 'featured', label: 'Featured' },
-    { key: 'sermons', label: 'Sermons' },
-    { key: 'audio', label: 'Audio' },
+    { key: 'featured', label: 'Featured', icon: 'star' },
+    { key: 'sermons', label: 'Video', icon: 'play-circle-filled' },
+    { key: 'audio', label: 'Audio', icon: 'headphones' },
   ];
 
   return (
-    <View style={[
-      styles.customTabHeader,
-      { backgroundColor: isDark ? colors.dark.background : colors.light.background }
-    ]}>
+    <View style={[styles.modernTabHeader, isSticky && (isDark ? styles.stickyTabHeaderDark : styles.stickyTabHeaderLight)]}>
+      {!isSticky && <BlurView intensity={isDark ? 20 : 30} style={StyleSheet.absoluteFill} />}
       {tabs.map((tab) => (
         <TouchableOpacity
           key={tab.key}
           style={[
-            styles.customTab,
-            activeTab === tab.key && {
-              borderBottomColor: isDark ? colors.dark.text : colors.light.text,
-            },
+            styles.modernTab,
+            activeTab === tab.key && styles.modernTabActive
           ]}
           onPress={() => onTabPress(tab.key as TabType)}
         >
+          <Icon 
+            name={tab.icon as any} 
+            size={20} 
+            color={activeTab === tab.key ? colors.primary : colors.textGrey} 
+          />
           <Text
             style={[
-              styles.customTabText,
+              styles.modernTabText,
               {
-                color: activeTab === tab.key 
-                  ? isDark ? colors.dark.text : colors.light.text
-                  : colors.textGrey,
+                color: activeTab === tab.key ? colors.primary : colors.textGrey,
                 fontFamily: activeTab === tab.key 
                   ? typography.fonts.poppins.semiBold 
                   : typography.fonts.poppins.medium,
@@ -119,34 +157,38 @@ const CustomTabHeader = ({
   );
 };
 
-// Featured Tab Content - Grid only since main card is above tabs
-const FeaturedContent = ({ navigation }: any) => {
+// Modern Featured Content
+const ModernFeaturedContent = ({ navigation, isDark }: any) => {
   const { data: videos } = useVideoSermons();
   const { data: audios } = useAudioSermons();
   
   const allSermons = [...(videos || []), ...(audios || [])];
 
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      {/* Grid of Sermons */}
-      <View style={styles.gridSection}>
-        <View style={styles.gridContainer}>
+    <ScrollView style={styles.modernTabContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.modernGridSection}>
+        <View style={styles.modernGridContainer}>
           {allSermons && allSermons.length > 0 ? (
             allSermons.slice(0, 6).map((sermon, index) => (
-              <GridSermonCard
+              <ModernGridCard
                 key={`${sermon.id}-${index}`}
                 sermon={sermon}
                 onPress={() => navigation.navigate('SermonDetail', { 
                   sermon, 
                   type: videos?.includes(sermon as VideoSermon) ? 'video' : 'audio'
                 })}
+                isDark={isDark}
               />
             ))
           ) : (
-            <View style={styles.emptyState}>
-              <Icon name="playlist-play" size={64} color={colors.textGrey} />
-              <Text style={styles.emptyStateTitle}>No Sermons Available</Text>
-              <Text style={styles.emptyStateText}>
+            <View style={styles.modernEmptyState}>
+              <View style={styles.modernEmptyIcon}>
+                <Icon name="playlist-play" size={48} color={colors.textGrey} />
+              </View>
+              <Text style={[styles.modernEmptyTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
+                No Sermons Available
+              </Text>
+              <Text style={styles.modernEmptyText}>
                 Check back later for new content
               </Text>
             </View>
@@ -157,8 +199,8 @@ const FeaturedContent = ({ navigation }: any) => {
   );
 };
 
-// Sermons Tab Content
-const SermonsContent = ({ navigation }: any) => {
+// Modern Sermons Content
+const ModernSermonsContent = ({ navigation, isDark }: any) => {
   const { data: videos, isLoading: videosLoading } = useVideoSermons();
   const { data: audios, isLoading: audiosLoading } = useAudioSermons();
   const [searchQuery, setSearchQuery] = useState('');
@@ -172,37 +214,48 @@ const SermonsContent = ({ navigation }: any) => {
   if (videosLoading || audiosLoading) return <LoadingSpinner />;
 
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <SearchBar 
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Search sermons..."
-      />
+    <ScrollView style={styles.modernTabContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.modernSearchContainer}>
+        <SearchBar 
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search sermons..."
+        />
+      </View>
       
-      <View style={styles.listSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>All Sermons</Text>
-          <Text style={styles.countText}>{filteredSermons?.length || 0} sermons</Text>
+      <View style={styles.modernListSection}>
+        <View style={styles.modernSectionHeader}>
+          <Text style={[styles.modernSectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
+            All Sermons
+          </Text>
+          <View style={styles.modernCountBadge}>
+            <Text style={styles.modernCountText}>{filteredSermons?.length || 0}</Text>
+          </View>
         </View>
         
-        <View style={styles.gridContainer}>
+        <View style={styles.modernGridContainer}>
           {filteredSermons && filteredSermons.length > 0 ? (
             filteredSermons.map((sermon, index) => (
-              <GridSermonCard
+              <ModernGridCard
                 key={`${sermon.id}-${index}`}
                 sermon={sermon}
                 onPress={() => navigation.navigate('SermonDetail', { 
                   sermon, 
                   type: videos?.includes(sermon as VideoSermon) ? 'video' : 'audio'
                 })}
+                isDark={isDark}
               />
             ))
           ) : (
-            <View style={styles.emptyState}>
-              <Icon name="search-off" size={64} color={colors.textGrey} />
-              <Text style={styles.emptyStateTitle}>No Sermons Found</Text>
-              <Text style={styles.emptyStateText}>
-                Try adjusting your search or check back later
+            <View style={styles.modernEmptyState}>
+              <View style={styles.modernEmptyIcon}>
+                <Icon name="search-off" size={48} color={colors.textGrey} />
+              </View>
+              <Text style={[styles.modernEmptyTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
+                No Results Found
+              </Text>
+              <Text style={styles.modernEmptyText}>
+                Try adjusting your search terms
               </Text>
             </View>
           )}
@@ -212,50 +265,47 @@ const SermonsContent = ({ navigation }: any) => {
   );
 };
 
-// Audio Tab Content
-const AudioContent = ({ navigation }: any) => {
+// Modern Audio Content
+const ModernAudioContent = ({ navigation, isDark }: any) => {
   const { data: audios, isLoading } = useAudioSermons();
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredAudios = audios?.filter(audio => 
-    audio.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    audio.speaker.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <SearchBar 
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Search audio sermons..."
-      />
-      
-      <View style={styles.listSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Audio Sermons</Text>
-          <Text style={styles.countText}>{filteredAudios?.length || 0} audio</Text>
+    <ScrollView style={styles.modernTabContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.modernGridSection}>
+        <View style={styles.modernSectionHeader}>
+          <Text style={[styles.modernSectionTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
+            Audio Sermons
+          </Text>
+          <View style={styles.modernCountBadge}>
+            <Text style={styles.modernCountText}>{audios?.length || 0}</Text>
+          </View>
         </View>
         
-        <View style={styles.gridContainer}>
-          {filteredAudios && filteredAudios.length > 0 ? (
-            filteredAudios.map((audio, index) => (
-              <GridSermonCard
-                key={`${audio.id}-${index}`}
-                sermon={audio}
+        <View style={styles.modernGridContainer}>
+          {audios && audios.length > 0 ? (
+            audios.map((sermon, index) => (
+              <ModernGridCard
+                key={`${sermon.id}-${index}`}
+                sermon={sermon}
                 onPress={() => navigation.navigate('SermonDetail', { 
-                  sermon: audio, 
+                  sermon, 
                   type: 'audio'
                 })}
+                isDark={isDark}
               />
             ))
           ) : (
-            <View style={styles.emptyState}>
-              <Icon name="headphones-off" size={64} color={colors.textGrey} />
-              <Text style={styles.emptyStateTitle}>No Audio Found</Text>
-              <Text style={styles.emptyStateText}>
-                Try adjusting your search or check back later
+            <View style={styles.modernEmptyState}>
+              <View style={styles.modernEmptyIcon}>
+                <Icon name="headphones" size={48} color={colors.textGrey} />
+              </View>
+              <Text style={[styles.modernEmptyTitle, { color: isDark ? colors.dark.text : colors.light.text }]}>
+                No Audio Sermons
+              </Text>
+              <Text style={styles.modernEmptyText}>
+                Audio sermons will appear here
               </Text>
             </View>
           )}
@@ -265,364 +315,447 @@ const AudioContent = ({ navigation }: any) => {
   );
 };
 
-// Series Tab Content
-const SeriesContent = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+// Modern Refresh Icon
+const ModernRefreshIcon = ({ isRefreshing }: { isRefreshing: boolean }) => (
+  <View style={styles.modernRefreshIcon}>
+    <Icon 
+      name={isRefreshing ? "refresh" : "refresh"} 
+      size={24} 
+      color={colors.primary}
+      style={isRefreshing ? styles.rotating : undefined}
+    />
+  </View>
+);
 
-  return (
-    <ScrollView style={styles.tabContent}>
-      <View style={styles.emptyState}>
-        <Icon name="playlist-play" size={64} color={colors.textGrey} />
-        <Text style={[
-          styles.emptyStateTitle,
-          { color: isDark ? colors.dark.text : colors.light.text }
-        ]}>
-          Coming Soon
-        </Text>
-        <Text style={styles.emptyStateText}>
-          Sermon series will be available here
-        </Text>
-      </View>
-    </ScrollView>
-  );
-};
-
-const RefreshIcon = ({ isRefreshing }: { isRefreshing: boolean }) => {
-    const rotationValue = new Animated.Value(0);
-  
-    React.useEffect(() => {
-      if (isRefreshing) {
-        // Start rotation animation
-        Animated.loop(
-          Animated.timing(rotationValue, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          })
-        ).start();
-      } else {
-        // Stop rotation and reset
-        rotationValue.stopAnimation();
-        rotationValue.setValue(0);
-      }
-    }, [isRefreshing]);
-  
-    const rotation = rotationValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['0deg', '360deg'],
-    });
-  
-    return (
-      <Animated.View style={{ transform: [{ rotate: rotation }] }}>
-        <Icon 
-          name="refresh" 
-          size={24} 
-          color={isRefreshing ? colors.primary : colors.textGrey} 
-        />
-      </Animated.View>
-    );
-  };
-
-// Main Sermons Component
+// Main Component
 const SermonsHome = ({ navigation }: any) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [activeTab, setActiveTab] = useState<TabType>('featured');
-  const [refreshing, setRefreshing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // Get data and refetch functions
-  const { 
-    data: videos, 
-    refetch: refetchVideos, 
-    isLoading: loadingVideos 
-  } = useVideoSermons();
-  
-  const { 
-    data: audios, 
-    refetch: refetchAudios, 
-    isLoading: loadingAudios 
-  } = useAudioSermons();
-  
+  const [isTabHeaderSticky, setIsTabHeaderSticky] = useState(false);
+  const tabHeaderY = useRef(0);
 
-  const featuredVideo = videos?.find(v => v.is_featured) || videos?.[0];
+  const { data: videos, refetch: refetchVideos } = useVideoSermons();
+  const { data: audios, refetch: refetchAudios } = useAudioSermons();
+
+  const featuredVideo = videos?.find(video => video.is_featured) || videos?.[0];
 
   const onRefresh = async () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  };
-
-  const handleRefresh = async () => {
-    if (isRefreshing) return; // Prevent multiple refreshes
-    
     setIsRefreshing(true);
-    
     try {
-      // Refetch all sermon data
-      await Promise.all([
-        refetchVideos(),
-        refetchAudios(),
-      ]);
-      
-      // Show success feedback
-      Alert.alert('Success', 'Content refreshed successfully!');
+      await Promise.all([refetchVideos(), refetchAudios()]);
     } catch (error) {
       console.error('Refresh failed:', error);
-      Alert.alert('Error', 'Failed to refresh content. Please try again.');
     } finally {
-      // Add a small delay to show the animation
-      setTimeout(() => {
-        setIsRefreshing(false);
-      }, 500);
+      setIsRefreshing(false);
     }
   };
 
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    await onRefresh();
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'featured':
-        return <FeaturedContent navigation={navigation} />;
+        return <ModernFeaturedContent navigation={navigation} isDark={isDark} />;
       case 'sermons':
-        return <SermonsContent navigation={navigation} />;
+        return <ModernSermonsContent navigation={navigation} isDark={isDark} />;
       case 'audio':
-        return <AudioContent navigation={navigation} />;
+        return <ModernAudioContent navigation={navigation} isDark={isDark} />;
       default:
-        return <FeaturedContent navigation={navigation} />;
+        return <ModernFeaturedContent navigation={navigation} isDark={isDark} />;
+    }
+  };
+
+  // Handler to track scroll and set sticky state
+  const handleScroll = (event: any) => {
+    const y = event.nativeEvent.contentOffset.y;
+    if (tabHeaderY.current !== 0) {
+      setIsTabHeaderSticky(y >= tabHeaderY.current - 1); // -1 for precision
     }
   };
 
   return (
-    <SafeAreaView style={[
-      styles.container,
-      { backgroundColor: isDark ? colors.dark.background : colors.light.background }
-    ]}>
-      {/* Header - Exact match to reference */}
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.modernContainer, { backgroundColor: isDark ? colors.dark.background : colors.light.background }]}> 
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      {/* Modern Header (sticky) */}
+      <View style={styles.modernHeader}>
         <Text style={[
-          styles.headerTitle,
+          styles.modernHeaderTitle,
           { color: isDark ? colors.dark.text : colors.light.text }
         ]}>
           Listen
         </Text>
         <TouchableOpacity 
           style={[
-            styles.refreshButton,
-            isRefreshing && styles.refreshButtonActive
+            styles.modernRefreshButton,
+            isRefreshing && styles.modernRefreshButtonActive
           ]}
           onPress={handleRefresh}
           disabled={isRefreshing}
         >
-          <RefreshIcon isRefreshing={isRefreshing} />
+          <ModernRefreshIcon isRefreshing={isRefreshing} />
         </TouchableOpacity>
       </View>
-
-      {/* Main Featured Card - ABOVE TABS */}
-      {featuredVideo && (
-        <View style={styles.topFeaturedSection}>
-          <MainFeaturedCard
-            sermon={featuredVideo}
-            onPress={() => navigation.navigate('SermonDetail', { 
-              sermon: featuredVideo, 
-              type: 'video' 
-            })}
+      {/* Scrollable content: HeroCard, TabHeader (sticky), TabContent */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[featuredVideo ? 1 : 0]}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
+        {/* Modern Hero Card */}
+        {featuredVideo && (
+          <View style={styles.modernHeroSection}>
+            <ModernHeroCard
+              sermon={featuredVideo}
+              onPress={() => navigation.navigate('SermonDetail', { 
+                sermon: featuredVideo, 
+                type: 'video' 
+              })}
+              isDark={isDark}
+            />
+          </View>
+        )}
+        {/* Modern Tab Header (sticky) */}
+        <View
+          onLayout={e => {
+            tabHeaderY.current = e.nativeEvent.layout.y;
+          }}
+        >
+          <ModernTabHeader 
+            activeTab={activeTab}
+            onTabPress={setActiveTab}
+            isDark={isDark}
+            isSticky={isTabHeaderSticky}
           />
         </View>
-      )}
-
-      {/* Custom Tab Header */}
-      <CustomTabHeader 
-        activeTab={activeTab}
-        onTabPress={setActiveTab}
-        isDark={isDark}
-      />
-
-      {/* Tab Content */}
-      <View style={styles.contentContainer}>
-        {renderContent()}
-      </View>
+        {/* Tab Content */}
+        <View style={styles.modernContentContainer}>
+          {renderContent()}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  modernContainer: {
     flex: 1,
   },
-  header: {
+  modernHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
     justifyContent: 'center',
     position: 'relative',
   },
-  headerTitle: {
-    ...typography.styles.h4,
+  modernHeaderTitle: {
+    fontSize: 28,
+    fontFamily: typography.fonts.poppins.bold,
     textAlign: 'center',
   },
-  searchButton: {
+  modernRefreshButton: {
     position: 'absolute',
-    right: 20,
-    padding: 4,
+    right: 24,
+    padding: 12,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  customTabHeader: {
+  modernRefreshButtonActive: {
+    backgroundColor: `${colors.primary}20`,
+  },
+  modernRefreshIcon: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rotating: {
+    transform: [{ rotate: '360deg' }],
+  },
+  
+  // Modern Hero Card
+  modernHeroSection: {
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+  },
+  heroCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    height: 270,
+    position: 'relative',
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#F5F5F5',
+  },
+  heroGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '60%',
+  },
+  heroContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+  },
+  heroBadge: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    borderBottomWidth: 0.5,
-    borderBottomColor: colors.light.border,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
   },
-  customTab: {
+  heroBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: typography.fonts.poppins.medium,
+    marginLeft: 4,
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontFamily: typography.fonts.poppins.bold,
+    color: '#fff',
+    marginBottom: 8,
+    lineHeight: 30,
+  },
+  heroSpeaker: {
+    fontSize: 16,
+    fontFamily: typography.fonts.poppins.medium,
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 12,
+  },
+  heroMeta: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  heroMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  heroMetaText: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    fontFamily: typography.fonts.poppins.regular,
+  },
+
+  // Modern Tab Header
+  modernTabHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    marginHorizontal: 24,
+    marginBottom: 12,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  stickyTabHeaderLight: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.07)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  stickyTabHeaderDark: {
+    backgroundColor: '#18181b',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.07)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  modernTab: {
     flex: 1,
     paddingVertical: 16,
     alignItems: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
-  },
-
-  customTabText: {
-    fontSize: 14,
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  tabContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  
-  // Main Featured Card Styles - NO SHADOWS, CLEAN DESIGN
-  topFeaturedSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  featuredSection: {
-    marginTop: 20,
-    marginBottom: 24,
-  },
-  mainFeaturedCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-  },
-  mainFeaturedImage: {
-    width: '100%',
-    height: 200,
-    backgroundColor: '#F5F5F5',
-  },
-  mainFeaturedContent: {
-    padding: 16,
-  },
-  mainFeaturedTitle: {
-    fontSize: 18,
-    fontFamily: typography.fonts.poppins.semiBold,
-    color: colors.black,
-    marginBottom: 4,
-  },
-  mainFeaturedSpeaker: {
-    fontSize: 14,
-    fontFamily: typography.fonts.poppins.regular,
-    color: colors.textGrey,
-    marginBottom: 4,
-  },
-  mainFeaturedDuration: {
-    fontSize: 14,
-    fontFamily: typography.fonts.poppins.regular,
-    color: colors.textGrey,
-  },
-
-  // Grid Layout Styles - NO SHADOWS
-  gridSection: {
-    marginBottom: 100,
-  },
-  gridContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
+    justifyContent: 'flex-start',
+    gap: 8,
   },
-  gridSermonCard: {
-    width: (width - 52) / 2, // 20px padding on each side + 12px gap
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-    marginBottom: 12,
+  modernTabActive: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  gridSermonImage: {
-    width: '100%',
-    height: 100,
-    backgroundColor: '#F5F5F5',
-  },
-  gridSermonContent: {
-    padding: 12,
-  },
-  gridSermonTitle: {
+  modernTabText: {
     fontSize: 14,
     fontFamily: typography.fonts.poppins.medium,
-    color: colors.black,
-    marginBottom: 4,
-    lineHeight: 18,
-  },
-  gridSermonSpeaker: {
-    fontSize: 12,
-    fontFamily: typography.fonts.poppins.regular,
-    color: colors.textGrey,
   },
 
-  // List Section Styles
-  listSection: {
+  // Modern Content
+  modernContentContainer: {
+    flex: 1,
+  },
+  modernTabContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  modernSearchContainer: {
+    marginBottom: 20,
+  },
+  modernGridSection: {
+    marginBottom: 100,
+  },
+  modernListSection: {
     marginTop: 20,
     paddingBottom: 100,
   },
-  sectionHeader: {
+  modernSectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 18,
+  modernSectionTitle: {
+    fontSize: 20,
+    fontFamily: typography.fonts.poppins.bold,
+  },
+  modernCountBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  modernCountText: {
+    color: '#fff',
+    fontSize: 12,
     fontFamily: typography.fonts.poppins.semiBold,
-    color: colors.textPrimary,
   },
-  countText: {
+  modernGridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+
+  // Modern Grid Cards
+  modernGridCard: {
+    width: (width - 64) / 2, // 24px padding on each side + 16px gap
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  modernGridImageContainer: {
+    position: 'relative',
+    height: 120,
+  },
+  modernGridImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#F5F5F5',
+  },
+  modernGridOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modernGridContent: {
+    padding: 16,
+  },
+  modernGridTitle: {
     fontSize: 14,
+    fontFamily: typography.fonts.poppins.semiBold,
+    marginBottom: 6,
+    lineHeight: 18,
+  },
+  modernGridSpeaker: {
+    fontSize: 12,
+    fontFamily: typography.fonts.poppins.medium,
+    color: colors.textGrey,
+    marginBottom: 8,
+  },
+  modernGridMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modernGridMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  modernGridMetaText: {
+    fontSize: 11,
     fontFamily: typography.fonts.poppins.regular,
     color: colors.textGrey,
   },
+  featuredBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: `${colors.primary}20`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
-  // Empty State Styles
-  emptyState: {
+  // Modern Empty State
+  modernEmptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 80,
   },
-  emptyStateTitle: {
-    fontSize: 18,
-    fontFamily: typography.fonts.poppins.semiBold,
-    color: colors.textPrimary,
-    marginTop: 16,
+  modernEmptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modernEmptyTitle: {
+    fontSize: 20,
+    fontFamily: typography.fonts.poppins.bold,
+    marginBottom: 8,
     textAlign: 'center',
   },
-  emptyStateText: {
+  modernEmptyText: {
     color: colors.textGrey,
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: typography.fonts.poppins.regular,
     textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 20,
-  },
-  refreshButton: {
-    position: 'absolute',
-    right: 20,
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'transparent',
-  },
-  refreshButtonActive: {
-    backgroundColor: `${colors.primary}15`,
+    lineHeight: 24,
   },
 });
 

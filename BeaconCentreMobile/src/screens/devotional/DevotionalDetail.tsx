@@ -9,6 +9,8 @@ import {
   useColorScheme,
   Share,
   Alert,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -23,23 +25,27 @@ import { readingTime } from '@/utils/textUtils';
 import ReadingProgress from '@/components/devotional/ReadingProgress';
 import RefreshControl from '@/components/common/RefreshControl';
 
+import Svg, { Circle } from 'react-native-svg';
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 type DevotionalDetailRouteProp = RouteProp<DevotionalStackParamList, 'DevotionalDetail'>;
 
 export default function DevotionalDetail() {
   const navigation = useNavigation();
   const route = useRoute<DevotionalDetailRouteProp>();
   const { devotional } = route.params;
-  
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  
+  const { width, height } = Dimensions.get('window');
+
   const { userData, markDevotionalRead, addFavorite, removeFavorite } = useLocalStorage();
-  
   const [isFavorite, setIsFavorite] = useState(false);
   const [isRead, setIsRead] = useState(false);
   const [readingStartTime, setReadingStartTime] = useState<Date | null>(null);
   const [timeSpent, setTimeSpent] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [showFab, setShowFab] = useState(false);
+  const scrollY = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
     if (userData) {
@@ -49,200 +55,174 @@ export default function DevotionalDetail() {
   }, [userData, devotional.id]);
 
   useEffect(() => {
-    // Start reading timer
     setReadingStartTime(new Date());
-    
-    // Track view
-    analyticsApi.trackInteraction('devotional', devotional.id, 'viewed');
-
     return () => {
-      // Stop reading timer and save progress
       if (readingStartTime) {
         const timeSpentReading = Math.floor((new Date().getTime() - readingStartTime.getTime()) / 1000);
-        if (timeSpentReading > 30) { // Only count if spent more than 30 seconds
+        if (timeSpentReading > 30) {
           setTimeSpent(timeSpentReading);
         }
       }
     };
   }, []);
 
-  const handleToggleFavorite = async () => {
-    try {
-      if (isFavorite) {
-        await removeFavorite('devotional', devotional.id);
-        setIsFavorite(false);
-      } else {
-        await addFavorite('devotional', devotional.id);
-        setIsFavorite(true);
-        analyticsApi.trackContentFavorite('devotional', devotional.id);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update favorites');
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: false,
+      listener: (event: { nativeEvent: { contentOffset: { y: number }, contentSize: { height: number }, layoutMeasurement: { height: number } } }) => {
+        const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+        const progress = (contentOffset.y / (contentSize.height - layoutMeasurement.height)) * 100;
+        setScrollProgress(Math.min(100, Math.max(0, progress)));
+        setShowFab(contentOffset.y > 80); // Show FAB after scrolling 80px
+      },
     }
-  };
-
-  const handleMarkAsRead = async () => {
-    if (!isRead) {
-      try {
-        await markDevotionalRead(devotional.id);
-        setIsRead(true);
-        analyticsApi.trackDevotionalRead(devotional.id);
-      } catch (error) {
-        Alert.alert('Error', 'Failed to mark as read');
-      }
-    }
-  };
-
-  const handleShare = async () => {
-    try {
-      await Share.share({
-        message: `Check out this devotional: "${devotional.title}"\n\n${devotional.verse_reference}: "${devotional.verse_text}"\n\nFrom The Beacon Centre app`,
-        title: devotional.title,
-      });
-      
-      analyticsApi.trackInteraction('devotional', devotional.id, 'shared');
-    } catch (error) {
-      console.error('Error sharing:', error);
-    }
-  };
-
-  const handleScroll = (event: any) => {
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const progress = (contentOffset.y / (contentSize.height - layoutMeasurement.height)) * 100;
-    setScrollProgress(Math.min(100, Math.max(0, progress)));
-  };
+  );
 
   const estimatedReadTime = readingTime(devotional.content + (devotional.prayer || '')) * 60;
 
+  // Animated FAB style
+  const fabTranslate = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [120, 0],
+    extrapolate: 'clamp',
+  });
+  const fabOpacity = scrollY.interpolate({
+    inputRange: [60, 100],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <SafeAreaView style={[
-      styles.container,
-      { backgroundColor: isDark ? colors.dark.background : colors.light.background }
-    ]}>
-      {/* Header */}
-      <View style={[
-        styles.header,
-        { backgroundColor: isDark ? colors.dark.background : colors.light.background }
-      ]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? colors.dark.background : colors.light.background }}>
+      {/* Modern Header with Hero Verse */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingTop: 8, paddingBottom: 0, backgroundColor: isDark ? colors.dark.background : '#fff', borderBottomWidth: 0, elevation: 0 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
           <Icon name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        
-        <View style={styles.headerActions}>
-          <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ backgroundColor: colors.primary + '10', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', maxWidth: width * 0.7 }}>
+            <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 15, textAlign: 'center' }}>{devotional.verse_reference}</Text>
+          </View>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity style={{ padding: 8 }}>
             <Icon name="share" size={22} color={colors.textGrey} />
           </TouchableOpacity>
-          
-          <TouchableOpacity onPress={handleToggleFavorite} style={styles.headerButton}>
-            <Icon 
-              name={isFavorite ? 'favorite' : 'favorite-border'} 
-              size={22} 
-              color={isFavorite ? colors.red : colors.textGrey} 
-            />
+          <TouchableOpacity style={{ padding: 8 }}>
+            <Icon name={isFavorite ? 'favorite' : 'favorite-border'} size={22} color={isFavorite ? colors.red : colors.textGrey} />
           </TouchableOpacity>
         </View>
       </View>
-
-      <ScrollView
-        style={styles.content}
+      {/* Main Content */}
+      <Animated.ScrollView
+        style={{ flex: 1, paddingHorizontal: 20 }}
+        contentContainerStyle={{ paddingVertical: 32, paddingBottom: 120 }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        refreshControl={
-          <RefreshControl refreshing={false} onRefresh={() => {}} />
-        }
+        showsVerticalScrollIndicator={false}
       >
-        {/* Date */}
-        <Text style={[styles.date, { color: colors.primary }]}>
-          {formatDate(devotional.date)}
-        </Text>
-
-        {/* Title */}
-        <Text style={[
-          styles.title,
-          { color: isDark ? colors.dark.text : colors.light.text }
-        ]}>
-          {devotional.title}
-        </Text>
-
-        {/* Reading Progress */}
-        <ReadingProgress
-          progress={scrollProgress}
-          timeSpent={timeSpent}
-          estimatedReadTime={estimatedReadTime}
-        />
-
-        {/* Bible Verse */}
-        <View style={[
-          styles.verseContainer,
-          { 
-            backgroundColor: colors.primary + '10',
-            borderLeftColor: colors.primary 
-          }
-        ]}>
-          <Text style={[styles.verseReference, { color: colors.primary }]}>
-            {devotional.verse_reference}
-          </Text>
-          <Text style={[
-            styles.verseText,
-            { color: isDark ? colors.dark.text : colors.light.text }
-          ]}>
+        {/* Memory Verse */}
+        <View style={{ backgroundColor: colors.primary + '15', borderRadius: 16, padding: 18, marginBottom: 24, alignItems: 'center' }}>
+          <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 15, marginBottom: 6 }}>Memory Verse</Text>
+          <Text style={{ color: isDark ? colors.dark.text : colors.light.text, fontStyle: 'italic', fontSize: 16, textAlign: 'center', fontFamily: typography.fonts.notoSerif.regular }}>
             "{devotional.verse_text}"
           </Text>
         </View>
-
-        {/* Content */}
-        <View style={styles.contentContainer}>
-          <Text style={[
-            styles.contentText,
-            { color: isDark ? colors.dark.text : colors.light.text }
-          ]}>
-            {devotional.content}
-          </Text>
+        {/* Content with paragraphs */}
+        <View style={{ backgroundColor: isDark ? colors.dark.card : '#fff', borderRadius: 18, padding: 20, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
+          {devotional.content
+            .split(/\n\n|(?<=\.)\s*\n/)
+            .filter(Boolean)
+            .map((para, idx) => (
+              <Text
+                key={idx}
+                style={{ color: isDark ? colors.dark.text : colors.light.text, fontSize: 17, lineHeight: 28, fontFamily: typography.fonts.notoSerif.regular, marginBottom: 16 }}
+              >
+                {para.trim()}
+              </Text>
+            ))}
         </View>
-
         {/* Prayer */}
         {devotional.prayer && (
-          <View style={[
-            styles.prayerContainer,
-            { backgroundColor: colors.blue + '10' }
-          ]}>
-            <View style={styles.prayerHeader}>
+          <View style={{ backgroundColor: colors.blue + '10', borderRadius: 16, padding: 18, marginBottom: 24 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <Icon name="favorite" size={20} color={colors.blue} />
-              <Text style={[styles.prayerTitle, { color: colors.blue }]}>
-                Prayer
-              </Text>
+              <Text style={{ color: colors.blue, fontWeight: 'bold', fontSize: 16, marginLeft: 8 }}>Prayer</Text>
             </View>
-            <Text style={[
-              styles.prayerText,
-              { color: isDark ? colors.dark.text : colors.light.text }
-            ]}>
-              {devotional.prayer}
-            </Text>
+            <Text style={{ color: isDark ? colors.dark.text : colors.light.text, fontSize: 16, fontFamily: typography.fonts.notoSerif.regular }}>{devotional.prayer}</Text>
           </View>
         )}
-
-        {/* Mark as Read Button */}
-        {!isRead && (
-          <TouchableOpacity
-            style={[styles.markReadButton, { backgroundColor: colors.success }]}
-            onPress={handleMarkAsRead}
-          >
-            <Icon name="check-circle" size={20} color="#fff" />
-            <Text style={styles.markReadText}>Mark as Read</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Read Status */}
-        {isRead && (
-          <View style={styles.readStatus}>
-            <Icon name="check-circle" size={20} color={colors.success} />
-            <Text style={[styles.readStatusText, { color: colors.success }]}>
-              Completed
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+      </Animated.ScrollView>
+      {/* Floating Circular Reading Progress */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          bottom: 32,
+          right: 24,
+          zIndex: 10,
+          transform: [{ translateY: fabTranslate }],
+          opacity: fabOpacity,
+        }}
+        pointerEvents={showFab ? 'auto' : 'none'}
+      >
+        <View style={{ alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: 32, backgroundColor: isDark ? colors.dark.card : '#fff', shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, elevation: 6 }}>
+          <AnimatedCircularProgress progress={scrollProgress} />
+        </View>
+      </Animated.View>
+      {/* Top Bar Reading Progress (when not scrolled) */}
+      {!showFab && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, backgroundColor: colors.light.border, zIndex: 5 }}>
+          <Animated.View style={{ height: 6, backgroundColor: colors.primary, width: `${scrollProgress}%`, borderRadius: 3 }} />
+        </View>
+      )}
     </SafeAreaView>
+  );
+}
+
+// Animated circular progress component
+function AnimatedCircularProgress({ progress }: { progress: number }) {
+  const animated = useState(new Animated.Value(0))[0];
+  useEffect(() => {
+    Animated.timing(animated, {
+      toValue: progress,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
+  const circumference = 56 * Math.PI;
+  const strokeDashoffset = animated.interpolate({
+    inputRange: [0, 100],
+    outputRange: [circumference, 0],
+    extrapolate: 'clamp',
+  });
+  return (
+    <View style={{ position: 'relative', width: 56, height: 56, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View style={{ position: 'absolute', top: 0, left: 0 }}>
+        <Svg width={56} height={56}>
+          <Circle
+            cx={28}
+            cy={28}
+            r={26}
+            stroke={colors.light.border}
+            strokeWidth={4}
+            fill="none"
+          />
+          <AnimatedCircle
+            cx={28}
+            cy={28}
+            r={26}
+            stroke={colors.primary}
+            strokeWidth={4}
+            fill="none"
+            strokeDasharray={`${circumference}, ${circumference}`}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </Svg>
+      </Animated.View>
+      <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 16 }}>{Math.round(progress)}%</Text>
+    </View>
   );
 }
 

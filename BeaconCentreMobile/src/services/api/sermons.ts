@@ -1,11 +1,14 @@
 // src/services/api/sermons.ts
-import  apiClient  from './client';
+import { apiClient } from './client';
 import { VideoSermon, AudioSermon } from '@/types/api';
 import LocalStorageService from '@/services/storage/LocalStorage';
 
-const transformAudioSermon = (backendSermon: any): AudioSermon => ({
+export const transformAudioSermon = (backendSermon: any): AudioSermon => ({
   ...backendSermon,
   audioUrl: backendSermon.audioUrl,
+  // Map both camelCase and snake_case to thumbnail_url and thumbnail_cloudinary_public_id
+  thumbnail_url: backendSermon.thumbnail_url || backendSermon.thumbnailUrl || undefined,
+  thumbnail_cloudinary_public_id: backendSermon.thumbnail_cloudinary_public_id || backendSermon.thumbnailCloudinaryPublicId || undefined,
 });
 
 export const sermonsApi = {

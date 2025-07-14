@@ -5,7 +5,9 @@ import {
   TextInput,
   StyleSheet,
   useColorScheme,
+  TouchableOpacity,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { colors } from '@/constants/colors';
 import { typography } from '@/constants/typography';
@@ -27,12 +29,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const isDark = colorScheme === 'dark';
 
   return (
-    <View style={[
-      styles.container,
-      { backgroundColor: isDark ? colors.dark.card : colors.backgroundSecondary },
-      style
-    ]}>
-      <Icon name="search" size={20} color={colors.textGrey} />
+    <BlurView 
+      intensity={isDark ? 20 : 30} 
+      style={[
+        styles.container,
+        { 
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.8)',
+        },
+        style
+      ]}
+    >
+      <View style={styles.searchIconContainer}>
+        <Icon name="search" size={20} color={colors.textGrey} />
+      </View>
       <TextInput
         style={[
           styles.input,
@@ -44,14 +54,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
         placeholderTextColor={colors.textGrey}
       />
       {value.length > 0 && (
-        <Icon 
-          name="clear" 
-          size={20} 
-          color={colors.textGrey}
+        <TouchableOpacity 
+          style={styles.clearButton}
           onPress={() => onChangeText('')}
-        />
+        >
+          <Icon 
+            name="clear" 
+            size={18} 
+            color={colors.textGrey}
+          />
+        </TouchableOpacity>
       )}
-    </View>
+    </BlurView>
   );
 };
 
@@ -60,15 +74,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: 14,
+    borderRadius: 16,
     marginVertical: 8,
+    borderWidth: 1,
+  },
+  searchIconContainer: {
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    marginLeft: 12,
     fontSize: 16,
-    fontFamily: typography.fonts.poppins.regular,
+    fontFamily: typography.fonts.poppins.medium,
+  },
+  clearButton: {
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
 });
 

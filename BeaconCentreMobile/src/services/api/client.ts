@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { Platform } from 'react-native';
 import { config, validateConfig } from '../../config/environment';
+import { transformAudioSermon } from './sermons';
 
 // Validate configuration on startup
 validateConfig();
@@ -397,8 +398,16 @@ export const apiClient = new ApiClient();
 export const devotionalApi = {
   getAll: async (): Promise<Devotional[]> => {
     try {
-      const result = await apiClient.get<Devotional[]>(ENDPOINTS.DEVOTIONALS);
-      return Array.isArray(result) ? result : [];
+      const result = await apiClient.get<any>(ENDPOINTS.DEVOTIONALS);
+      // Support both direct array and nested array (data.devotionals)
+      if (Array.isArray(result)) {
+        return result;
+      } else if (result && Array.isArray(result.devotionals)) {
+        return result.devotionals;
+      } else if (result && Array.isArray(result.items)) {
+        return result.items;
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching devotionals:', error);
       return [];
@@ -494,9 +503,9 @@ export const audioSermonsApi = {
   getAll: async (): Promise<AudioSermon[]> => {
     try {
       const result = await apiClient.get<any>(ENDPOINTS.AUDIO_SERMONS);
-      // Handle the backend response format: { success: true, data: { sermons: [...], total, page, etc } }
+      // Handle the backend response format: { success: true, data: { sermons: [...], ... } }
       if (result && result.sermons && Array.isArray(result.sermons)) {
-        return result.sermons;
+        return result.sermons.map(transformAudioSermon);
       }
       return [];
     } catch (error) {
@@ -546,8 +555,16 @@ export const audioSermonsApi = {
 export const announcementsApi = {
   getAll: async (): Promise<Announcement[]> => {
     try {
-      const result = await apiClient.get<Announcement[]>(ENDPOINTS.ANNOUNCEMENTS);
-      return Array.isArray(result) ? result : [];
+      const result = await apiClient.get<any>(ENDPOINTS.ANNOUNCEMENTS);
+      // Support both direct array and nested array (data.announcements)
+      if (Array.isArray(result)) {
+        return result;
+      } else if (result && Array.isArray(result.announcements)) {
+        return result.announcements;
+      } else if (result && Array.isArray(result.items)) {
+        return result.items;
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching announcements:', error);
       return [];

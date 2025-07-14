@@ -162,6 +162,9 @@ export interface CreateAudioSermonRequest {
   isFeatured?: boolean;
   isActive?: boolean;
   tags?: string[];
+  // New fields for thumbnail support
+  thumbnailUrl?: string;
+  thumbnailCloudinaryPublicId?: string;
 }
 
 export interface UpdateAudioSermonRequest extends Partial<CreateAudioSermonRequest> {
