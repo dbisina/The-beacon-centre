@@ -123,13 +123,13 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const play = async (): Promise<void> => {
     try {
       if (soundRef.current) {
-        console.log('▶️ Resuming playback');
+        console.log('\u25b6\ufe0f Resuming playback');
         await soundRef.current.playAsync();
       } else {
-        console.warn('⚠️ No sound loaded to play');
+        console.warn('\u26a0\ufe0f No sound loaded to play');
       }
     } catch (error) {
-      console.error('❌ Error playing:', error);
+      console.error('\u274c Error playing:', error);
       updateState({ error: 'Failed to play' });
     }
   };
@@ -137,11 +137,11 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const pause = async (): Promise<void> => {
     try {
       if (soundRef.current) {
-        console.log('⏸️ Pausing playback');
+        console.log('[AudioContext] pause called');
         await soundRef.current.pauseAsync();
       }
     } catch (error) {
-      console.error('❌ Error pausing:', error);
+      console.error('\u274c Error pausing:', error);
       updateState({ error: 'Failed to pause' });
     }
   };
@@ -159,10 +159,12 @@ export const AudioContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const showMiniPlayer = (): void => {
+    console.log('[AudioContext] showMiniPlayer called');
     updateState({ isPlayerVisible: true });
   };
 
   const hideMiniPlayer = (): void => {
+    console.log('[AudioContext] hideMiniPlayer called');
     updateState({ isPlayerVisible: false });
   };
 

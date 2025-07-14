@@ -13,6 +13,7 @@ import {
   useColorScheme,
   StatusBar,
   ScrollView,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Slider from '@react-native-community/slider';
@@ -29,6 +30,8 @@ interface AudioPlayerProps {
 }
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+
+const DEFAULT_THUMBNAIL = 'https://res.cloudinary.com/your-cloud/image/upload/v1/beacon-app/default-artwork.jpg';
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
   const colorScheme = useColorScheme();
@@ -130,11 +133,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
   }, [isPlaying]);
 
   const handleClose = () => {
+    console.log('[AudioPlayer] handleClose called');
     Animated.timing(slideAnim, {
       toValue: 1,
       duration: 200,
       useNativeDriver: true,
     }).start(() => {
+      console.log('[AudioPlayer] onClose called from handleClose');
       onClose();
       slideAnim.setValue(0);
     });
@@ -142,6 +147,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
 
   const handlePlayPause = () => {
     if (isPlaying) {
+      console.log('[AudioPlayer] Pause button pressed');
       pause();
     } else {
       play();
@@ -200,6 +206,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
       animationType="slide"
       presentationStyle="fullScreen"
       statusBarTranslucent
+      onRequestClose={() => {
+        console.log('[AudioPlayer] Modal onRequestClose');
+        handleClose();
+      }}
     >
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
@@ -218,6 +228,26 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ visible, onClose }) => {
         {...panResponder.panHandlers}
       >
         <SafeAreaView style={styles.modernSafeArea}>
+          {/* Thumbnail artwork */}
+          <View style={{ alignItems: 'center', marginTop: 32, marginBottom: 24, elevation: 8 }}>
+            <Image
+              source={{ uri: currentTrack.thumbnail_url || DEFAULT_THUMBNAIL }}
+              style={{
+                width: 220,
+                height: 220,
+                borderRadius: 24,
+                backgroundColor: isDark ? '#222' : '#eee',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.18,
+                shadowRadius: 8,
+                borderWidth: 2,
+                borderColor: isDark ? '#444' : '#fff',
+              }}
+              resizeMode="cover"
+              onError={() => console.log('[AudioPlayer] Failed to load thumbnail:', currentTrack.thumbnail_url)}
+            />
+          </View>
           {/* Modern Header */}
           <BlurView 
             intensity={isDark ? 30 : 40} 
