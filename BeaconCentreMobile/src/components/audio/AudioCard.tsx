@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AudioSermon } from '@/types/api';
 import { colors } from '@/constants/colors';
@@ -12,17 +12,36 @@ interface AudioCardProps {
 }
 
 const AudioCard = ({ sermon, onPress, isFavorite = false }: AudioCardProps) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity style={[
+      styles.container,
+      { backgroundColor: isDark ? colors.dark.card : colors.light.card }
+    ]} onPress={onPress}>
       <View style={styles.content}>
+        <View style={styles.thumbnailContainer}>
+          <View style={styles.audioThumbnail}>
+            <Icon name="audiotrack" size={48} color={colors.primary} />
+          </View>
+        </View>
         <View style={styles.info}>
-          <Text style={styles.title} numberOfLines={2}>{sermon.title}</Text>
-          <Text style={styles.speaker}>{sermon.speaker}</Text>
+          <Text style={[
+            styles.title,
+            { color: isDark ? colors.dark.text : colors.light.text }
+          ]} numberOfLines={2}>{sermon.title}</Text>
+          <Text style={[styles.speaker, { color: colors.textGrey }]}>{sermon.speaker}</Text>
+          {sermon.duration && (
+            <Text style={[styles.duration, { color: colors.textGrey }]}>
+              {sermon.duration}
+            </Text>
+          )}
         </View>
         <Icon 
           name={isFavorite ? 'favorite' : 'favorite-border'} 
           size={24} 
-          color={colors.primary} 
+          color={isFavorite ? colors.red : colors.textGrey} 
         />
       </View>
     </TouchableOpacity>
@@ -32,7 +51,7 @@ const AudioCard = ({ sermon, onPress, isFavorite = false }: AudioCardProps) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.light.card,
-    borderRadius: 8,
+    borderRadius: 16,
     marginHorizontal: 16,
     marginVertical: 8,
     padding: 16,
@@ -45,7 +64,19 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+  },
+  thumbnailContainer: {
+    marginRight: 16,
+  },
+  audioThumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    backgroundColor: colors.light.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   info: {
     flex: 1,
@@ -60,6 +91,12 @@ const styles = StyleSheet.create({
   speaker: {
     fontFamily: typography.fonts.notoSerif.regular,
     fontSize: typography.sizes.sm,
+    color: colors.textGrey,
+    marginBottom: 2,
+  },
+  duration: {
+    fontFamily: typography.fonts.poppins.regular,
+    fontSize: typography.sizes.xs,
     color: colors.textGrey,
   },
 });

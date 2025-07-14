@@ -1,5 +1,5 @@
 // src/components/video/VideoCard.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -31,6 +31,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const scaleValue = new Animated.Value(1);
+  const [thumbnailError, setThumbnailError] = useState(false);
 
   const handlePressIn = () => {
     Animated.spring(scaleValue, {
@@ -47,7 +48,10 @@ const VideoCard: React.FC<VideoCardProps> = ({
   };
 
   const thumbnailUrl = sermon.thumbnail_url || 
-    `https://img.youtube.com/vi/${sermon.youtube_id}/maxresdefault.jpg`;
+    (thumbnailError 
+      ? `https://img.youtube.com/vi/${sermon.youtube_id}/hqdefault.jpg`
+      : `https://img.youtube.com/vi/${sermon.youtube_id}/maxresdefault.jpg`
+    );
 
   return (
     <TouchableOpacity
@@ -71,6 +75,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
             source={{ uri: thumbnailUrl }}
             style={styles.thumbnail}
             resizeMode="cover"
+            onError={() => setThumbnailError(true)}
           />
           <View style={styles.playOverlay}>
             <Icon name="play-circle-filled" size={64} color="#fff" />
@@ -116,7 +121,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
               { backgroundColor: isDark ? colors.dark.background : colors.light.background }
             ]}>
               <Text style={[styles.category, { color: colors.primary }]}>
-                {sermon.category.name}
+                {sermon.category}
               </Text>
             </View>
           )}

@@ -14,7 +14,6 @@ import {
   FolderOpen,
   BarChart3,
   Settings,
-  Users,
   Menu,
   X,
   LogOut,
@@ -75,12 +74,6 @@ const navigation = [
     icon: BarChart3,
   },
   {
-    name: "Admins",
-    href: "/dashboard/admins",
-    icon: Users,
-    requireSuperAdmin: true,
-  },
-  {
     name: "Settings",
     href: "/dashboard/settings",
     icon: Settings,
@@ -100,13 +93,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     await logout();
   };
 
-  // Filter navigation based on admin role
-  const filteredNavigation = navigation.filter((item) => {
-    if (item.requireSuperAdmin) {
-      return admin?.role === "SUPER_ADMIN";
-    }
-    return true;
-  });
+  // Use navigation directly since we removed role-based filtering
+  const filteredNavigation = navigation;
 
   const getInitials = (name: string) => {
     return name
