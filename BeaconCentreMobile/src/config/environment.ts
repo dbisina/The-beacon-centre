@@ -32,7 +32,7 @@ const getConfig = (): AppConfig => {
   
   // Get environment variables from Expo config
   const apiUrl = process.env.EXPO_PUBLIC_API_URL || 
-    (isDev ? 'http://localhost:5000/api' : 'https://api.thebeaconcentre.org/api');
+    (isDev ? 'http://localhost:5000/api' : 'https://tbc-backend-vybk.onrender.com/api');
   
   const environment = (process.env.EXPO_PUBLIC_ENVIRONMENT as AppConfig['environment']) || 
     (isDev ? 'development' : 'production');

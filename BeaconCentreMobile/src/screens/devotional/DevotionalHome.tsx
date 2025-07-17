@@ -98,10 +98,6 @@ const DevotionalHome = ({ navigation }: any) => {
     return <LoadingSpinner />;
   }
 
-  // Debug logs for featured data
-  console.log('VideoSermons:', videoSermons);
-  console.log('AudioSermons:', audioSermons);
-
   return (
     <SafeAreaView style={[
       styles.container,
@@ -128,30 +124,32 @@ const DevotionalHome = ({ navigation }: any) => {
 
         {/* Today's Devotional Card */}
         {todaysDevotional && (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('DevotionalDetail', { 
-              devotional: todaysDevotional 
-            })}
-            style={styles.featuredCard}
-          >
-            <LinearGradient
-              colors={colors.gradients.primary as any}
-              style={styles.gradientCard}
+          <View style={{ marginTop: 32 }}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('DevotionalDetail', { 
+                devotional: todaysDevotional 
+              })}
+              style={styles.featuredCard}
             >
-              <View style={styles.cardContent}>
-                <Text style={styles.cardLabel}>Daily Devotional</Text>
-                <Text style={styles.cardTitle} numberOfLines={2}>
-                  {todaysDevotional.title}
-                </Text>
-                <Text style={styles.cardSubtitle} numberOfLines={1}>
-                  Dive into today's scripture and reflection
-                </Text>
-                <View style={styles.readButton}>
-                  <Text style={styles.readButtonText}>READ</Text>
+              <LinearGradient
+                colors={colors.gradients.primary as any}
+                style={styles.gradientCard}
+              >
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardLabel}>Daily Devotional</Text>
+                  <Text style={styles.cardTitle} numberOfLines={2}>
+                    {todaysDevotional.title}
+                  </Text>
+                  <Text style={styles.cardSubtitle} numberOfLines={1}>
+                    Dive into today's scripture and reflection
+                  </Text>
+                  <View style={styles.readButton}>
+                    <Text style={styles.readButtonText}>READ</Text>
+                  </View>
                 </View>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Most Recent Announcement */}

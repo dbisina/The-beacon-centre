@@ -1,7 +1,7 @@
 // src/constants/config.ts
 export const config = {
     api: {
-      baseUrl: __DEV__ ? 'http://localhost:5000/api' : 'https://your-api.com/api',
+      baseUrl: __DEV__ ? 'http://localhost:5000/api' : 'https://tbc-backend-vybk.onrender.com/api',
       timeout: 10000,
     },
     cache: {
