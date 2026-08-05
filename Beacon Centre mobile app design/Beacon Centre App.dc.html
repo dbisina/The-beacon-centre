@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap">
+<script src="./image-slot.js"></script>
+<style>
+body{margin:0;background:#E3DED4;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+a{color:#0E3B38}a:hover{color:#41BBAC}
+.dv-turn{padding:44px 48px 36px;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 26px}
+.dv-tid{font:700 10px ui-monospace,Menlo,monospace;padding:4px 8px;background:#12100F;color:#fff;text-decoration:none;border-radius:6px}
+.dv-tname{font:700 13px/1.2 'Plus Jakarta Sans',sans-serif;color:#12100F}
+.dv-opts{display:flex;flex-wrap:wrap;gap:38px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:16px}
+.dv-oid{font:700 10.5px ui-monospace,Menlo,monospace;padding:4px 8px;background:rgba(0,0,0,.1);color:#12100F;text-decoration:none;border-radius:6px}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:500 11.5px/1.3 'Plus Jakarta Sans',sans-serif;color:rgba(0,0,0,.55)}
+.dv-opt:target .dv-oid{background:#41BBAC}
+.dv-next{margin:26px 0 0;font:12px/1.6 'Plus Jakarta Sans',sans-serif;color:rgba(0,0,0,.5)}
+.dv-turn *{scrollbar-width:none}
+.dv-turn *::-webkit-scrollbar{display:none}
+@keyframes bcPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.82)}}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t6">
+<div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">The Beacon Centre — full app, colour-forward</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="6a">
+<div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a>Home</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:60px 14px 180px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px">
+<div style="display:flex;align-items:center;gap:9px"><img src="TBC/assets/images/dark-logo.png" alt="" style="width:26px;height:26px;object-fit:contain"><div style="font:800 13px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.01em">Beacon</div></div>
+<div style="display:flex;align-items:center;gap:8px">
+<div style="width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;position:relative"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path></svg><div style="position:absolute;top:7px;right:8px;width:9px;height:9px;border-radius:50%;background:#FF6B4A;border:2px solid #fff"></div></div>
+<div style="width:38px;height:38px;border-radius:50%;background:#12100F;display:flex;align-items:center;justify-content:center;font:800 14px 'Plus Jakarta Sans',sans-serif;color:#fff">A</div>
+</div>
+</div>
+
+<div style="padding:24px 4px 0"><div style="font:800 34px/1.04 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em">Morning, Adeola.<br><span style="color:#1C6462">Stay lit today.</span></div></div>
+
+<div style="display:flex;align-items:center;gap:11px;margin-top:20px;padding:13px 14px;border-radius:20px;background:#12100F;color:#fff">
+<div style="width:34px;height:34px;border-radius:12px;background:#41BBAC;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2-8z"></path></svg></div>
+<div style="flex:1;min-width:0"><div style="font:800 9.5px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#41BBAC">ANNOUNCEMENT</div><div style="font:700 13px/1.35 'Plus Jakarta Sans',sans-serif;margin-top:3px">Impart Service moves to 8:30AM</div></div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+</div>
+
+<div style="position:relative;margin-top:12px;border-radius:26px;padding:24px 20px 20px;background:#CB3CA0;overflow:hidden;color:#fff">
+<div style="position:absolute;top:-50px;right:-40px;width:170px;height:170px;border-radius:50%;background:#E572C0"></div>
+<div style="position:relative;font:800 9.5px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;opacity:.85">VERSE OF THE DAY</div>
+<div style="position:relative;font:400 31px/1.22 'Instrument Serif',Georgia,serif;margin-top:14px">You are the <span style="color:#FFF6C4;text-shadow:0 0 18px rgba(255,238,150,.95),0 0 42px rgba(255,225,120,.6)">light</span> of the world.</div>
+<div style="position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:22px">
+<div style="padding:8px 13px;border-radius:14px;background:rgba(0,0,0,.22);font:700 11.5px 'Plus Jakarta Sans',sans-serif">Matthew 5:14</div>
+<div style="display:flex;align-items:center;gap:7px;padding:11px 16px;border-radius:14px;background:#12100F;font:700 12px 'Plus Jakarta Sans',sans-serif"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg>Share</div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin:24px 4px 12px"><div style="font:800 19px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em">Shorts</div><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#1C6462">See all</div></div>
+<div style="display:flex;gap:9px;overflow:auto;padding-bottom:2px">
+<div style="flex:none;position:relative;width:120px;height:198px;border-radius:12px;overflow:hidden"><image-slot id="h-s1" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,0) 46%,rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;top:8px;left:8px;padding:4px 8px;border-radius:7px;background:#FF3B30;font:800 8.5px 'Plus Jakarta Sans',sans-serif;letter-spacing:.06em;color:#fff;pointer-events:none">SHORT</div><div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none"><div style="font:700 11.5px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff">Faith is not a feeling</div><div style="font:600 9px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.62);margin-top:3px">0:48 · 2.1K</div></div></div>
+<div style="flex:none;position:relative;width:120px;height:198px;border-radius:12px;overflow:hidden"><image-slot id="h-s2" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,0) 46%,rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none"><div style="font:700 11.5px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff">One minute on grace</div><div style="font:600 9px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.62);margin-top:3px">1:02 · 3.4K</div></div></div>
+<div style="flex:none;position:relative;width:120px;height:198px;border-radius:12px;overflow:hidden"><image-slot id="h-s3" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,0) 46%,rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none"><div style="font:700 11.5px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff">Why Shining Lights</div><div style="font:600 9px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.62);margin-top:3px">0:39 · 1.8K</div></div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px">
+<div style="border-radius:24px;padding:18px;background:#41BBAC;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;color:#04211B"><div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.12em">AUDIO SERMONS</div><div><div style="font:800 46px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.045em">128</div><div style="font:600 12px 'Plus Jakarta Sans',sans-serif;margin-top:3px;opacity:.7">play offline</div></div></div>
+<div style="position:relative;border-radius:24px;overflow:hidden;min-height:150px"><image-slot id="h-live" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,.1),rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:16px;right:16px;bottom:14px;pointer-events:none"><div style="display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;background:#FF3B30"><div style="width:6px;height:6px;border-radius:50%;background:#fff;animation:bcPulse 1.7s ease-in-out infinite"></div><div style="font:800 9px 'Plus Jakarta Sans',sans-serif;letter-spacing:.08em;color:#fff">LIVE SUN 9AM</div></div><div style="font:700 15px/1.2 'Plus Jakarta Sans',sans-serif;color:#fff;margin-top:9px">Impart<br>Service</div></div></div>
+</div>
+
+<div style="margin-top:10px;border-radius:24px;padding:20px;background:#fff;color:#12100F">
+<div style="display:flex;align-items:center;justify-content:space-between"><div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#6B665F">BUILDING PROJECT</div><div style="font:800 15px 'Plus Jakarta Sans',sans-serif;color:#1C6462">68%</div></div>
+<div style="font:800 20px/1.2 'Plus Jakarta Sans',sans-serif;letter-spacing:-.025em;margin-top:10px">The new auditorium roof</div>
+<div style="height:10px;border-radius:10px;background:#EDEAE3;margin-top:16px;overflow:hidden"><div style="width:68%;height:10px;border-radius:10px;background:#41BBAC"></div></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:11px"><div style="font:800 14px 'Plus Jakarta Sans',sans-serif">₦34.2M <span style="font:600 12px 'Plus Jakarta Sans',sans-serif;color:#6B665F">of ₦50M</span></div><div style="font:600 11.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F">412 givers</div></div>
+<div style="margin-top:16px;padding:13px;border-radius:14px;background:#12100F;color:#fff;text-align:center;font:700 12.5px 'Plus Jakarta Sans',sans-serif">Sow into this project</div>
+</div>
+
+<div style="margin-top:10px;border-radius:24px;padding:20px;background:#0E3B38;color:#fff">
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#7FD8CC">COMMUNITY SERVICE GROUPS</div>
+<div style="font:800 19px/1.2 'Plus Jakarta Sans',sans-serif;margin-top:8px">Not in a CSG yet?</div>
+<div style="font:500 12px/1.55 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.6);margin-top:6px">Community Service Groups meet in person each week. Join one and its updates land right here.</div>
+<div style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:11px 16px;border-radius:14px;background:#41BBAC;color:#04211B;font:700 12.5px 'Plus Jakarta Sans',sans-serif">Find a CSG near me</div>
+</div>
+</div>
+
+<div style="position:absolute;left:14px;right:14px;bottom:90px;border-radius:18px;padding:10px;background:#12100F;display:flex;align-items:center;gap:11px;z-index:6">
+<div style="width:44px;height:44px;border-radius:12px;overflow:hidden;flex:none"><image-slot id="h-np" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot></div>
+<div style="flex:1;min-width:0"><div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ordinary People, Uncommon Grace</div><div style="height:3px;border-radius:3px;background:rgba(255,255,255,.2);margin-top:7px"><div style="width:62%;height:3px;border-radius:3px;background:#41BBAC"></div></div></div>
+<div style="width:38px;height:38px;border-radius:50%;background:#41BBAC;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="#04211B"><path d="M6 4h4v16H6zM14 4h4v16h-4z"></path></svg></div>
+</div>
+
+<div style="position:absolute;left:14px;right:14px;bottom:22px;height:62px;border-radius:20px;background:#12100F;display:flex;align-items:center;justify-content:space-around;padding:0 8px;z-index:5">
+<div style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:14px;background:#41BBAC"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#04211B">Home</div></div>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a3 3 0 0 1 2.3-2.9C6.1 5.2 9 5 12 5s5.9.2 7.7.6A3 3 0 0 1 22 8.5c.2 1.2.3 2.4.3 3.5s-.1 2.3-.3 3.5a3 3 0 0 1-2.3 2.9c-1.8.4-4.7.6-7.7.6s-5.9-.2-7.7-.6A3 3 0 0 1 2 15.5C1.8 14.3 1.7 13.1 1.7 12S1.8 9.7 2 8.5z"></path><path d="m10 15 5-3-5-3z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2-8z"></path></svg>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6b">
+<div class="dv-olabel"><a class="dv-oid" href="#6b">6b</a>Watch — shorts, full messages, series</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:60px 0 106px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 18px"><div style="font:800 32px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em">Watch</div><div style="width:40px;height:40px;border-radius:50%;background:#12100F;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></div></div>
+<div style="display:flex;gap:7px;margin-top:18px;padding:0 18px;overflow:auto">
+<div style="flex:none;padding:9px 15px;border-radius:14px;background:#12100F;color:#fff;font:700 12.5px 'Plus Jakarta Sans',sans-serif">All</div>
+<div style="flex:none;padding:9px 15px;border-radius:14px;background:#fff;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">Shorts</div>
+<div style="flex:none;padding:9px 15px;border-radius:14px;background:#fff;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">Full messages</div>
+<div style="flex:none;padding:9px 15px;border-radius:14px;background:#fff;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">Series</div>
+</div>
+<div style="display:flex;gap:9px;overflow:auto;padding:22px 18px 0">
+<div style="flex:none;position:relative;width:124px;height:206px;border-radius:12px;overflow:hidden"><image-slot id="w-s1" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,0) 46%,rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none"><div style="font:700 11.5px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff">Faith is not a feeling</div><div style="font:600 9px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.62);margin-top:3px">0:48 · 2.1K</div></div></div>
+<div style="flex:none;position:relative;width:124px;height:206px;border-radius:12px;overflow:hidden"><image-slot id="w-s2" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,0) 46%,rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none"><div style="font:700 11.5px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff">One minute on grace</div><div style="font:600 9px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.62);margin-top:3px">1:02 · 3.4K</div></div></div>
+<div style="flex:none;position:relative;width:124px;height:206px;border-radius:12px;overflow:hidden"><image-slot id="w-s3" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,0) 46%,rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none"><div style="font:700 11.5px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff">Why Shining Lights</div><div style="font:600 9px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.62);margin-top:3px">0:39 · 1.8K</div></div></div>
+</div>
+<div style="font:800 19px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em;margin:26px 18px 12px">This week's message</div>
+<div style="padding:0 18px">
+<div style="border-radius:22px;background:#fff;overflow:hidden">
+<div style="position:relative;height:180px"><image-slot id="w-v1" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none"><div style="width:56px;height:38px;border-radius:10px;background:#FF3B30;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M7 4l13 8-13 8z"></path></svg></div></div><div style="position:absolute;right:10px;bottom:10px;padding:4px 8px;border-radius:6px;background:rgba(18,16,15,.85);font:700 10.5px 'Plus Jakarta Sans',sans-serif;color:#fff;pointer-events:none">42:18</div></div>
+<div style="padding:16px 18px 18px"><div style="font:700 16px/1.3 'Plus Jakarta Sans',sans-serif">Carry The Flame — Beacon Series 03</div><div style="display:flex;align-items:center;gap:8px;margin-top:10px"><div style="width:22px;height:22px;border-radius:50%;background:#41BBAC"></div><div style="font:600 11.5px 'Plus Jakarta Sans',sans-serif;color:#7A756E">The Beacon Centre · 4 days ago</div></div></div>
+</div>
+<div style="display:flex;gap:13px;margin-top:16px;align-items:center"><div style="position:relative;width:128px;height:78px;border-radius:12px;overflow:hidden;flex:none"><image-slot id="w-v2" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;right:6px;bottom:6px;padding:3px 6px;border-radius:5px;background:rgba(18,16,15,.85);font:700 9.5px 'Plus Jakarta Sans',sans-serif;color:#fff;pointer-events:none">38:02</div></div><div style="flex:1;min-width:0"><div style="font:700 14px/1.3 'Plus Jakarta Sans',sans-serif">Ordinary People, Uncommon Grace</div><div style="font:500 11.5px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:5px">Refuel · 1.2K views</div></div></div>
+<div style="display:flex;gap:13px;margin-top:16px;align-items:center"><div style="position:relative;width:128px;height:78px;border-radius:12px;overflow:hidden;flex:none"><image-slot id="w-v3" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;right:6px;bottom:6px;padding:3px 6px;border-radius:5px;background:rgba(18,16,15,.85);font:700 9.5px 'Plus Jakarta Sans',sans-serif;color:#fff;pointer-events:none">27:44</div></div><div style="flex:1;min-width:0"><div style="font:700 14px/1.3 'Plus Jakarta Sans',sans-serif">The Weight of Light</div><div style="font:500 11.5px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:5px">Impart · 890 views</div></div></div>
+</div>
+<div style="font:800 19px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em;margin:28px 18px 12px">Series</div>
+<div style="display:flex;gap:10px;overflow:auto;padding:0 18px">
+<div style="flex:none;width:150px;height:110px;border-radius:20px;background:#0E3B38;color:#fff;padding:16px;display:flex;flex-direction:column;justify-content:space-between"><div style="font:800 16px/1.2 'Plus Jakarta Sans',sans-serif">The Beacon<br>Series</div><div style="font:600 11px 'Plus Jakarta Sans',sans-serif;opacity:.7">8 messages</div></div>
+<div style="flex:none;width:150px;height:110px;border-radius:20px;background:#fff;color:#12100F;padding:16px;display:flex;flex-direction:column;justify-content:space-between"><div style="font:800 16px/1.2 'Plus Jakarta Sans',sans-serif">Stay Lit</div><div style="font:600 11px 'Plus Jakarta Sans',sans-serif;color:#6B665F">5 messages</div></div>
+<div style="flex:none;width:150px;height:110px;border-radius:20px;background:#fff;color:#12100F;padding:16px;display:flex;flex-direction:column;justify-content:space-between"><div style="font:800 16px/1.2 'Plus Jakarta Sans',sans-serif">Midweek<br>Refuel</div><div style="font:600 11px 'Plus Jakarta Sans',sans-serif;color:#6B665F">12 messages</div></div>
+</div>
+</div>
+<div style="position:absolute;left:14px;right:14px;bottom:22px;height:62px;border-radius:20px;background:#12100F;display:flex;align-items:center;justify-content:space-around;padding:0 8px;z-index:5">
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+<div style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:14px;background:#41BBAC"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a3 3 0 0 1 2.3-2.9C6.1 5.2 9 5 12 5s5.9.2 7.7.6A3 3 0 0 1 22 8.5c.2 1.2.3 2.4.3 3.5s-.1 2.3-.3 3.5a3 3 0 0 1-2.3 2.9c-1.8.4-4.7.6-7.7.6s-5.9-.2-7.7-.6A3 3 0 0 1 2 15.5C1.8 14.3 1.7 13.1 1.7 12S1.8 9.7 2 8.5z"></path><path d="m10 15 5-3-5-3z"></path></svg><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#04211B">Watch</div></div>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2-8z"></path></svg>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6c">
+<div class="dv-olabel"><a class="dv-oid" href="#6c">6c</a>Shorts player</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#000;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#fff">
+<image-slot id="sp-v" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot>
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.6) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 50%,rgba(0,0,0,.9) 100%);pointer-events:none"></div>
+<div style="position:absolute;top:58px;left:16px;right:16px;display:flex;align-items:center;justify-content:space-between;pointer-events:none">
+<div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></div>
+<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:12px;background:#FF3B30"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M13 2L4 14h6l-1 8 9-12h-6z"></path></svg><div style="font:800 12px 'Plus Jakarta Sans',sans-serif">Shorts</div></div>
+<div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg></div>
+</div>
+<div style="position:absolute;right:14px;bottom:150px;display:flex;flex-direction:column;align-items:center;gap:20px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg></div><div style="font:700 11px 'Plus Jakarta Sans',sans-serif">1.4K</div></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"></path></svg></div><div style="font:700 11px 'Plus Jakarta Sans',sans-serif">86</div></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg></div><div style="font:700 11px 'Plus Jakarta Sans',sans-serif">Share</div></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></div><div style="font:700 11px 'Plus Jakarta Sans',sans-serif">Save</div></div>
+</div>
+<div style="position:absolute;left:18px;right:88px;bottom:64px;pointer-events:none">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:50%;background:#41BBAC"></div><div style="font:700 13px 'Plus Jakarta Sans',sans-serif">The Beacon Centre</div><div style="padding:5px 12px;border-radius:10px;background:#41BBAC;color:#04211B;font:800 11px 'Plus Jakarta Sans',sans-serif">Follow</div></div>
+<div style="font:700 15px/1.4 'Plus Jakarta Sans',sans-serif;margin-top:12px">Faith is not a feeling — it's what you do on the days you don't feel it.</div>
+<div style="font:500 12px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.6);margin-top:8px">From <span style="color:#7FD8CC">Carry The Flame</span> · 0:48</div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:44px;height:3px;background:rgba(255,255,255,.25)"><div style="width:38%;height:3px;background:#41BBAC"></div></div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6d">
+<div class="dv-olabel"><a class="dv-oid" href="#6d">6d</a>Message player — chapters and notes</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto">
+<div style="position:relative;height:282px;background:#000">
+<image-slot id="mp-v" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot>
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,.72) 100%);pointer-events:none"></div>
+<div style="position:absolute;top:58px;left:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg></div>
+<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:30px;pointer-events:none">
+<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"><path d="M11 19V5l-8 7z"></path><path d="M21 19V5l-8 7z"></path></svg>
+<div style="width:62px;height:62px;border-radius:50%;background:#41BBAC;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="#04211B"><path d="M6 4h4v16H6zM14 4h4v16h-4z"></path></svg></div>
+<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"><path d="M13 5v14l8-7z"></path><path d="M3 5v14l8-7z"></path></svg>
+</div>
+<div style="position:absolute;left:16px;right:16px;bottom:14px;pointer-events:none"><div style="height:4px;border-radius:4px;background:rgba(255,255,255,.3)"><div style="width:34%;height:4px;border-radius:4px;background:#41BBAC"></div></div><div style="display:flex;justify-content:space-between;margin-top:8px;font:600 11px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.85)"><div>14:22</div><div>42:18</div></div></div>
+</div>
+<div style="padding:20px 18px 30px">
+<div style="font:800 22px/1.25 'Plus Jakarta Sans',sans-serif;letter-spacing:-.025em">Carry The Flame — Beacon Series 03</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:14px"><div style="width:34px;height:34px;border-radius:50%;background:#41BBAC"></div><div style="flex:1"><div style="font:700 13px 'Plus Jakarta Sans',sans-serif">The Beacon Centre</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:2px">Impart Service · 1.2K views</div></div><div style="padding:9px 15px;border-radius:12px;background:#41BBAC;font:800 12px 'Plus Jakarta Sans',sans-serif">Follow</div></div>
+<div style="display:flex;gap:8px;margin-top:16px;overflow:auto">
+<div style="flex:none;display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:12px;background:#fff;font:600 12px 'Plus Jakarta Sans',sans-serif"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>Save</div>
+<div style="flex:none;display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:12px;background:#fff;font:600 12px 'Plus Jakarta Sans',sans-serif"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>Download</div>
+<div style="flex:none;display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:12px;background:#fff;font:600 12px 'Plus Jakarta Sans',sans-serif"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg>Share</div>
+<div style="flex:none;display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:12px;background:#fff;font:600 12px 'Plus Jakarta Sans',sans-serif"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Notes</div>
+</div>
+<div style="margin-top:20px;border-radius:20px;background:#fff;padding:18px">
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#7A756E">IN THIS MESSAGE</div>
+<div style="display:flex;align-items:center;gap:14px;margin-top:14px"><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#7A756E;width:42px">00:00</div><div style="font:600 13px 'Plus Jakarta Sans',sans-serif;flex:1">Opening prayer</div></div>
+<div style="height:1px;background:#F0EDE7;margin:12px 0"></div>
+<div style="display:flex;align-items:center;gap:14px"><div style="font:800 12px 'Plus Jakarta Sans',sans-serif;color:#12100F;width:42px">12:40</div><div style="font:700 13px 'Plus Jakarta Sans',sans-serif;flex:1">A lamp is lit to be seen</div><div style="padding:3px 8px;border-radius:7px;background:#41BBAC;font:800 9px 'Plus Jakarta Sans',sans-serif">NOW</div></div>
+<div style="height:1px;background:#F0EDE7;margin:12px 0"></div>
+<div style="display:flex;align-items:center;gap:14px"><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#7A756E;width:42px">26:05</div><div style="font:600 13px 'Plus Jakarta Sans',sans-serif;flex:1">Three ways to stay lit</div></div>
+<div style="height:1px;background:#F0EDE7;margin:12px 0"></div>
+<div style="display:flex;align-items:center;gap:14px"><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#7A756E;width:42px">38:11</div><div style="font:600 13px 'Plus Jakarta Sans',sans-serif;flex:1">Altar call</div></div>
+</div>
+<div style="font:800 18px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em;margin:24px 0 12px">Up next</div>
+<div style="display:flex;gap:13px;align-items:center"><div style="width:128px;height:78px;border-radius:12px;overflow:hidden;flex:none"><image-slot id="mp-n1" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot></div><div style="flex:1;min-width:0"><div style="font:700 14px/1.3 'Plus Jakarta Sans',sans-serif">The Weight of Light</div><div style="font:500 11.5px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:5px">27:44 · Series 04</div></div></div>
+</div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6e">
+<div class="dv-olabel"><a class="dv-oid" href="#6e">6e</a>Now playing — audio</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#0E3B38;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#EAF6F3">
+<div style="position:absolute;inset:0;overflow:auto;padding:60px 22px 30px">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#EAF6F3" stroke-width="2.2" stroke-linecap="round"><path d="m6 15 6-6 6 6"></path></svg></div>
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#7FD8CC">AUDIO SERMON</div>
+<div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#EAF6F3" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg></div>
+</div>
+<div style="margin-top:32px;border-radius:24px;overflow:hidden;height:296px"><image-slot id="np-art" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot></div>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-top:26px">
+<div style="flex:1"><div style="font:800 23px/1.22 'Plus Jakarta Sans',sans-serif;letter-spacing:-.025em">Stay Lit — Part 1</div><div style="font:500 13px 'Plus Jakarta Sans',sans-serif;color:#7FA9A3;margin-top:7px">The Beacon Centre · Impart</div></div>
+<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg></div>
+</div>
+<div style="display:flex;align-items:flex-end;gap:3px;height:40px;margin-top:24px">
+<div style="flex:1;height:14px;background:#7FD8CC;border-radius:2px"></div><div style="flex:1;height:26px;background:#7FD8CC;border-radius:2px"></div><div style="flex:1;height:34px;background:#7FD8CC;border-radius:2px"></div><div style="flex:1;height:18px;background:#7FD8CC;border-radius:2px"></div><div style="flex:1;height:28px;background:#7FD8CC;border-radius:2px"></div><div style="flex:1;height:40px;background:#7FD8CC;border-radius:2px"></div><div style="flex:1;height:22px;background:#7FD8CC;border-radius:2px"></div><div style="flex:1;height:12px;background:#7FD8CC;border-radius:2px"></div>
+<div style="flex:1;height:30px;background:#1D5451;border-radius:2px"></div><div style="flex:1;height:16px;background:#1D5451;border-radius:2px"></div><div style="flex:1;height:36px;background:#1D5451;border-radius:2px"></div><div style="flex:1;height:20px;background:#1D5451;border-radius:2px"></div><div style="flex:1;height:28px;background:#1D5451;border-radius:2px"></div><div style="flex:1;height:14px;background:#1D5451;border-radius:2px"></div><div style="flex:1;height:24px;background:#1D5451;border-radius:2px"></div><div style="flex:1;height:32px;background:#1D5451;border-radius:2px"></div><div style="flex:1;height:18px;background:#1D5451;border-radius:2px"></div><div style="flex:1;height:26px;background:#1D5451;border-radius:2px"></div>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:10px;font:600 11.5px 'Plus Jakarta Sans',sans-serif;color:#7FA9A3"><div>12:38</div><div>-19:22</div></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-top:24px">
+<div style="padding:7px 11px;border-radius:11px;background:rgba(255,255,255,.12);font:700 12px 'Plus Jakarta Sans',sans-serif">1.0×</div>
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#EAF6F3" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19V5l-8 7z"></path><path d="M21 19V5l-8 7z"></path></svg>
+<div style="width:74px;height:74px;border-radius:50%;background:#41BBAC;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="#04211B"><path d="M6 4h4v16H6zM14 4h4v16h-4z"></path></svg></div>
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#EAF6F3" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5v14l8-7z"></path><path d="M3 5v14l8-7z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#7FA9A3" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+</div>
+<div style="display:flex;gap:10px;margin-top:28px">
+<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;background:rgba(255,255,255,.1);font:700 12.5px 'Plus Jakarta Sans',sans-serif"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41BBAC" stroke-width="2.4" stroke-linecap="round"><path d="m5 12 5 5L20 7"></path></svg>Downloaded</div>
+<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;background:rgba(255,255,255,.1);font:700 12.5px 'Plus Jakarta Sans',sans-serif">Queue</div>
+</div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6f">
+<div class="dv-olabel"><a class="dv-oid" href="#6f">6f</a>Live service</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#12100F;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#F3F1EC">
+<div style="position:relative;height:246px;background:#000">
+<image-slot id="lv-v" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot>
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 40%,rgba(0,0,0,.6) 100%);pointer-events:none"></div>
+<div style="position:absolute;top:58px;left:16px;right:16px;display:flex;align-items:center;justify-content:space-between;pointer-events:none">
+<div style="display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:9px;background:#FF3B30"><div style="width:6px;height:6px;border-radius:50%;background:#fff;animation:bcPulse 1.7s ease-in-out infinite"></div><div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.1em;color:#fff">LIVE</div></div>
+<div style="padding:6px 11px;border-radius:9px;background:rgba(0,0,0,.55);font:700 11px 'Plus Jakarta Sans',sans-serif">482 watching</div>
+</div>
+</div>
+<div style="padding:18px 16px 0">
+<div style="font:800 21px/1.25 'Plus Jakarta Sans',sans-serif;letter-spacing:-.025em">Impart Service — Who is your King?</div>
+<div style="font:500 12px 'Plus Jakarta Sans',sans-serif;color:#8A857D;margin-top:7px">Started 42 minutes ago · Sunday 9:00 AM</div>
+<div style="display:flex;gap:9px;margin-top:16px">
+<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;border-radius:14px;background:#41BBAC;color:#04211B;font:800 12.5px 'Plus Jakarta Sans',sans-serif"><svg width="15" height="15" viewBox="0 0 24 24" fill="#04211B"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg>Give now</div>
+<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;border-radius:14px;background:#241F1C;font:700 12.5px 'Plus Jakarta Sans',sans-serif">Take notes</div>
+<div style="width:46px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:#241F1C"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F3F1EC" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg></div>
+</div>
+</div>
+<div style="padding:22px 16px 0;display:flex;align-items:center;gap:8px"><div style="font:800 16px 'Plus Jakarta Sans',sans-serif">Live chat</div><div style="padding:4px 9px;border-radius:8px;background:#241F1C;font:700 10px 'Plus Jakarta Sans',sans-serif;color:#8A857D">482 here</div></div>
+<div style="padding:14px 16px 0;display:flex;flex-direction:column;gap:13px">
+<div style="display:flex;gap:10px"><div style="width:28px;height:28px;border-radius:50%;background:#41BBAC;flex:none"></div><div><span style="font:800 12.5px 'Plus Jakarta Sans',sans-serif;color:#41BBAC">Tolu M.</span> <span style="font:500 12.5px/1.5 'Plus Jakarta Sans',sans-serif;color:#CFC9C0">Watching from Bodija CSG 🙌</span></div></div>
+<div style="display:flex;gap:10px"><div style="width:28px;height:28px;border-radius:50%;background:#1C6462;flex:none"></div><div><span style="font:800 12.5px 'Plus Jakarta Sans',sans-serif;color:#41BBAC">Grace A.</span> <span style="font:500 12.5px/1.5 'Plus Jakarta Sans',sans-serif;color:#CFC9C0">That line about the lamp — writing it down.</span></div></div>
+<div style="display:flex;gap:10px"><div style="width:28px;height:28px;border-radius:50%;background:#7FD8CC;flex:none"></div><div><span style="font:800 12.5px 'Plus Jakarta Sans',sans-serif;color:#41BBAC">Emeka O.</span> <span style="font:500 12.5px/1.5 'Plus Jakarta Sans',sans-serif;color:#CFC9C0">Joining from Lagos this morning.</span></div></div>
+<div style="display:flex;gap:10px"><div style="width:28px;height:28px;border-radius:50%;background:#3F4A47;flex:none"></div><div><span style="font:800 12.5px 'Plus Jakarta Sans',sans-serif;color:#41BBAC">Ada N.</span> <span style="font:500 12.5px/1.5 'Plus Jakarta Sans',sans-serif;color:#CFC9C0">Praying for everyone here today.</span></div></div>
+</div>
+<div style="position:absolute;left:16px;right:16px;bottom:30px;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:16px;background:#241F1C">
+<div style="flex:1;font:500 12.5px 'Plus Jakarta Sans',sans-serif;color:#6E6963">Say something…</div>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#41BBAC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2-8z"></path></svg>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6g">
+<div class="dv-olabel"><a class="dv-oid" href="#6g">6g</a>Announcements — church-wide and your CSG</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:60px 16px 106px">
+<div style="font:800 32px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em">Announcements</div>
+<div style="display:flex;gap:7px;margin-top:18px;overflow:auto">
+<div style="flex:none;padding:9px 15px;border-radius:14px;background:#12100F;color:#fff;font:700 12.5px 'Plus Jakarta Sans',sans-serif">All</div>
+<div style="flex:none;padding:9px 15px;border-radius:14px;background:#fff;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">Church-wide</div>
+<div style="flex:none;display:flex;align-items:center;gap:6px;padding:9px 15px;border-radius:14px;background:#fff;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640"><div style="width:7px;height:7px;border-radius:50%;background:#41BBAC"></div>Bodija CSG</div>
+<div style="flex:none;padding:9px 15px;border-radius:14px;background:#fff;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">Events</div>
+</div>
+<div style="margin-top:18px;border-radius:22px;overflow:hidden;background:#12100F;color:#fff">
+<div style="position:relative;height:146px"><image-slot id="an-hero" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,.2),rgba(18,16,15,.94));pointer-events:none"></div><div style="position:absolute;top:12px;left:12px;padding:6px 10px;border-radius:8px;background:#41BBAC;color:#04211B;font:800 9px 'Plus Jakarta Sans',sans-serif;letter-spacing:.1em;pointer-events:none">PINNED</div></div>
+<div style="padding:18px 20px 20px">
+<div style="font:800 20px/1.24 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em">Impart Service moves to 8:30AM</div>
+<div style="font:500 12.5px/1.6 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.72);margin-top:8px">From Sunday 10 August the first service starts thirty minutes earlier. Doors open 8:00AM; second service follows at 11:00.</div>
+<div style="font:600 11px 'Plus Jakarta Sans',sans-serif;color:#8A857D;margin-top:12px">Church-wide · 2 days ago</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin:24px 4px 12px"><div style="width:8px;height:8px;border-radius:50%;background:#41BBAC"></div><div style="font:800 18px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em">From your CSG</div><div style="flex:1"></div><div style="font:600 11.5px 'Plus Jakarta Sans',sans-serif;color:#7A756E">Bodija</div></div>
+<div style="border-radius:22px;background:#41BBAC;color:#04211B;padding:18px">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:#0E3B38;display:flex;align-items:center;justify-content:center;font:800 11px 'Plus Jakarta Sans',sans-serif;color:#fff">TM</div><div style="flex:1"><div style="font:800 12.5px 'Plus Jakarta Sans',sans-serif">Tolu M. · CSG admin</div><div style="font:600 11px 'Plus Jakarta Sans',sans-serif;opacity:.7;margin-top:2px">Yesterday, 8:14 PM</div></div><div style="padding:5px 10px;border-radius:8px;background:rgba(4,33,27,.14);font:800 9.5px 'Plus Jakarta Sans',sans-serif">SENT TO 18</div></div>
+<div style="font:800 16px/1.3 'Plus Jakarta Sans',sans-serif;margin-top:14px">This week we're at Sister Ada's — 12 Awolowo Rd</div>
+<div style="font:500 12.5px/1.6 'Plus Jakarta Sans',sans-serif;margin-top:8px;opacity:.78">Thursday 6PM as usual. Bring your Bible and a friend; we're finishing the Stay Lit study.</div>
+<div style="display:flex;gap:8px;margin-top:16px"><div style="padding:10px 15px;border-radius:12px;background:#12100F;color:#fff;font:700 12px 'Plus Jakarta Sans',sans-serif">I'll be there</div><div style="padding:10px 15px;border-radius:12px;background:rgba(4,33,27,.12);font:700 12px 'Plus Jakarta Sans',sans-serif">Directions</div></div>
+</div>
+<div style="border-radius:22px;background:#fff;padding:18px;margin-top:11px;display:flex;gap:14px">
+<div style="width:62px;height:62px;border-radius:14px;overflow:hidden;flex:none"><image-slot id="an-t1" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot></div>
+<div style="flex:1;min-width:0"><div style="font:700 14.5px/1.35 'Plus Jakarta Sans',sans-serif">Workers' meeting — Saturday 4PM</div><div style="font:500 11.5px/1.55 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:5px">All ushers, media and choir. Main auditorium.</div><div style="font:600 10.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:9px">Church-wide · 4 days ago</div></div>
+</div>
+<div style="border-radius:22px;background:#fff;padding:18px;margin-top:11px;display:flex;gap:14px;align-items:center">
+<div style="width:52px;height:52px;border-radius:14px;background:#E4F6F3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="#1C6462"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg></div>
+<div style="flex:1;min-width:0"><div style="font:800 15px/1.3 'Plus Jakarta Sans',sans-serif">Roof project passed ₦34M</div><div style="font:500 11.5px/1.55 'Plus Jakarta Sans',sans-serif;margin-top:5px;color:#6B665F">Thank you — 68% of target in six weeks.</div></div>
+</div>
+</div>
+<div style="position:absolute;left:14px;right:14px;bottom:22px;height:62px;border-radius:20px;background:#12100F;display:flex;align-items:center;justify-content:space-around;padding:0 8px;z-index:5">
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a3 3 0 0 1 2.3-2.9C6.1 5.2 9 5 12 5s5.9.2 7.7.6A3 3 0 0 1 22 8.5c.2 1.2.3 2.4.3 3.5s-.1 2.3-.3 3.5a3 3 0 0 1-2.3 2.9c-1.8.4-4.7.6-7.7.6s-5.9-.2-7.7-.6A3 3 0 0 1 2 15.5C1.8 14.3 1.7 13.1 1.7 12S1.8 9.7 2 8.5z"></path><path d="m10 15 5-3-5-3z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg>
+<div style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:14px;background:#41BBAC"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2-8z"></path></svg><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#04211B">News</div></div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6h">
+<div class="dv-olabel"><a class="dv-oid" href="#6h">6h</a>Your CSG</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding-bottom:30px">
+<div style="position:relative;height:206px">
+<image-slot id="ci-hero" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot>
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,59,56,.5) 0%,rgba(14,59,56,.1) 40%,rgba(14,59,56,.94) 100%);pointer-events:none"></div>
+<div style="position:absolute;top:58px;left:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg></div>
+<div style="position:absolute;left:18px;right:18px;bottom:16px;color:#fff;pointer-events:none"><div style="font:800 9.5px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#7FD8CC">COMMUNITY SERVICE GROUP</div><div style="font:800 28px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.03em;margin-top:8px">Bodija</div><div style="font:500 12px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.72);margin-top:4px">Thursdays 6:00 PM · 18 members</div></div>
+</div>
+<div style="padding:16px 16px 0;display:flex;gap:9px">
+<div style="flex:1;text-align:center;padding:13px;border-radius:14px;background:#41BBAC;font:800 12.5px 'Plus Jakarta Sans',sans-serif">I'm attending</div>
+<div style="flex:1;text-align:center;padding:13px;border-radius:14px;background:#fff;font:700 12.5px 'Plus Jakarta Sans',sans-serif">Message admin</div>
+</div>
+<div style="margin:20px 16px 0;padding:18px;border-radius:20px;background:#fff;display:flex;align-items:center;gap:14px">
+<div style="width:52px;height:56px;border-radius:14px;background:#E4F6F3;color:#1C6462;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none"><div style="font:800 20px 'Plus Jakarta Sans',sans-serif;line-height:1">07</div><div style="font:700 9px 'Plus Jakarta Sans',sans-serif;letter-spacing:.08em;margin-top:2px">AUG</div></div>
+<div style="flex:1"><div style="font:800 15px/1.3 'Plus Jakarta Sans',sans-serif">This week at Sister Ada's</div><div style="font:500 11.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">12 Awolowo Rd · 6:00 PM</div></div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.4" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin:24px 16px 12px"><div style="font:800 18px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em">Updates</div><div style="font:600 11.5px 'Plus Jakarta Sans',sans-serif;color:#7A756E">Only your CSG sees these</div></div>
+<div style="margin:0 16px;border-radius:20px;background:#fff;padding:18px">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:#41BBAC;display:flex;align-items:center;justify-content:center;font:800 11px 'Plus Jakarta Sans',sans-serif;color:#04211B">TM</div><div style="flex:1"><div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif">Tolu M. · Admin</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:2px">Yesterday, 8:14 PM</div></div></div>
+<div style="font:500 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:12px">We're finishing the Stay Lit study this week. Bring your Bible and a friend — and Ada is doing jollof, so come hungry.</div>
+</div>
+<div style="margin:11px 16px 0;border-radius:20px;background:#fff;padding:18px">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:#41BBAC;display:flex;align-items:center;justify-content:center;font:800 11px 'Plus Jakarta Sans',sans-serif;color:#04211B">TM</div><div style="flex:1"><div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif">Tolu M. · Admin</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:2px">Last Friday</div></div></div>
+<div style="font:500 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:12px">Thank you to everyone who came out for the visitation. Nine homes in one afternoon.</div>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin:22px 16px 0">
+<div style="display:flex"><div style="width:30px;height:30px;border-radius:50%;background:#41BBAC;border:2px solid #F3F1EC"></div><div style="width:30px;height:30px;border-radius:50%;background:#1C6462;border:2px solid #F3F1EC;margin-left:-10px"></div><div style="width:30px;height:30px;border-radius:50%;background:#7FD8CC;border:2px solid #F3F1EC;margin-left:-10px"></div><div style="width:30px;height:30px;border-radius:50%;background:#DEDAD1;border:2px solid #F3F1EC;margin-left:-10px;display:flex;align-items:center;justify-content:center;font:800 10px 'Plus Jakarta Sans',sans-serif;color:#4A4640">+15</div></div>
+<div style="font:600 12px 'Plus Jakarta Sans',sans-serif;color:#7A756E">18 members in this CSG</div>
+</div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6i">
+<div class="dv-olabel"><a class="dv-oid" href="#6i">6i</a>Give — tithe, seed, project pools</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:60px 16px 106px">
+<div style="display:flex;align-items:center;justify-content:space-between"><div style="font:800 32px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em">Give</div><div style="display:flex;align-items:center;gap:7px;padding:10px 14px;border-radius:14px;background:#fff;font:700 12px 'Plus Jakarta Sans',sans-serif"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>History</div></div>
+<div style="margin-top:18px;border-radius:26px;padding:22px 20px;background:#0E3B38;color:#fff">
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#7FD8CC">GIVING TO</div>
+<div style="display:flex;gap:7px;margin-top:13px;flex-wrap:wrap">
+<div style="padding:9px 14px;border-radius:12px;background:#41BBAC;color:#04211B;font:800 12px 'Plus Jakarta Sans',sans-serif">Tithe</div>
+<div style="padding:9px 14px;border-radius:12px;background:rgba(255,255,255,.14);font:600 12px 'Plus Jakarta Sans',sans-serif">Offering</div>
+<div style="padding:9px 14px;border-radius:12px;background:rgba(255,255,255,.14);font:600 12px 'Plus Jakarta Sans',sans-serif">Seed</div>
+<div style="padding:9px 14px;border-radius:12px;background:rgba(255,255,255,.14);font:600 12px 'Plus Jakarta Sans',sans-serif">Project</div>
+</div>
+<div style="display:flex;align-items:baseline;gap:4px;margin-top:22px"><div style="font:700 26px 'Plus Jakarta Sans',sans-serif;color:#7FD8CC">₦</div><div style="font:800 52px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.045em">20,000</div></div>
+<div style="display:flex;gap:7px;margin-top:18px">
+<div style="flex:1;text-align:center;padding:11px 0;border-radius:12px;background:rgba(255,255,255,.14);font:600 12px 'Plus Jakarta Sans',sans-serif">₦5,000</div>
+<div style="flex:1;text-align:center;padding:11px 0;border-radius:12px;background:rgba(255,255,255,.14);font:600 12px 'Plus Jakarta Sans',sans-serif">₦10,000</div>
+<div style="flex:1;text-align:center;padding:11px 0;border-radius:12px;background:#41BBAC;color:#04211B;font:800 12px 'Plus Jakarta Sans',sans-serif">₦20,000</div>
+<div style="flex:1;text-align:center;padding:11px 0;border-radius:12px;background:rgba(255,255,255,.14);font:600 12px 'Plus Jakarta Sans',sans-serif">Other</div>
+</div>
+</div>
+<div style="margin-top:11px;border-radius:20px;background:#fff;padding:15px 18px;display:flex;align-items:center;gap:14px">
+<div style="width:42px;height:42px;border-radius:12px;background:#E4F6F3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1C6462" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20"></path></svg></div>
+<div style="flex:1"><div style="font:700 13px 'Plus Jakarta Sans',sans-serif">Card ending 4412</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:3px">Change payment method</div></div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+</div>
+<div style="margin-top:11px;padding:15px;border-radius:18px;background:#fff;display:flex;align-items:center;gap:12px">
+<div style="width:22px;height:22px;border-radius:7px;background:#41BBAC;display:flex;align-items:center;justify-content:center;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="3.2" stroke-linecap="round"><path d="m5 12 5 5L20 7"></path></svg></div>
+<div style="font:700 12.5px/1.5 'Plus Jakarta Sans',sans-serif">Repeat this every month on the 1st</div>
+</div>
+<div style="margin-top:12px;padding:17px;border-radius:16px;background:#12100F;color:#fff;text-align:center;font:800 14px 'Plus Jakarta Sans',sans-serif">Give ₦20,000</div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin:28px 4px 14px"><div style="font:800 19px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em">Church projects</div><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#1C6462">See all</div></div>
+<div style="border-radius:24px;background:#fff;overflow:hidden">
+<div style="position:relative;height:132px"><image-slot id="gv-p1" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;top:12px;right:12px;padding:6px 10px;border-radius:8px;background:#12100F;font:700 10px 'Plus Jakarta Sans',sans-serif;color:#fff;pointer-events:none">24 days left</div></div>
+<div style="padding:18px 20px 20px">
+<div style="font:800 19px/1.24 'Plus Jakarta Sans',sans-serif">The new auditorium roof</div>
+<div style="font:500 12px/1.6 'Plus Jakarta Sans',sans-serif;margin-top:6px;color:#6B665F">Replacing the main roof before the rains return.</div>
+<div style="height:10px;border-radius:10px;background:#EDEAE3;margin-top:15px;overflow:hidden"><div style="width:68%;height:10px;border-radius:10px;background:#41BBAC"></div></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:11px"><div style="font:800 15px 'Plus Jakarta Sans',sans-serif;color:#1C6462">₦34,200,000</div><div style="font:600 12px 'Plus Jakarta Sans',sans-serif;color:#6B665F">of ₦50,000,000</div></div>
+<div style="display:flex;align-items:center;gap:12px;margin-top:15px"><div style="display:flex"><div style="width:26px;height:26px;border-radius:50%;background:#41BBAC;border:2px solid #fff"></div><div style="width:26px;height:26px;border-radius:50%;background:#1C6462;border:2px solid #fff;margin-left:-9px"></div><div style="width:26px;height:26px;border-radius:50%;background:#7FD8CC;border:2px solid #fff;margin-left:-9px"></div></div><div style="font:600 11.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F">412 givers</div><div style="flex:1"></div><div style="padding:11px 17px;border-radius:14px;background:#12100F;color:#fff;font:700 12.5px 'Plus Jakarta Sans',sans-serif">Contribute</div></div>
+</div>
+</div>
+<div style="border-radius:24px;background:#fff;padding:20px;margin-top:11px">
+<div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font:800 17px/1.24 'Plus Jakarta Sans',sans-serif">Campus outreach bus</div><div style="font:800 14px 'Plus Jakarta Sans',sans-serif;color:#1C6462">31%</div></div>
+<div style="height:10px;border-radius:10px;background:#EDEAE3;margin-top:13px;overflow:hidden"><div style="width:31%;height:10px;border-radius:10px;background:#41BBAC"></div></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:11px"><div style="font:800 13.5px 'Plus Jakarta Sans',sans-serif">₦3,720,000 <span style="font:600 12px 'Plus Jakarta Sans',sans-serif;color:#6B665F">of ₦12M</span></div><div style="font:600 11.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F">86 givers</div></div>
+</div>
+<div style="margin-top:20px;padding:18px 20px;border-radius:20px;background:#fff">
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#7A756E">YOUR GIVING</div>
+<div style="display:flex;align-items:baseline;gap:10px;margin-top:9px"><div style="font:800 23px 'Plus Jakarta Sans',sans-serif">₦186,000</div><div style="font:500 12px 'Plus Jakarta Sans',sans-serif;color:#7A756E">this year · 9 gifts</div></div>
+<div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#1C6462;margin-top:9px">Download giving statement</div>
+</div>
+</div>
+<div style="position:absolute;left:14px;right:14px;bottom:22px;height:62px;border-radius:20px;background:#12100F;display:flex;align-items:center;justify-content:space-around;padding:0 8px;z-index:5">
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a3 3 0 0 1 2.3-2.9C6.1 5.2 9 5 12 5s5.9.2 7.7.6A3 3 0 0 1 22 8.5c.2 1.2.3 2.4.3 3.5s-.1 2.3-.3 3.5a3 3 0 0 1-2.3 2.9c-1.8.4-4.7.6-7.7.6s-5.9-.2-7.7-.6A3 3 0 0 1 2 15.5C1.8 14.3 1.7 13.1 1.7 12S1.8 9.7 2 8.5z"></path><path d="m10 15 5-3-5-3z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>
+<div style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:14px;background:#41BBAC"><svg width="18" height="18" viewBox="0 0 24 24" fill="#04211B"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg><div style="font:800 12px 'Plus Jakarta Sans',sans-serif;color:#04211B">Give</div></div>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2-8z"></path></svg>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6j">
+<div class="dv-olabel"><a class="dv-oid" href="#6j">6j</a>Payment methods &amp; receipt</div>
+<div style="display:flex;gap:24px">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#12100F;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;opacity:.3;padding:60px 16px;pointer-events:none"><div style="font:800 32px 'Plus Jakarta Sans',sans-serif;color:#F3F1EC;letter-spacing:-.035em">Give</div><div style="margin-top:18px;border-radius:26px;height:200px;background:#0E3B38"></div></div>
+<div style="position:absolute;left:0;right:0;bottom:0;border-radius:28px 28px 0 0;background:#F3F1EC;padding:18px 16px 32px">
+<div style="width:40px;height:4px;border-radius:4px;background:#D8D3C9;margin:0 auto 18px"></div>
+<div style="font:800 22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.025em">How would you like to pay?</div>
+<div style="font:500 12.5px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:6px">Tithe · ₦20,000</div>
+<div style="margin-top:18px;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:center;gap:13px;padding:15px;border-radius:18px;background:#41BBAC;color:#04211B">
+<div style="width:40px;height:40px;border-radius:12px;background:rgba(4,33,27,.14);display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="3"></rect><path d="M2 10h20"></path></svg></div>
+<div style="flex:1"><div style="font:800 13.5px 'Plus Jakarta Sans',sans-serif">Card ending 4412</div><div style="font:600 11px 'Plus Jakarta Sans',sans-serif;opacity:.72;margin-top:2px">Visa · expires 09/28</div></div>
+<div style="width:22px;height:22px;border-radius:50%;background:#12100F;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#41BBAC" stroke-width="3.4" stroke-linecap="round"><path d="m5 12 5 5L20 7"></path></svg></div>
+</div>
+<div style="display:flex;align-items:center;gap:13px;padding:15px;border-radius:18px;background:#fff">
+<div style="width:40px;height:40px;border-radius:12px;background:#EFEDE7;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M4 10h16"></path><path d="m12 3 9 5H3z"></path><path d="M6 10v11"></path><path d="M18 10v11"></path></svg></div>
+<div style="flex:1"><div style="font:700 13.5px 'Plus Jakarta Sans',sans-serif">Bank transfer</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:2px">One-time account number</div></div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+</div>
+<div style="display:flex;align-items:center;gap:13px;padding:15px;border-radius:18px;background:#fff">
+<div style="width:40px;height:40px;border-radius:12px;background:#EFEDE7;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"></rect><path d="M11 18h2"></path></svg></div>
+<div style="flex:1"><div style="font:700 13.5px 'Plus Jakarta Sans',sans-serif">USSD</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:2px">Pay from any phone, no data</div></div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+</div>
+<div style="display:flex;align-items:center;gap:13px;padding:15px;border-radius:18px;background:#fff">
+<div style="width:40px;height:40px;border-radius:12px;background:#EFEDE7;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="3"></rect><path d="M16 12h2"></path></svg></div>
+<div style="flex:1"><div style="font:700 13.5px 'Plus Jakarta Sans',sans-serif">Apple Pay / Google Pay</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:2px">One tap, nothing to type</div></div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+</div>
+<div style="display:flex;align-items:center;gap:13px;padding:15px;border-radius:18px;background:#fff">
+<div style="width:40px;height:40px;border-radius:12px;background:#EFEDE7;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></div>
+<div style="flex:1;font:700 13.5px 'Plus Jakarta Sans',sans-serif">Add a new card</div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+</div>
+</div>
+<div style="margin-top:18px;padding:17px;border-radius:16px;background:#12100F;color:#fff;text-align:center;font:800 14px 'Plus Jakarta Sans',sans-serif">Pay ₦20,000</div>
+<div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#A8A29A">Secured by Paystack · card never stored</div></div>
+</div>
+</div>
+</x-import>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:60px 20px 30px">
+<div style="display:flex;justify-content:flex-end"><div style="width:38px;height:38px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="2.3" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></div></div>
+<div style="display:flex;flex-direction:column;align-items:center;margin-top:40px">
+<div style="width:96px;height:96px;border-radius:50%;background:#41BBAC;display:flex;align-items:center;justify-content:center"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="2.8" stroke-linecap="round"><path d="m5 12 5 5L20 7"></path></svg></div>
+<div style="font:800 28px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.03em;margin-top:24px">Thank you</div>
+<div style="font:500 13px/1.6 'Plus Jakarta Sans',sans-serif;opacity:.7;margin-top:9px;text-align:center;max-width:240px">Your tithe has been received. A receipt is on its way to your email.</div>
+<div style="font:800 46px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.045em;margin-top:22px">₦20,000</div>
+</div>
+<div style="margin-top:30px;border-radius:22px;background:#fff;color:#12100F;padding:20px">
+<div style="display:flex;justify-content:space-between"><div style="font:500 12.5px 'Plus Jakarta Sans',sans-serif;color:#8A857D">Given to</div><div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif">Tithe</div></div>
+<div style="height:1px;background:#2A2622;margin:13px 0"></div>
+<div style="display:flex;justify-content:space-between"><div style="font:500 12.5px 'Plus Jakarta Sans',sans-serif;color:#8A857D">Paid with</div><div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif">Card ···· 4412</div></div>
+<div style="height:1px;background:#2A2622;margin:13px 0"></div>
+<div style="display:flex;justify-content:space-between"><div style="font:500 12.5px 'Plus Jakarta Sans',sans-serif;color:#8A857D">Date</div><div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif">2 Aug 2026, 10:42</div></div>
+<div style="height:1px;background:#2A2622;margin:13px 0"></div>
+<div style="display:flex;justify-content:space-between"><div style="font:500 12.5px 'Plus Jakarta Sans',sans-serif;color:#8A857D">Reference</div><div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif">TBC-4471-9302</div></div>
+</div>
+<div style="margin-top:12px;padding:15px;border-radius:16px;background:#EFEDE7;display:flex;align-items:center;gap:12px"><div style="width:22px;height:22px;border-radius:7px;background:#41BBAC;display:flex;align-items:center;justify-content:center;flex:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="3.2" stroke-linecap="round"><path d="m5 12 5 5L20 7"></path></svg></div><div style="font:600 12px/1.5 'Plus Jakarta Sans',sans-serif">Repeating monthly on the 1st — manage in Settings</div></div>
+<div style="display:flex;gap:10px;margin-top:18px"><div style="flex:1;text-align:center;padding:15px;border-radius:14px;background:#fff;font:700 12.5px 'Plus Jakarta Sans',sans-serif">Download receipt</div><div style="flex:1;text-align:center;padding:15px;border-radius:14px;background:#41BBAC;color:#04211B;font:800 12.5px 'Plus Jakarta Sans',sans-serif">Done</div></div>
+</div>
+</div>
+</x-import>
+</div>
+</div>
+
+<div class="dv-opt" id="6k">
+<div class="dv-olabel"><a class="dv-oid" href="#6k">6k</a>Settings — profile, notifications, contact</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:60px 16px 30px">
+<div style="font:800 32px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em">Settings</div>
+<div style="margin-top:18px;border-radius:22px;background:#12100F;color:#fff;padding:18px;display:flex;align-items:center;gap:14px">
+<div style="width:56px;height:56px;border-radius:50%;background:#41BBAC;color:#04211B;display:flex;align-items:center;justify-content:center;font:800 20px 'Plus Jakarta Sans',sans-serif;flex:none">A</div>
+<div style="flex:1"><div style="font:800 18px 'Plus Jakarta Sans',sans-serif">Adeola Okon</div><div style="font:500 12px 'Plus Jakarta Sans',sans-serif;color:#9B958D;margin-top:3px">adeola@email.com</div><div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.12)"><div style="width:6px;height:6px;border-radius:50%;background:#41BBAC"></div><div style="font:800 9.5px 'Plus Jakarta Sans',sans-serif">BODIJA CSG</div></div></div>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+</div>
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#7A756E;margin:24px 4px 9px">NOTIFICATIONS</div>
+<div style="border-radius:20px;background:#fff;overflow:hidden">
+<div style="display:flex;align-items:center;gap:14px;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Verse of the day</div><div style="width:44px;height:26px;border-radius:13px;background:#41BBAC;display:flex;align-items:center;justify-content:flex-end;padding:0 3px"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:14px;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Live service starting</div><div style="width:44px;height:26px;border-radius:13px;background:#41BBAC;display:flex;align-items:center;justify-content:flex-end;padding:0 3px"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:14px;padding:15px 18px"><div style="flex:1"><div style="font:600 13.5px 'Plus Jakarta Sans',sans-serif">My CSG's updates</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:3px">Only from Bodija CSG</div></div><div style="width:44px;height:26px;border-radius:13px;background:#41BBAC;display:flex;align-items:center;justify-content:flex-end;padding:0 3px"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:14px;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">New sermons &amp; shorts</div><div style="width:44px;height:26px;border-radius:13px;background:#DEDAD1;display:flex;align-items:center;padding:0 3px"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:14px;padding:15px 18px"><div style="flex:1"><div style="font:600 13.5px 'Plus Jakarta Sans',sans-serif">Quiet hours</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:3px">10:00 PM – 6:00 AM</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+</div>
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#7A756E;margin:24px 4px 9px">PLAYBACK &amp; STORAGE</div>
+<div style="border-radius:20px;background:#fff;overflow:hidden">
+<div style="display:flex;align-items:center;gap:14px;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Download over Wi-Fi only</div><div style="width:44px;height:26px;border-radius:13px;background:#41BBAC;display:flex;align-items:center;justify-content:flex-end;padding:0 3px"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:12px;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Downloads</div><div style="font:600 12px 'Plus Jakarta Sans',sans-serif;color:#7A756E">14 files · 612 MB</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:12px;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Appearance</div><div style="display:flex;gap:3px;padding:3px;border-radius:11px;background:#F3F1EC"><div style="padding:6px 11px;border-radius:9px;background:#12100F;color:#fff;font:700 11px 'Plus Jakarta Sans',sans-serif">Light</div><div style="padding:6px 11px;border-radius:9px;font:600 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E">Dark</div><div style="padding:6px 11px;border-radius:9px;font:600 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E">Auto</div></div></div>
+</div>
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#7A756E;margin:24px 4px 9px">GIVING</div>
+<div style="border-radius:20px;background:#fff;overflow:hidden">
+<div style="display:flex;align-items:center;gap:12px;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Payment methods</div><div style="font:600 12px 'Plus Jakarta Sans',sans-serif;color:#7A756E">2 saved</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:12px;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Recurring gifts</div><div style="padding:4px 9px;border-radius:8px;background:#E4F6F3;color:#1C6462;font:800 10px 'Plus Jakarta Sans',sans-serif">1 ACTIVE</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:12px;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Giving statements</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+</div>
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#7A756E;margin:24px 4px 9px">GET IN TOUCH</div>
+<div style="border-radius:20px;background:#fff;overflow:hidden">
+<div style="display:flex;align-items:center;gap:13px;padding:15px 18px"><div style="width:36px;height:36px;border-radius:11px;background:#EFEDE7;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"></path><path d="M9 21v-6h6v6"></path></svg></div><div style="flex:1"><div style="font:600 13.5px 'Plus Jakarta Sans',sans-serif">Contact the church office</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:3px">Call, WhatsApp or email · Mon–Fri</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:13px;padding:15px 18px"><div style="width:36px;height:36px;border-radius:11px;background:#E4F6F3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1C6462" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg></div><div style="flex:1"><div style="font:600 13.5px 'Plus Jakarta Sans',sans-serif">Message my CSG admin</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:3px">Tolu M. · Bodija CSG</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:13px;padding:15px 18px"><div style="width:36px;height:36px;border-radius:11px;background:#EFEDE7;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"></path><path d="m8 6-6 6 6 6"></path></svg></div><div style="flex:1"><div style="font:600 13.5px 'Plus Jakarta Sans',sans-serif">Contact the developers</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:3px">Report a bug or suggest a feature</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:13px;padding:15px 18px"><div style="width:36px;height:36px;border-radius:11px;background:#EFEDE7;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="#12100F"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg></div><div style="flex:1"><div style="font:600 13.5px 'Plus Jakarta Sans',sans-serif">Prayer request</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:3px">Sent privately to the pastoral team</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:13px;padding:15px 18px"><div style="width:36px;height:36px;border-radius:11px;background:#EFEDE7;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path><circle cx="12" cy="11" r="2.4"></circle></svg></div><div style="flex:1"><div style="font:600 13.5px 'Plus Jakarta Sans',sans-serif">Visit us</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#7A756E;margin-top:3px">Directions to The Beacon Centre</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+</div>
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#7A756E;margin:24px 4px 9px">ABOUT</div>
+<div style="border-radius:20px;background:#fff;overflow:hidden">
+<div style="display:flex;align-items:center;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Privacy policy</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Terms of use</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;padding:15px 18px"><div style="flex:1;font:600 13.5px 'Plus Jakarta Sans',sans-serif">Rate the app</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29A" stroke-width="2.3" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+</div>
+<div style="margin-top:14px;padding:17px;border-radius:16px;background:#fff;color:#D93025;text-align:center;font:800 13.5px 'Plus Jakarta Sans',sans-serif">Sign out</div>
+<div style="text-align:center;font:500 11px 'Plus Jakarta Sans',sans-serif;color:#A8A29A;margin-top:16px">The Beacon Centre · version 2.0.1</div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6l">
+<div class="dv-olabel"><a class="dv-oid" href="#6l">6l</a>Devotional reader</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:60px 22px 108px">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<div style="width:38px;height:38px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg></div>
+<div style="display:flex;gap:8px">
+<div style="width:38px;height:38px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="2" stroke-linecap="round"><path d="M4 7h4"></path><path d="M4 12h8"></path><path d="M4 17h6"></path><path d="M16 5v14"></path><path d="m13 8 3-3 3 3"></path></svg></div>
+<div style="width:38px;height:38px;border-radius:12px;background:#41BBAC;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></div>
+</div>
+</div>
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#1C6462;margin-top:28px">SUNDAY 2 AUGUST · DAY 214</div>
+<div style="font:800 33px/1.12 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em;margin-top:12px;text-wrap:pretty">Light that doesn't flicker</div>
+<div style="margin-top:20px;padding:20px;border-radius:22px;background:#CB3CA0;color:#fff">
+<div style="font:400 22px/1.42 'Instrument Serif',Georgia,serif">“You are the <span style="color:#FFF6C4;text-shadow:0 0 16px rgba(255,238,150,.9)">light</span> of the world. A city set on a hill cannot be hidden.”</div>
+<div style="font:800 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:.1em;opacity:.8;margin-top:14px">MATTHEW 5:14</div>
+</div>
+<div style="font:400 15.5px/1.85 'Plus Jakarta Sans',sans-serif;color:#3C3833;margin-top:22px;text-wrap:pretty">A lamp is a small thing. It doesn't argue, it doesn't shout, it doesn't wait until the room deserves it. It simply keeps burning, and the room changes around it.</div>
+<div style="font:400 15.5px/1.85 'Plus Jakarta Sans',sans-serif;color:#3C3833;margin-top:16px;text-wrap:pretty">Most of us are not asked to do anything dramatic this week. We're asked to stay lit — in the office, in the traffic, in the group chat, at the table where nobody says grace. Faithfulness is unglamorous and it is everything.</div>
+<div style="font:400 15.5px/1.85 'Plus Jakarta Sans',sans-serif;color:#3C3833;margin-top:16px;text-wrap:pretty">Ask one question today: where has my flame gone quiet, and what would it cost me to let it burn there again?</div>
+<div style="margin-top:22px;padding:20px;border-radius:22px;background:#fff;color:#12100F">
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#6B665F">PRAY</div>
+<div style="font:500 14px/1.75 'Plus Jakarta Sans',sans-serif;margin-top:9px">Father, make me steady. Not spectacular — steady. Let the people nearest me see it first.</div>
+</div>
+<div style="margin-top:22px;display:flex;gap:10px">
+<div style="flex:1;padding:15px;border-radius:14px;background:#fff;text-align:center;font:700 12.5px 'Plus Jakarta Sans',sans-serif">Yesterday</div>
+<div style="flex:1;padding:15px;border-radius:14px;background:#12100F;color:#fff;text-align:center;font:800 12.5px 'Plus Jakarta Sans',sans-serif">Mark as read</div>
+</div>
+</div>
+<div style="position:absolute;left:16px;right:16px;bottom:26px;padding:13px 16px;border-radius:18px;background:#12100F;display:flex;align-items:center;gap:12px;z-index:6">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#41BBAC" stroke-width="2" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg>
+<div style="flex:1;font:700 13px 'Plus Jakarta Sans',sans-serif;color:#fff">Share today's word</div>
+<div style="padding:8px 13px;border-radius:11px;background:#41BBAC;color:#04211B;font:800 11.5px 'Plus Jakarta Sans',sans-serif">Make a card</div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6m">
+<div class="dv-olabel"><a class="dv-oid" href="#6m">6m</a>Welcome — no wall, two equal doors</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#0E3B38;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#F3F1EC">
+<div style="position:absolute;inset:0"><image-slot id="ob-w" shape="rect" src="TBC/assets/images/cover.jpg" placeholder="Drop a service photo"></image-slot></div>
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,59,56,.55) 0%,rgba(14,59,56,.25) 34%,rgba(8,26,25,.9) 72%,#081A19 100%);pointer-events:none"></div>
+<div style="position:absolute;top:64px;left:22px;display:flex;align-items:center;gap:10px;pointer-events:none"><img src="TBC/assets/images/light-logo.png" alt="" style="width:30px;height:30px;object-fit:contain"><div style="font:800 13px/1.15 'Plus Jakarta Sans',sans-serif">The Beacon<br>Centre</div></div>
+<div style="position:absolute;left:22px;right:22px;bottom:44px">
+<div style="font:800 40px/1.04 'Plus Jakarta Sans',sans-serif;letter-spacing:-.038em">Sermons, live<br>services and<br>a place to belong.</div>
+<div style="font:500 13.5px/1.65 'Plus Jakarta Sans',sans-serif;color:rgba(243,241,236,.66);margin-top:16px;max-width:300px">Everything works straight away. Make an account only when you want to save things.</div>
+<div style="margin-top:28px;padding:17px;border-radius:16px;background:#41BBAC;color:#04211B;text-align:center;font:800 14px 'Plus Jakarta Sans',sans-serif">Start exploring</div>
+<div style="margin-top:10px;padding:17px;border-radius:16px;background:rgba(255,255,255,.1);text-align:center;font:700 14px 'Plus Jakarta Sans',sans-serif">Create an account</div>
+<div style="text-align:center;font:500 11.5px 'Plus Jakarta Sans',sans-serif;color:rgba(243,241,236,.45);margin-top:16px">Already have one? <span style="color:#7FD8CC;font-weight:700">Sign in</span></div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6n">
+<div class="dv-olabel"><a class="dv-oid" href="#6n">6n</a>What you get — three cards, skippable</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;top:62px;left:20px;right:20px;display:flex;align-items:center;justify-content:space-between">
+<div style="display:flex;gap:6px"><div style="width:22px;height:5px;border-radius:5px;background:#12100F"></div><div style="width:5px;height:5px;border-radius:5px;background:#D5D0C6"></div><div style="width:5px;height:5px;border-radius:5px;background:#D5D0C6"></div></div>
+<div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F">Skip</div>
+</div>
+<div style="position:absolute;top:108px;left:20px;right:20px;bottom:150px;border-radius:26px;overflow:hidden;background:#12100F">
+<image-slot id="ob-c1" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot>
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,.15) 40%,rgba(18,16,15,.94) 100%);pointer-events:none"></div>
+<div style="position:absolute;left:22px;right:22px;bottom:26px;color:#fff;pointer-events:none">
+<div style="display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:10px;background:rgba(255,255,255,.14)"><div style="width:6px;height:6px;border-radius:50%;background:#41BBAC"></div><div style="font:800 9.5px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em">NO ACCOUNT NEEDED</div></div>
+<div style="font:800 30px/1.1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.03em;margin-top:16px">Watch and listen<br>from day one</div>
+<div style="font:500 13px/1.65 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.65);margin-top:12px">Shorts, full messages, audio sermons and Sunday live — all open, nothing gated.</div>
+</div>
+</div>
+<div style="position:absolute;left:20px;right:20px;bottom:44px;display:flex;align-items:center;gap:12px">
+<div style="flex:1;padding:17px;border-radius:16px;background:#12100F;color:#fff;text-align:center;font:800 14px 'Plus Jakarta Sans',sans-serif">Next</div>
+<div style="width:56px;height:56px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6o">
+<div class="dv-olabel"><a class="dv-oid" href="#6o">6o</a>Sign up — or don't</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:62px 20px 30px">
+<div style="width:38px;height:38px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg></div>
+<div style="font:800 32px/1.08 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em;margin-top:26px">Create an account</div>
+<div style="font:500 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:10px">Only needed to save sermons, keep your giving history and get your CSG's updates.</div>
+<div style="margin-top:24px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;border-radius:16px;background:#fff;font:700 13.5px 'Plus Jakarta Sans',sans-serif"><img src="TBC/assets/images/google.png" alt="" style="width:18px;height:18px;object-fit:contain">Continue with Google</div>
+<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;border-radius:16px;background:#12100F;color:#fff;font:700 13.5px 'Plus Jakarta Sans',sans-serif"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.9-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.9-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.2.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.4zM14.2 5.6c.6-.8 1-1.9.9-3-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.8-.9 2.9 1 .1 2-.5 2.7-1.3z"></path></svg>Continue with Apple</div>
+</div>
+<div style="display:flex;align-items:center;gap:14px;margin:22px 0"><div style="flex:1;height:1px;background:#DFDACF"></div><div style="font:600 11px 'Plus Jakarta Sans',sans-serif;color:#857F77">or with email</div><div style="flex:1;height:1px;background:#DFDACF"></div></div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="padding:15px 16px;border-radius:16px;background:#fff"><div style="font:700 9.5px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#857F77">FULL NAME</div><div style="font:600 14px 'Plus Jakarta Sans',sans-serif;margin-top:6px">Adeola Okon</div></div>
+<div style="padding:15px 16px;border-radius:16px;background:#fff;border:1.5px solid #41BBAC"><div style="font:700 9.5px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#1C6462">EMAIL</div><div style="display:flex;align-items:center;gap:2px;margin-top:6px"><div style="font:600 14px 'Plus Jakarta Sans',sans-serif">adeola@email.com</div><div style="width:1.5px;height:16px;background:#41BBAC;margin-left:2px"></div></div></div>
+<div style="padding:15px 16px;border-radius:16px;background:#fff;display:flex;align-items:center"><div style="flex:1"><div style="font:700 9.5px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#857F77">PASSWORD</div><div style="font:600 14px 'Plus Jakarta Sans',sans-serif;margin-top:6px;letter-spacing:.14em">••••••••</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857F77" stroke-width="1.9" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></div>
+</div>
+<div style="margin-top:18px;padding:17px;border-radius:16px;background:#41BBAC;color:#04211B;text-align:center;font:800 14px 'Plus Jakarta Sans',sans-serif">Create account</div>
+<div style="margin-top:22px;padding:18px;border-radius:18px;background:#EFEDE7">
+<div style="display:flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C6462" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 16v-5"></path><path d="M12 8h.01"></path></svg><div style="font:800 12.5px 'Plus Jakarta Sans',sans-serif">You don't have to</div></div>
+<div style="font:500 12px/1.65 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:8px">Sermons, live services, announcements and giving all work without an account. You can sign up later from Settings and keep everything you've saved on this phone.</div>
+<div style="margin-top:14px;padding:14px;border-radius:14px;background:#fff;text-align:center;font:800 13px 'Plus Jakarta Sans',sans-serif">Continue without an account</div>
+</div>
+<div style="text-align:center;font:500 11px/1.6 'Plus Jakarta Sans',sans-serif;color:#857F77;margin-top:18px">By continuing you agree to our <span style="color:#1C6462;font-weight:700">Terms</span> and <span style="color:#1C6462;font-weight:700">Privacy Policy</span>.</div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6p">
+<div class="dv-olabel"><a class="dv-oid" href="#6p">6p</a>Set up — notifications and a CSG, both optional</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:62px 20px 118px">
+<div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:6px"><div style="width:5px;height:5px;border-radius:5px;background:#D5D0C6"></div><div style="width:22px;height:5px;border-radius:5px;background:#12100F"></div><div style="width:5px;height:5px;border-radius:5px;background:#D5D0C6"></div></div><div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F">Skip</div></div>
+<div style="font:800 30px/1.1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.032em;margin-top:26px">What should we<br>tell you about?</div>
+<div style="font:500 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:10px">Change any of this later in Settings.</div>
+<div style="margin-top:22px;border-radius:20px;background:#fff;overflow:hidden">
+<div style="display:flex;align-items:center;gap:14px;padding:16px 18px"><div style="flex:1"><div style="font:700 13.5px 'Plus Jakarta Sans',sans-serif">Verse of the day</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:3px">One a morning, 6:30 AM</div></div><div style="width:44px;height:26px;border-radius:13px;background:#41BBAC;display:flex;align-items:center;justify-content:flex-end;padding:0 3px"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:14px;padding:16px 18px"><div style="flex:1"><div style="font:700 13.5px 'Plus Jakarta Sans',sans-serif">When we go live</div><div style="font:500 11px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:3px">Sundays 9AM, Wednesdays 6PM</div></div><div style="width:44px;height:26px;border-radius:13px;background:#41BBAC;display:flex;align-items:center;justify-content:flex-end;padding:0 3px"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+<div style="height:1px;background:#F3F1EC;margin-left:18px"></div>
+<div style="display:flex;align-items:center;gap:14px;padding:16px 18px"><div style="flex:1"><div style="font:700 13.5px 'Plus Jakarta Sans',sans-serif">New sermons &amp; shorts</div></div><div style="width:44px;height:26px;border-radius:13px;background:#DEDAD1;display:flex;align-items:center;padding:0 3px"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div></div>
+</div>
+<div style="font:800 22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.025em;margin-top:32px">Join a CSG?</div>
+<div style="font:500 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:8px">CSGs meet in person each week. Pick one and its updates come to you — or leave this for later.</div>
+<div style="margin-top:16px;display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:#fff;border:1.5px solid #41BBAC"><div style="flex:1"><div style="font:800 14px 'Plus Jakarta Sans',sans-serif">Bodija</div><div style="font:500 11.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:4px">Thursdays 6PM · 18 members · 2.1km</div></div><div style="width:22px;height:22px;border-radius:50%;background:#41BBAC;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="3.4" stroke-linecap="round"><path d="m5 12 5 5L20 7"></path></svg></div></div>
+<div style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:#fff"><div style="flex:1"><div style="font:700 14px 'Plus Jakarta Sans',sans-serif">Akobo</div><div style="font:500 11.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:4px">Fridays 5PM · 12 members · 5.4km</div></div><div style="width:22px;height:22px;border-radius:50%;border:1.5px solid #D5D0C6"></div></div>
+<div style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:#fff"><div style="flex:1"><div style="font:700 14px 'Plus Jakarta Sans',sans-serif">Online</div><div style="font:500 11.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:4px">Saturdays 8AM · 26 members</div></div><div style="width:22px;height:22px;border-radius:50%;border:1.5px solid #D5D0C6"></div></div>
+</div>
+</div>
+<div style="position:absolute;left:20px;right:20px;bottom:34px">
+<div style="padding:17px;border-radius:16px;background:#12100F;color:#fff;text-align:center;font:800 14px 'Plus Jakarta Sans',sans-serif">Take me in</div>
+<div style="text-align:center;font:700 12.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:14px">Not now</div>
+</div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="6q">
+<div class="dv-olabel"><a class="dv-oid" href="#6q">6q</a>Guest mode — full app, one quiet nudge</div>
+<div style="display:flex;gap:24px">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#F3F1EC;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;overflow:auto;padding:60px 14px 180px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px">
+<div style="display:flex;align-items:center;gap:9px"><img src="TBC/assets/images/dark-logo.png" alt="" style="width:26px;height:26px;object-fit:contain"><div style="font:800 13px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.01em">Beacon</div></div>
+<div style="display:flex;align-items:center;gap:8px">
+<div style="width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path></svg></div>
+<div style="height:38px;padding:0 14px;border-radius:19px;background:#fff;display:flex;align-items:center;font:700 12px 'Plus Jakarta Sans',sans-serif">Sign in</div>
+</div>
+</div>
+<div style="padding:24px 4px 0"><div style="font:800 34px/1.04 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em">Good morning.<br><span style="color:#1C6462">Stay lit today.</span></div></div>
+<div style="margin-top:18px;padding:14px;border-radius:18px;background:#EFEDE7;display:flex;align-items:center;gap:12px">
+<div style="width:34px;height:34px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></div>
+<div style="flex:1;min-width:0"><div style="font:700 12.5px 'Plus Jakarta Sans',sans-serif">Browsing as a guest</div><div style="font:500 11px/1.5 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:3px">Saves stay on this phone until you sign in.</div></div>
+<div style="padding:9px 13px;border-radius:11px;background:#12100F;color:#fff;font:700 11.5px 'Plus Jakarta Sans',sans-serif;flex:none">Sign in</div>
+</div>
+<div style="position:relative;margin-top:12px;border-radius:26px;padding:24px 20px 20px;background:#CB3CA0;overflow:hidden;color:#fff">
+<div style="position:absolute;top:-50px;right:-40px;width:170px;height:170px;border-radius:50%;background:#E572C0"></div>
+<div style="position:relative;font:800 9.5px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;opacity:.85">VERSE OF THE DAY</div>
+<div style="position:relative;font:400 31px/1.22 'Instrument Serif',Georgia,serif;margin-top:14px">You are the <span style="color:#FFF6C4;text-shadow:0 0 18px rgba(255,238,150,.95),0 0 42px rgba(255,225,120,.6)">light</span> of the world.</div>
+<div style="position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:22px">
+<div style="padding:8px 13px;border-radius:14px;background:rgba(0,0,0,.22);font:700 11.5px 'Plus Jakarta Sans',sans-serif">Matthew 5:14</div>
+<div style="display:flex;align-items:center;gap:7px;padding:11px 16px;border-radius:14px;background:#12100F;font:700 12px 'Plus Jakarta Sans',sans-serif"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg>Share</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin:24px 4px 12px"><div style="font:800 19px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em">Shorts</div><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#1C6462">See all</div></div>
+<div style="display:flex;gap:9px;overflow:auto;padding-bottom:2px">
+<div style="flex:none;position:relative;width:120px;height:198px;border-radius:12px;overflow:hidden"><image-slot id="g-s1" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,0) 46%,rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none"><div style="font:700 11.5px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff">Faith is not a feeling</div><div style="font:600 9px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.62);margin-top:3px">0:48 · 2.1K</div></div></div>
+<div style="flex:none;position:relative;width:120px;height:198px;border-radius:12px;overflow:hidden"><image-slot id="g-s2" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,0) 46%,rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none"><div style="font:700 11.5px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff">One minute on grace</div><div style="font:600 9px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.62);margin-top:3px">1:02 · 3.4K</div></div></div>
+<div style="flex:none;position:relative;width:120px;height:198px;border-radius:12px;overflow:hidden"><image-slot id="g-s3" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,0) 46%,rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none"><div style="font:700 11.5px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff">Why Shining Lights</div><div style="font:600 9px 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.62);margin-top:3px">0:39 · 1.8K</div></div></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px">
+<div style="border-radius:24px;padding:18px;background:#41BBAC;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;color:#04211B"><div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.12em">AUDIO SERMONS</div><div><div style="font:800 46px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.045em">128</div><div style="font:600 12px 'Plus Jakarta Sans',sans-serif;margin-top:3px;opacity:.7">play offline</div></div></div>
+<div style="position:relative;border-radius:24px;overflow:hidden;min-height:150px"><image-slot id="g-live" shape="rect" src="TBC/assets/images/cover.jpg" placeholder=""></image-slot><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,15,.1),rgba(18,16,15,.88));pointer-events:none"></div><div style="position:absolute;left:16px;right:16px;bottom:14px;pointer-events:none"><div style="display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;background:#FF3B30"><div style="width:6px;height:6px;border-radius:50%;background:#fff;animation:bcPulse 1.7s ease-in-out infinite"></div><div style="font:800 9px 'Plus Jakarta Sans',sans-serif;letter-spacing:.08em;color:#fff">LIVE SUN 9AM</div></div><div style="font:700 15px/1.2 'Plus Jakarta Sans',sans-serif;color:#fff;margin-top:9px">Impart<br>Service</div></div></div>
+</div>
+<div style="margin-top:10px;border-radius:24px;padding:20px;background:#0E3B38;color:#fff">
+<div style="font:800 10px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#7FD8CC">GIVING</div>
+<div style="font:800 19px/1.2 'Plus Jakarta Sans',sans-serif;margin-top:8px">You can give as a guest</div>
+<div style="font:500 12px/1.55 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.6);margin-top:6px">No account needed. Add your email at checkout if you want a receipt.</div>
+<div style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:11px 16px;border-radius:14px;background:#41BBAC;color:#04211B;font:700 12.5px 'Plus Jakarta Sans',sans-serif">Give now</div>
+</div>
+</div>
+<div style="position:absolute;left:14px;right:14px;bottom:22px;height:62px;border-radius:20px;background:#12100F;display:flex;align-items:center;justify-content:space-around;padding:0 8px;z-index:5">
+<div style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:14px;background:#41BBAC"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><div style="font:700 12px 'Plus Jakarta Sans',sans-serif;color:#04211B">Home</div></div>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a3 3 0 0 1 2.3-2.9C6.1 5.2 9 5 12 5s5.9.2 7.7.6A3 3 0 0 1 22 8.5c.2 1.2.3 2.4.3 3.5s-.1 2.3-.3 3.5a3 3 0 0 1-2.3 2.9c-1.8.4-4.7.6-7.7.6s-5.9-.2-7.7-.6A3 3 0 0 1 2 15.5C1.8 14.3 1.7 13.1 1.7 12S1.8 9.7 2 8.5z"></path><path d="m10 15 5-3-5-3z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-3-8-6-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 11c0 4-4 7-8 10z"></path></svg>
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#6C6862" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2-8z"></path></svg>
+</div>
+</div>
+</x-import>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;overflow:hidden;background:#12100F;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+<div style="position:absolute;inset:0;opacity:.3;padding:60px 14px;pointer-events:none"><div style="font:800 34px/1.04 'Plus Jakarta Sans',sans-serif;color:#F3F1EC;letter-spacing:-.035em">Good morning.</div><div style="margin-top:20px;border-radius:26px;height:200px;background:#3A3532"></div></div>
+<div style="position:absolute;left:0;right:0;bottom:0;border-radius:28px 28px 0 0;background:#F3F1EC;padding:18px 20px 34px">
+<div style="width:40px;height:4px;border-radius:4px;background:#D8D3C9;margin:0 auto 22px"></div>
+<div style="width:56px;height:56px;border-radius:18px;background:#EFEDE7;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#12100F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></div>
+<div style="font:800 24px/1.16 'Plus Jakarta Sans',sans-serif;letter-spacing:-.028em;margin-top:20px">Saved on this phone</div>
+<div style="font:500 13px/1.7 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:10px">“Carry The Flame” is in your saves. Sign in and it follows you to any device — along with your notes, downloads and giving history.</div>
+<div style="display:flex;flex-direction:column;gap:9px;margin-top:22px">
+<div style="padding:16px;border-radius:16px;background:#41BBAC;color:#04211B;text-align:center;font:800 13.5px 'Plus Jakarta Sans',sans-serif">Sign in or create an account</div>
+<div style="padding:16px;border-radius:16px;background:#fff;text-align:center;font:700 13.5px 'Plus Jakarta Sans',sans-serif">Keep it on this phone</div>
+</div>
+<div style="text-align:center;font:500 11px 'Plus Jakarta Sans',sans-serif;color:#857F77;margin-top:16px">We'll only ask this once.</div>
+</div>
+</div>
+</x-import>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "dark mode across the set" · "onboarding + sign-in" · "the verse share card and push notification"</p>
+</section>
+</x-dc>
+</body>
+</html>

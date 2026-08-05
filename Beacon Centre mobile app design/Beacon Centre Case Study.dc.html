@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap">
+<script src="./image-slot.js"></script>
+<style>
+body{margin:0;background:#F3F1EC}
+a{color:#1C6462;text-decoration:none}a:hover{color:#41BBAC}
+::selection{background:#41BBAC;color:#04211B}
+.cs *{scrollbar-width:none}
+.cs *::-webkit-scrollbar{display:none}
+@keyframes csRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+
+<div class="cs" style="max-width:1180px;margin:0 auto;padding:0 40px 120px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#12100F">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:32px 0">
+<div style="display:flex;align-items:center;gap:11px"><img src="TBC/assets/images/dark-logo.png" alt="" style="width:30px;height:30px;object-fit:contain"><div style="font:800 14px 'Plus Jakarta Sans',sans-serif;letter-spacing:-.01em">The Beacon Centre</div></div>
+<div style="display:flex;align-items:center;gap:26px;font:600 13px 'Plus Jakarta Sans',sans-serif;color:#6B665F">
+<a href="#problem">Problem</a><a href="#system">System</a><a href="#screens">Screens</a><a href="#craft">Craft</a><a href="#ship">Shipped</a>
+</div>
+</div>
+
+<div style="padding:56px 0 0">
+<div style="font:800 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:.18em;color:#1C6462">CASE STUDY · MOBILE PRODUCT DESIGN · 2026</div>
+<h1 style="font:800 86px/0.98 'Plus Jakarta Sans',sans-serif;letter-spacing:-.045em;margin:26px 0 0;text-wrap:balance">A church app<br>people actually<br>open on Tuesday.</h1>
+<div style="display:grid;grid-template-columns:1.35fr 1fr;gap:60px;margin-top:38px;align-items:start">
+<div style="font:400 18px/1.7 'Plus Jakarta Sans',sans-serif;color:#3C3833;text-wrap:pretty">Most church apps are a sermon archive with a donate button — used once on Sunday, then forgotten. I redesigned and rebuilt The Beacon Centre's app around the weekly rhythm of a member instead: a verse in the morning, a short on the bus, a CSG meeting on Thursday, giving whenever it's on your heart.</div>
+<div style="display:flex;flex-direction:column;gap:18px;padding-top:6px">
+<div style="display:flex;gap:16px"><div style="font:800 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#857F77;width:78px;flex:none;padding-top:2px">ROLE</div><div style="font:600 13.5px/1.6 'Plus Jakarta Sans',sans-serif">Product design, design system, React Native build</div></div>
+<div style="display:flex;gap:16px"><div style="font:800 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#857F77;width:78px;flex:none;padding-top:2px">STACK</div><div style="font:600 13.5px/1.6 'Plus Jakarta Sans',sans-serif">Expo SDK 51 · expo-router · Firebase · YouTube Data API</div></div>
+<div style="display:flex;gap:16px"><div style="font:800 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:.14em;color:#857F77;width:78px;flex:none;padding-top:2px">SCOPE</div><div style="font:600 13.5px/1.6 'Plus Jakarta Sans',sans-serif">17 screens, shipped as running code</div></div>
+</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#DFDACF;margin-top:64px;border-radius:20px;overflow:hidden">
+<div style="background:#F3F1EC;padding:26px 24px"><div style="font:800 44px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.04em;color:#1C6462">17</div><div style="font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:9px">screens designed<br>and built</div></div>
+<div style="background:#F3F1EC;padding:26px 24px"><div style="font:800 44px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.04em;color:#1C6462">0</div><div style="font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:9px">features behind<br>a sign-in wall</div></div>
+<div style="background:#F3F1EC;padding:26px 24px"><div style="font:800 44px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.04em;color:#1C6462">2</div><div style="font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:9px">production bugs<br>found and fixed</div></div>
+<div style="background:#F3F1EC;padding:26px 24px"><div style="font:800 44px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.04em;color:#1C6462">360→</div><div style="font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:9px">one layout, every<br>Android and iPhone</div></div>
+</div>
+
+<div style="margin-top:26px;border-radius:26px;overflow:hidden;height:440px;background:#12100F;position:relative">
+<image-slot id="cs-hero" shape="rect" src="TBC/assets/images/cover.jpg" placeholder="Hero shot — three phones"></image-slot>
+</div>
+
+<div id="problem" style="height:1px;background:#DFDACF;margin:100px 0 0;scroll-margin-top:20px"></div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:60px;padding-top:44px">
+<div style="font:800 12px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#857F77;padding-top:8px">01 — THE PROBLEM</div>
+<div>
+<h2 style="font:800 44px/1.1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em;margin:0;text-wrap:balance">The old app worked. Nobody had a reason to come back.</h2>
+<div style="font:400 17px/1.75 'Plus Jakarta Sans',sans-serif;color:#3C3833;margin-top:22px;max-width:660px;text-wrap:pretty">I read the existing codebase before drawing anything. It had the content — devotionals, audio sermons, articles, announcements — and no shape. Tabs were nouns from the database. The home screen was a devotional and nothing else. And two things were quietly broken in ways the team hadn't noticed.</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:34px">
+<div style="border-radius:20px;background:#fff;padding:24px">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:8px;background:#FFE9E5;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D93025" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5"></path><path d="M12 17h.01"></path><circle cx="12" cy="12" r="9"></circle></svg></div><div style="font:800 13px 'Plus Jakarta Sans',sans-serif">The Live tab was never live</div></div>
+<div style="font:400 13.5px/1.7 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:12px">It built a <code style="font:600 12px ui-monospace,monospace;background:#F3F1EC;padding:2px 5px;border-radius:4px">eventType=live</code> request, never sent it, then displayed the newest upload from the channel and labelled it LIVE. On a Tuesday afternoon the app told you a service was streaming.</div>
+</div>
+<div style="border-radius:20px;background:#fff;padding:24px">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:26px;height:26px;border-radius:8px;background:#FFE9E5;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D93025" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5"></path><path d="M12 17h.01"></path><circle cx="12" cy="12" r="9"></circle></svg></div><div style="font:800 13px 'Plus Jakarta Sans',sans-serif">The first tap on a sermon did nothing</div></div>
+<div style="font:400 13.5px/1.7 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:12px">The audio context read stale React state inside its own play handler instead of the track passed in, and its cleanup unloaded the sound on every change — racing whatever had just been created.</div>
+</div>
+</div>
+<div style="font:400 15px/1.7 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:20px;max-width:660px;font-style:italic">Reading the code first is the part of this project I'd defend hardest. Neither bug is visible in a screenshot, and both are the kind of thing that quietly teaches people the app doesn't work.</div>
+</div>
+</div>
+
+<div id="system" style="height:1px;background:#DFDACF;margin:90px 0 0;scroll-margin-top:20px"></div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:60px;padding-top:44px">
+<div style="font:800 12px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#857F77;padding-top:8px">02 — THE SYSTEM</div>
+<div>
+<h2 style="font:800 44px/1.1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em;margin:0;text-wrap:balance">One accent, used once per screen.</h2>
+<div style="font:400 17px/1.75 'Plus Jakarta Sans',sans-serif;color:#3C3833;margin-top:22px;max-width:660px;text-wrap:pretty">The brand is teal and turquoise. The first pass used the whole category palette from the codebase — sky, amber, coral — and every screen turned into a fruit salad where nothing led. So I cut it to a rule strict enough to hold across seventeen screens.</div>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px">
+<div>
+<div style="height:120px;border-radius:18px;background:#41BBAC"></div>
+<div style="font:800 12.5px 'Plus Jakarta Sans',sans-serif;margin-top:12px">Teal #41BBAC</div>
+<div style="font:400 12.5px/1.6 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">The only accent. Marks the one thing to touch, and progress fills. Type on light drops to #1C6462 for contrast.</div>
+</div>
+<div>
+<div style="height:120px;border-radius:18px;background:#CB3CA0;position:relative;overflow:hidden"><div style="position:absolute;top:-30px;right:-24px;width:100px;height:100px;border-radius:50%;background:#E572C0"></div></div>
+<div style="font:800 12.5px 'Plus Jakarta Sans',sans-serif;margin-top:12px">Magenta #CB3CA0</div>
+<div style="font:400 12.5px/1.6 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">Appears exactly twice in the entire app: the verse card on Home, the verse block in the reader. Nowhere else.</div>
+</div>
+<div>
+<div style="height:120px;border-radius:18px;background:#12100F"></div>
+<div style="font:800 12.5px 'Plus Jakarta Sans',sans-serif;margin-top:12px">Ink #12100F</div>
+<div style="font:400 12.5px/1.6 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">Chrome, nav pill, secondary actions. Does the structural work colour usually gets asked to do.</div>
+</div>
+<div>
+<div style="height:120px;border-radius:18px;background:#fff;border:1px solid #DFDACF"></div>
+<div style="font:800 12.5px 'Plus Jakarta Sans',sans-serif;margin-top:12px">Paper #F3F1EC / #FFF</div>
+<div style="font:400 12.5px/1.6 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">Warm ground, white cards. Carries 90% of every screen so the teal has somewhere to land.</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:44px">
+<div style="border-radius:20px;background:#0E3B38;padding:28px;color:#fff">
+<div style="font:800 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:.15em;color:#7FD8CC">THE ONE GLOW</div>
+<div style="font:400 30px/1.3 'Instrument Serif',Georgia,serif;margin-top:16px">You are the <span style="color:#FFF6C4;text-shadow:0 0 18px rgba(255,238,150,.95),0 0 42px rgba(255,225,120,.6)">light</span> of the world.</div>
+<div style="font:400 13.5px/1.7 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.6);margin-top:18px">Glow is a single effect used on a single word — the theme word of the church. Not a glassmorphic surface, not a hover state, not a card border. Once, on purpose, and it means something.</div>
+</div>
+<div style="border-radius:20px;background:#fff;padding:28px">
+<div style="font:800 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:.15em;color:#857F77">TYPE</div>
+<div style="font:800 34px/1.06 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em;margin-top:16px">Plus Jakarta Sans<br>at 800, tight.</div>
+<div style="font:400 22px/1.4 'Instrument Serif',Georgia,serif;margin-top:14px;color:#3C3833">Instrument Serif for scripture only.</div>
+<div style="font:400 13.5px/1.7 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:16px">Two families, one job each. The serif never appears outside a verse, so scripture reads as a different kind of voice without a single decorative flourish.</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="screens" style="height:1px;background:#DFDACF;margin:90px 0 0;scroll-margin-top:20px"></div>
+
+<div style="padding-top:44px">
+<div style="display:grid;grid-template-columns:200px 1fr;gap:60px">
+<div style="font:800 12px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#857F77;padding-top:8px">03 — THE SCREENS</div>
+<div><h2 style="font:800 44px/1.1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em;margin:0;max-width:640px;text-wrap:balance">Built around a week, not a database.</h2>
+<div style="font:400 17px/1.75 'Plus Jakarta Sans',sans-serif;color:#3C3833;margin-top:22px;max-width:660px;text-wrap:pretty">Five tabs, named for what a member does: Home, Watch, Listen, Give, News. Sermons are a mix of shorts and full messages because that's how the church already publishes — so the app has a vertical shorts player and a chaptered message player, not one generic video list.</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px">
+<div><div style="border-radius:24px;overflow:hidden;height:520px;background:#E8E4DC"><image-slot id="cs-1" shape="rect" placeholder="Home screen"></image-slot></div><div style="font:800 13px 'Plus Jakarta Sans',sans-serif;margin-top:14px">Home</div><div style="font:400 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">Verse, shorts rail, live tile, project pool. Everything you'd open the app for, above one scroll.</div></div>
+<div><div style="border-radius:24px;overflow:hidden;height:520px;background:#E8E4DC"><image-slot id="cs-2" shape="rect" placeholder="Shorts player"></image-slot></div><div style="font:800 13px 'Plus Jakarta Sans',sans-serif;margin-top:14px">Shorts</div><div style="font:400 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">Full-bleed vertical, action rail on the right. The format young members already understand.</div></div>
+<div><div style="border-radius:24px;overflow:hidden;height:520px;background:#E8E4DC"><image-slot id="cs-3" shape="rect" placeholder="Give screen"></image-slot></div><div style="font:800 13px 'Plus Jakarta Sans',sans-serif;margin-top:14px">Give</div><div style="font:400 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">Tithe, seed, or a project pool with real progress. Card, transfer, USSD, wallet — and guests can give.</div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.1fr 1fr;gap:20px;margin-top:20px">
+<div style="border-radius:24px;background:#12100F;padding:34px;color:#fff">
+<div style="font:800 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:.15em;color:#41BBAC">THE DECISION I'D DEFEND</div>
+<div style="font:800 30px/1.15 'Plus Jakarta Sans',sans-serif;letter-spacing:-.03em;margin-top:16px">Signing up is optional. All of it.</div>
+<div style="font:400 14.5px/1.75 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.65);margin-top:16px">Sermons, live, announcements, the devotional — and <em>giving</em> — all work with no account. An account buys one thing: sync. The onboarding says that in plain words instead of dark-patterning people into a form.</div>
+<div style="font:400 14.5px/1.75 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.65);margin-top:14px">Guest actions write to local storage under <code style="font:600 12.5px ui-monospace,monospace;color:#7FD8CC">guest:*</code>, and signing in later hands them over. A first-time visitor should never meet a wall before they've met the church.</div>
+</div>
+<div style="border-radius:24px;overflow:hidden;background:#E8E4DC"><image-slot id="cs-4" shape="rect" placeholder="Onboarding"></image-slot></div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px">
+<div><div style="border-radius:24px;overflow:hidden;height:520px;background:#E8E4DC"><image-slot id="cs-5" shape="rect" placeholder="Now playing"></image-slot></div><div style="font:800 13px 'Plus Jakarta Sans',sans-serif;margin-top:14px">Now playing</div><div style="font:400 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">Resumes where you stopped, plays in the background, downloads for the drive to church.</div></div>
+<div><div style="border-radius:24px;overflow:hidden;height:520px;background:#E8E4DC"><image-slot id="cs-6" shape="rect" placeholder="CSG screen"></image-slot></div><div style="font:800 13px 'Plus Jakarta Sans',sans-serif;margin-top:14px">CSGs</div><div style="font:400 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">CSGs meet in person, so the app doesn't try to host them — it carries their admin's updates to the right eighteen people.</div></div>
+<div><div style="border-radius:24px;overflow:hidden;height:520px;background:#E8E4DC"><image-slot id="cs-7" shape="rect" placeholder="Devotional reader"></image-slot></div><div style="font:800 13px 'Plus Jakarta Sans',sans-serif;margin-top:14px">Reader</div><div style="font:400 13px/1.65 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:5px">Long-form set for actual reading, with a share card so a verse can leave the app.</div></div>
+</div>
+</div>
+
+<div id="craft" style="height:1px;background:#DFDACF;margin:90px 0 0;scroll-margin-top:20px"></div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:60px;padding-top:44px">
+<div style="font:800 12px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#857F77;padding-top:8px">04 — THE CRAFT</div>
+<div>
+<h2 style="font:800 44px/1.1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em;margin:0;max-width:640px;text-wrap:balance">Every phone, no device branching.</h2>
+<div style="font:400 17px/1.75 'Plus Jakarta Sans',sans-serif;color:#3C3833;margin-top:22px;max-width:660px;text-wrap:pretty">This congregation is on everything from a 360dp Galaxy A-series to a Pixel 9 Pro XL to an iPhone 15. There is not one <code style="font:600 14px ui-monospace,monospace;background:#EFEDE7;padding:2px 6px;border-radius:5px">Platform.OS ===</code> layout branch in the app. Three mechanisms cover the range.</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:32px">
+<div style="border-radius:20px;background:#fff;padding:24px">
+<div style="font:800 34px/1 'Plus Jakarta Sans',sans-serif;color:#41BBAC;letter-spacing:-.03em">×0.86<span style="font-size:20px;color:#DFDACF">–</span>1.3</div>
+<div style="font:800 13px 'Plus Jakarta Sans',sans-serif;margin-top:14px">A clamped scale layer</div>
+<div style="font:400 13px/1.7 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:8px">Every size passes through one function against a 390×844 baseline, clamped at both ends. Small phones never cramp; big ones never go cartoonish. Type scales at half the rate of space.</div>
+</div>
+<div style="border-radius:20px;background:#fff;padding:24px">
+<div style="font:800 34px/1 'Plus Jakarta Sans',sans-serif;color:#41BBAC;letter-spacing:-.03em">insets</div>
+<div style="font:800 13px 'Plus Jakarta Sans',sans-serif;margin-top:14px">Real safe areas, one path</div>
+<div style="font:400 13px/1.7 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:8px">Notch, Dynamic Island, Samsung punch-hole, Android 3-button nav, gesture bar — all resolved from the same inset call. Nothing hard-coded, nothing guessed.</div>
+</div>
+<div style="border-radius:20px;background:#fff;padding:24px">
+<div style="font:800 34px/1 'Plus Jakarta Sans',sans-serif;color:#41BBAC;letter-spacing:-.03em">520dp</div>
+<div style="font:800 13px 'Plus Jakarta Sans',sans-serif;margin-top:14px">Then it stops stretching</div>
+<div style="font:400 13px/1.7 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:8px">Above that the column centres, so a tablet, an unfolded Z Fold or split-screen gets a real layout instead of 2000px text lines. Unfolding re-renders live.</div>
+</div>
+</div>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:26px">
+<div style="padding:9px 15px;border-radius:12px;background:#EFEDE7;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">44pt / 48dp minimum touch targets</div>
+<div style="padding:9px 15px;border-radius:12px;background:#EFEDE7;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">OS font-scale respected, capped at 125%</div>
+<div style="padding:9px 15px;border-radius:12px;background:#EFEDE7;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">Android 15 edge-to-edge</div>
+<div style="padding:9px 15px;border-radius:12px;background:#EFEDE7;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">Keyboard pan, not resize</div>
+<div style="padding:9px 15px;border-radius:12px;background:#EFEDE7;font:600 12.5px 'Plus Jakarta Sans',sans-serif;color:#4A4640">Offline-first fallbacks on every fetch</div>
+</div>
+</div>
+</div>
+
+<div id="ship" style="height:1px;background:#DFDACF;margin:90px 0 0;scroll-margin-top:20px"></div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:60px;padding-top:44px">
+<div style="font:800 12px 'Plus Jakarta Sans',sans-serif;letter-spacing:.16em;color:#857F77;padding-top:8px">05 — SHIPPED</div>
+<div>
+<h2 style="font:800 44px/1.1 'Plus Jakarta Sans',sans-serif;letter-spacing:-.035em;margin:0;max-width:640px;text-wrap:balance">Handed over as running code, plus an honest list of what isn't built.</h2>
+<div style="font:400 17px/1.75 'Plus Jakarta Sans',sans-serif;color:#3C3833;margin-top:22px;max-width:660px;text-wrap:pretty">The app reads the church's existing Firestore and Storage, so content published from the admin panel appears with no migration. Where the design needs a backend that doesn't exist — payments, CSGs, push — I wrote the endpoint spec rather than faking it and letting someone discover the gap in sprint three.</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:32px">
+<div style="border-radius:20px;background:#fff;padding:26px">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:24px;height:24px;border-radius:50%;background:#41BBAC;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#04211B" stroke-width="3.2" stroke-linecap="round"><path d="m5 12 5 5L20 7"></path></svg></div><div style="font:800 14px 'Plus Jakarta Sans',sans-serif">Wired and working</div></div>
+<div style="font:400 13.5px/1.9 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:14px">Devotionals · verse of the day · announcements · audio sermons · GOAKS · full messages · short clips · articles · auth · real live detection · uploads with duration-based shorts/full split</div>
+</div>
+<div style="border-radius:20px;background:#EFEDE7;padding:26px">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:24px;height:24px;border-radius:50%;background:#D5D0C6;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4A4640" stroke-width="2.6" stroke-linecap="round"><path d="M12 7v5l3 2"></path><circle cx="12" cy="12" r="9"></circle></svg></div><div style="font:800 14px 'Plus Jakarta Sans',sans-serif">Specced, not built</div></div>
+<div style="font:400 13.5px/1.9 'Plus Jakarta Sans',sans-serif;color:#4A4640;margin-top:14px">Paystack initialize/verify/webhook · saved cards · virtual accounts · USSD · recurring gifts · project pools · CSGs and CSG-scoped push · device tokens · saves/notes/progress sync · live chat · account deletion</div>
+</div>
+</div>
+<div style="font:400 15px/1.7 'Plus Jakarta Sans',sans-serif;color:#6B665F;margin-top:20px;max-width:660px;font-style:italic">Eleven sections, every endpoint named with its request shape and the reason it matters. The engineer picking this up knows exactly what Monday looks like.</div>
+</div>
+</div>
+
+<div style="margin-top:80px;border-radius:26px;background:#0E3B38;padding:56px;color:#fff;position:relative;overflow:hidden">
+<div style="position:absolute;top:-90px;right:-60px;width:280px;height:280px;border-radius:50%;background:#12514D"></div>
+<div style="position:relative;max-width:640px">
+<div style="font:800 11px 'Plus Jakarta Sans',sans-serif;letter-spacing:.18em;color:#7FD8CC">WHAT I TOOK FROM IT</div>
+<div style="font:800 38px/1.14 'Plus Jakarta Sans',sans-serif;letter-spacing:-.032em;margin-top:18px;text-wrap:balance">The restraint was the work. Three rounds of this design were louder, and all three were worse.</div>
+<div style="font:400 15.5px/1.8 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.66);margin-top:20px">I started with the full category palette because the codebase had it. It looked busy and led nowhere. Cutting to one accent, one glow and two magenta surfaces is what made the app feel calm enough to open every morning — which was the entire brief.</div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding-top:44px;border-top:1px solid #DFDACF;margin-top:80px">
+<div style="font:600 13px 'Plus Jakarta Sans',sans-serif;color:#6B665F">The Beacon Centre · Ibadan, Nigeria</div>
+<div style="font:600 13px 'Plus Jakarta Sans',sans-serif;color:#6B665F">Design and build, 2026</div>
+</div>
+
+</div>
+</x-dc>
+</body>
+</html>
