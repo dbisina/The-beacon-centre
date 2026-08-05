@@ -1,10 +1,59 @@
 // backend/src/controllers/videoSermon.controller.ts
 import { Request, Response } from 'express';
 import { VideoSermonService } from '../services/videoSermon.service';
+import { YoutubeSyncService } from '../services/youtubeSync.service';
 import { sendSuccess, sendError } from '../utils/responses';
 import { CreateVideoSermonRequest, UpdateVideoSermonRequest, VideoSermonFilters } from '../types';
 
 export class VideoSermonController {
+  static async getDistinctSeries(_req: Request, res: Response): Promise<void> {
+    try {
+      const result = await VideoSermonService.getDistinctSeries();
+      if (result.success) {
+        sendSuccess(res, 'Series list retrieved successfully', result.data);
+      } else {
+        sendError(res, result.error, 500, result.details);
+      }
+    } catch (error) {
+      sendError(res, 'Failed to retrieve series list', 500, error);
+    }
+  }
+
+  static async getComments(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        sendError(res, 'Invalid video sermon ID', 400);
+        return;
+      }
+
+      const result = await VideoSermonService.getComments(id);
+      if (result.success) {
+        sendSuccess(res, 'Comments retrieved successfully', result.data);
+      } else {
+        const statusCode = result.error === 'Video sermon not found' ? 404 : result.error.includes('not configured') ? 503 : 500;
+        sendError(res, result.error, statusCode, result.details);
+      }
+    } catch (error) {
+      sendError(res, 'Failed to retrieve comments', 500, error);
+    }
+  }
+
+  static async syncFromYoutube(_req: Request, res: Response): Promise<void> {
+    try {
+      const result = await YoutubeSyncService.syncFromChannel();
+
+      if (result.success) {
+        sendSuccess(res, 'YouTube sync completed', result.data);
+      } else {
+        const statusCode = result.error.includes('not configured') ? 503 : 500;
+        sendError(res, result.error, statusCode, result.details);
+      }
+    } catch (error) {
+      sendError(res, 'Failed to sync from YouTube', 500, error);
+    }
+  }
+
   static async getAllVideoSermons(req: Request, res: Response): Promise<void> {
     try {
       const filters: VideoSermonFilters = {
@@ -17,6 +66,7 @@ export class VideoSermonController {
         isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : true,
         startDate: req.query.startDate as string,
         endDate: req.query.endDate as string,
+        kind: req.query.kind as 'SERMON' | 'EXCERPT' | 'INSPIRATIONAL' | undefined,
         sortBy: (req.query.sortBy as string) || 'createdAt',
         sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'desc',
       };
@@ -178,6 +228,31 @@ export class VideoSermonController {
       }
     } catch (error) {
       sendError(res, 'Failed to toggle featured status', 500, error);
+    }
+  }
+
+  static async bulkUpdateKind(req: Request, res: Response): Promise<void> {
+    try {
+      const { ids, kind } = req.body as { ids?: number[]; kind?: string };
+
+      if (!Array.isArray(ids) || ids.length === 0 || ids.some((id) => typeof id !== 'number')) {
+        sendError(res, 'ids must be a non-empty array of numbers', 400);
+        return;
+      }
+      if (kind !== 'SERMON' && kind !== 'EXCERPT' && kind !== 'INSPIRATIONAL') {
+        sendError(res, 'kind must be one of SERMON, EXCERPT, INSPIRATIONAL', 400);
+        return;
+      }
+
+      const result = await VideoSermonService.bulkUpdateKind(ids, kind);
+
+      if (result.success) {
+        sendSuccess(res, 'Videos updated successfully', result.data);
+      } else {
+        sendError(res, result.error, 500, result.details);
+      }
+    } catch (error) {
+      sendError(res, 'Failed to bulk update videos', 500, error);
     }
   }
 

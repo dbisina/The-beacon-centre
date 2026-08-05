@@ -1,13 +1,14 @@
 // backend/src/types/index.ts
 import { Request } from 'express';
-import { 
-  Devotional, 
-  VideoSermon, 
-  AudioSermon, 
-  Announcement, 
-  Category, 
-  Admin, 
-  DeviceSession, 
+import {
+  Devotional,
+  VideoSermon,
+  AudioSermon,
+  Announcement,
+  Category,
+  Admin,
+  AppUser,
+  DeviceSession,
   ContentInteraction,
   Priority,
   AdminRole,
@@ -18,11 +19,12 @@ import {
 // Export Prisma types
 export {
   Devotional,
-  VideoSermon, 
+  VideoSermon,
   AudioSermon,
   Announcement,
   Category,
   Admin,
+  AppUser,
   DeviceSession,
   ContentInteraction,
   Priority,
@@ -126,6 +128,8 @@ export interface CreateVideoSermonRequest {
   youtubeId: string;
   description?: string;
   duration?: string;
+  kind?: 'SERMON' | 'EXCERPT' | 'INSPIRATIONAL';
+  series?: string;
   categoryId?: number;
   sermonDate?: string;
   thumbnailUrl?: string;
@@ -146,6 +150,7 @@ export interface VideoSermonFilters extends PaginationParams {
   search?: string;
   startDate?: string;
   endDate?: string;
+  kind?: 'SERMON' | 'EXCERPT' | 'INSPIRATIONAL';
 }
 
 // Audio Sermon types
@@ -226,6 +231,7 @@ export interface CreateAdminRequest {
   name: string;
   role?: AdminRole;
   permissions?: string[];
+  csgId?: number | null;
   isActive?: boolean;
 }
 
@@ -235,6 +241,7 @@ export interface UpdateAdminRequest {
   name?: string;
   role?: AdminRole;
   permissions?: string[];
+  csgId?: number | null;
   isActive?: boolean;
 }
 
@@ -254,6 +261,7 @@ export interface JWTPayload {
   email: string;
   role: AdminRole;
   permissions: string[];
+  csgId?: number | null;
 }
 
 // Analytics types
@@ -384,6 +392,11 @@ export interface EnvironmentConfig {
 export interface AuthenticatedRequest extends Request {
   admin?: Omit<Admin, 'passwordHash'>;
   adminId?: number; // Add this line
+}
+
+// End-user (mobile app) request, identified via a verified Firebase ID token
+export interface AuthenticatedUserRequest extends Request {
+  appUser?: AppUser;
 }
 
 export interface MulterFile extends Express.Multer.File {

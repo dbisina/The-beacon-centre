@@ -46,6 +46,7 @@ export class AuthService {
               name: true,
               role: true,
               permissions: true,
+              csgId: true,
               isActive: true,
               createdAt: true,
               lastLogin: true,
@@ -93,6 +94,7 @@ export class AuthService {
             name: admin.name,
             role: admin.role,
             permissions: admin.permissions,
+            csgId: admin.csgId,
             isActive: admin.isActive,
             createdAt: admin.createdAt,
             lastLogin: admin.lastLogin,
@@ -128,8 +130,17 @@ export class AuthService {
     }
   }
 
-  // FIXED: Fallback login for development when database is not available
+  // Fallback login for development when the database is unreachable.
+  // Hard-gated to non-production: a DB error or missing admin record must
+  // never grant access via these hardcoded credentials in a live environment.
   private static async fallbackLogin(credentials: AdminLoginRequest): Promise<ServiceResponse<AdminLoginResponse>> {
+    if (process.env.NODE_ENV === 'production') {
+      return {
+        success: false,
+        error: 'Invalid email or password'
+      };
+    }
+
     const { email, password } = credentials;
 
     // Development fallback credentials
@@ -167,6 +178,7 @@ export class AuthService {
       name: devAdmin.name,
       role: devAdmin.role,
       permissions: ['*'], // All permissions for dev
+      csgId: null,
       isActive: true,
       createdAt: new Date(),
       lastLogin: null,
@@ -208,6 +220,7 @@ export class AuthService {
               name: true,
               role: true,
               permissions: true,
+              csgId: true,
               isActive: true,
               createdAt: true,
             },
@@ -220,7 +233,13 @@ export class AuthService {
             };
           }
         } catch (dbError) {
-          console.warn('Database query failed during token refresh, using fallback');
+          if (process.env.NODE_ENV === 'production') {
+            return {
+              success: false,
+              error: 'Admin not found or inactive'
+            };
+          }
+          console.warn('Database query failed during token refresh, using fallback (non-production only)');
           // Use fallback admin data
           admin = {
             id: adminId,
@@ -228,20 +247,27 @@ export class AuthService {
             name: 'Admin User',
             role: AdminRole.ADMIN,
             permissions: ['*'],
+            csgId: null,
             isActive: true,
             createdAt: new Date(),
           };
         }
-      } else {
-        // Database not available, create fallback admin
+      } else if (process.env.NODE_ENV !== 'production') {
+        // Database not available, create fallback admin (dev only)
         admin = {
           id: adminId,
           email: 'admin@beaconcentre.org',
           name: 'Admin User',
           role: AdminRole.ADMIN,
           permissions: ['*'],
+          csgId: null,
           isActive: true,
           createdAt: new Date(),
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Admin not found or inactive'
         };
       }
 
@@ -271,7 +297,7 @@ export class AuthService {
         };
       }
 
-      const { email, password, name, role, permissions } = adminData;
+      const { email, password, name, role, permissions, csgId } = adminData;
 
       // Check if admin already exists
       const existingAdmin = await prisma.admin.findUnique({
@@ -296,6 +322,7 @@ export class AuthService {
           name,
           role: role || AdminRole.ADMIN,
           permissions: permissions || [],
+          csgId: role === AdminRole.CSG_ADMIN ? (csgId ?? null) : null,
           isActive: true,
         },
         select: {
@@ -304,6 +331,7 @@ export class AuthService {
           name: true,
           role: true,
           permissions: true,
+          csgId: true,
           isActive: true,
           createdAt: true,
         },
@@ -342,6 +370,7 @@ export class AuthService {
           name: true,
           role: true,
           permissions: true,
+          csgId: true,
           isActive: true,
           createdAt: true,
         },
@@ -372,7 +401,7 @@ export class AuthService {
         };
       }
 
-      const { email, name, role, permissions, isActive } = updateData;
+      const { email, name, role, permissions, csgId, isActive } = updateData;
 
       // Prepare update data
       const updateFields: any = {};
@@ -380,6 +409,7 @@ export class AuthService {
       if (name) updateFields.name = name;
       if (role) updateFields.role = role;
       if (permissions) updateFields.permissions = permissions;
+      if (csgId !== undefined) updateFields.csgId = csgId;
       if (typeof isActive === 'boolean') updateFields.isActive = isActive;
 
       const updatedAdmin = await prisma.admin.update({
@@ -391,6 +421,7 @@ export class AuthService {
           name: true,
           role: true,
           permissions: true,
+          csgId: true,
           isActive: true,
           createdAt: true,
         },
@@ -476,6 +507,7 @@ export class AuthService {
           name: true,
           role: true,
           permissions: true,
+          csgId: true,
           isActive: true,
           createdAt: true,
         },

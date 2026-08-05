@@ -101,6 +101,7 @@ async function main() {
     // Create sample devotionals for the current week
     console.log('📖 Creating sample devotionals...');
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // midnight - matches getTodaysDevotional()'s exact-match lookup
     const devotionals = [];
 
     for (let i = 0; i < 7; i++) {
@@ -127,63 +128,269 @@ async function main() {
 
     console.log(`✅ Created ${devotionals.length} devotionals`);
 
-    // Create sample video sermons
+    // Create sample video sermons - real, public, embeddable YouTube videos
+    // (TED/TEDx talks on faith and purpose) so the app has genuine playable
+    // content to test against instead of placeholder/joke video IDs.
     console.log('🎬 Creating sample video sermons...');
     const videoSermons = await Promise.all([
       prisma.videoSermon.upsert({
-        where: { youtubeId: 'dQw4w9WgXcQ' },
+        where: { youtubeId: 'bDldAOiZBho' },
         update: {},
         create: {
-          title: 'The Power of Faith',
-          speaker: 'Pastor John Smith',
-          youtubeId: 'dQw4w9WgXcQ',
+          title: 'A Life of Purpose',
+          speaker: 'Rick Warren',
+          youtubeId: 'bDldAOiZBho',
           description: 'A powerful message about the transformative power of faith in our daily lives.',
-          duration: '45:30',
+          duration: '20:00',
+          kind: 'SERMON',
           categoryId: categories[0].id, // Sunday Service
           sermonDate: new Date('2024-01-07'),
-          thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+          thumbnailUrl: 'https://img.youtube.com/vi/bDldAOiZBho/maxresdefault.jpg',
           isFeatured: true,
           isActive: true,
           tags: ['faith', 'transformation', 'inspiration'],
         },
       }),
       prisma.videoSermon.upsert({
-        where: { youtubeId: 'oHg5SJYRHA0' },
+        where: { youtubeId: 'XTxuhEipb4k' },
         update: {},
         create: {
-          title: 'Walking in Love',
-          speaker: 'Pastor Mary Johnson',
-          youtubeId: 'oHg5SJYRHA0',
-          description: 'Understanding what it means to walk in love as followers of Christ.',
-          duration: '38:15',
+          title: 'Practical Faith',
+          speaker: 'Mike Dupre',
+          youtubeId: 'XTxuhEipb4k',
+          description: 'Understanding what it means to walk out our faith in everyday life.',
+          duration: '14:00',
+          kind: 'SERMON',
           categoryId: categories[1].id, // Bible Study
           sermonDate: new Date('2024-01-14'),
-          thumbnailUrl: 'https://img.youtube.com/vi/oHg5SJYRHA0/maxresdefault.jpg',
+          thumbnailUrl: 'https://img.youtube.com/vi/XTxuhEipb4k/maxresdefault.jpg',
           isFeatured: false,
           isActive: true,
-          tags: ['love', 'relationships', 'christian living'],
+          tags: ['faith', 'christian living'],
         },
       }),
       prisma.videoSermon.upsert({
-        where: { youtubeId: 'L_jWHffIx5E' },
+        where: { youtubeId: '36zrJfAFcuc' },
         update: {},
         create: {
           title: 'The Heart of Worship',
-          speaker: 'Pastor David Wilson',
-          youtubeId: 'L_jWHffIx5E',
+          speaker: 'His Holiness Pope Francis',
+          youtubeId: '36zrJfAFcuc',
           description: 'Discovering the true heart of worship beyond the songs and rituals.',
-          duration: '42:20',
+          duration: '17:00',
+          kind: 'SERMON',
           categoryId: categories[0].id, // Sunday Service
           sermonDate: new Date('2024-01-21'),
-          thumbnailUrl: 'https://img.youtube.com/vi/L_jWHffIx5E/maxresdefault.jpg',
+          thumbnailUrl: 'https://img.youtube.com/vi/36zrJfAFcuc/maxresdefault.jpg',
           isFeatured: true,
           isActive: true,
           tags: ['worship', 'heart', 'devotion'],
         },
       }),
+      prisma.videoSermon.upsert({
+        where: { youtubeId: 'fLeJJPxua3E' },
+        update: {},
+        create: {
+          title: 'One Minute of Motivation',
+          speaker: 'The Beacon Centre',
+          youtubeId: 'fLeJJPxua3E',
+          description: 'A quick word of encouragement to carry with you today.',
+          duration: '1:00',
+          kind: 'EXCERPT',
+          categoryId: categories[3].id, // Youth Service
+          sermonDate: new Date('2024-01-10'),
+          thumbnailUrl: 'https://img.youtube.com/vi/fLeJJPxua3E/maxresdefault.jpg',
+          isFeatured: false,
+          isActive: true,
+          tags: ['short', 'encouragement'],
+        },
+      }),
+      prisma.videoSermon.upsert({
+        where: { youtubeId: 'pKBF2AzNjA4' },
+        update: {},
+        create: {
+          title: 'Believe In Yourself',
+          speaker: 'The Beacon Centre',
+          youtubeId: 'pKBF2AzNjA4',
+          description: 'You were made for more than you think.',
+          duration: '1:00',
+          kind: 'EXCERPT',
+          categoryId: categories[3].id, // Youth Service
+          sermonDate: new Date('2024-01-17'),
+          thumbnailUrl: 'https://img.youtube.com/vi/pKBF2AzNjA4/maxresdefault.jpg',
+          isFeatured: false,
+          isActive: true,
+          tags: ['short', 'encouragement'],
+        },
+      }),
     ]);
 
     console.log(`✅ Created ${videoSermons.length} video sermons`);
+
+    // Create sample audio sermons. audioUrl points at stable, publicly
+    // reachable test mp3s (SoundHelix's well-known demo tracks) since there's
+    // no real Cloudinary-hosted audio to seed with yet - swap for real
+    // uploads once the admin panel has some.
+    console.log('🎧 Creating sample audio sermons...');
+    const audioSermons = await Promise.all([
+      prisma.audioSermon.upsert({
+        where: { id: 1 },
+        update: {},
+        create: {
+          title: 'Stay Lit — Part 1',
+          speaker: 'Pastor John Smith',
+          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+          cloudinaryPublicId: 'seed/audio-sermon-1',
+          duration: '32:00',
+          categoryId: categories[0].id,
+          sermonDate: new Date('2024-01-07'),
+          description: 'The first in our Stay Lit series on faithfulness in the ordinary.',
+          isFeatured: true,
+          isActive: true,
+          tags: ['faithfulness'],
+        },
+      }),
+      prisma.audioSermon.upsert({
+        where: { id: 2 },
+        update: {},
+        create: {
+          title: 'The God Who Sees',
+          speaker: 'Pastor Mary Johnson',
+          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+          cloudinaryPublicId: 'seed/audio-sermon-2',
+          duration: '41:00',
+          categoryId: categories[2].id, // Prayer Meeting
+          sermonDate: new Date('2024-01-14'),
+          description: 'On being fully known and fully loved.',
+          isFeatured: false,
+          isActive: true,
+          tags: ['prayer'],
+        },
+      }),
+      prisma.audioSermon.upsert({
+        where: { id: 3 },
+        update: {},
+        create: {
+          title: 'Rooted — Midweek Refuel',
+          speaker: 'Pastor David Wilson',
+          audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+          cloudinaryPublicId: 'seed/audio-sermon-3',
+          duration: '27:00',
+          categoryId: categories[1].id,
+          sermonDate: new Date('2024-01-17'),
+          description: 'Staying rooted in the middle of the week.',
+          isFeatured: false,
+          isActive: true,
+          tags: ['bible study'],
+        },
+      }),
+    ]);
+
+    console.log(`✅ Created ${audioSermons.length} audio sermons`);
+
+    // Create Community Service Groups - the real ones, given by name only;
+    // admin fills in meeting day/time/address per group via the admin panel.
+    console.log('👨‍👩‍👧‍👦 Creating CSGs...');
+    const CSG_NAMES = [
+      'Kuola CSG',
+      'Oluyole CSG',
+      'Tipper Garage/Taska CSG',
+      'New Garage CSG',
+      'Lead City CSG',
+      'Oluyole Extension CSG',
+      'Sango CSG',
+      'Ringroad/Challenge/Fele CSG',
+      'Elebu CSG',
+    ];
+    const csgs = [];
+    for (const name of CSG_NAMES) {
+      const existing = await prisma.csg.findFirst({ where: { name } });
+      csgs.push(existing ?? (await prisma.csg.create({ data: { name, isActive: true } })));
+    }
+
+    console.log(`✅ Created ${csgs.length} CSGs`);
+
+    // Create fundraising projects
+    console.log('🏗️ Creating sample projects...');
+    const projects = await Promise.all([
+      prisma.project.upsert({
+        where: { id: 1 },
+        update: {},
+        create: {
+          title: 'The new auditorium roof',
+          blurb: 'Replacing the main roof before the rains return.',
+          description: 'Our current roof has served us well for over a decade, but recent inspections show it needs full replacement before this year\'s rainy season.',
+          targetAmount: BigInt(5_000_000_000), // ₦50,000,000 in kobo
+          raisedAmount: BigInt(3_420_000_000), // ₦34,200,000 in kobo
+          donorCount: 412,
+          deadline: new Date(Date.now() + 24 * 24 * 60 * 60 * 1000),
+          isActive: true,
+        },
+      }),
+      prisma.project.upsert({
+        where: { id: 2 },
+        update: {},
+        create: {
+          title: 'Campus outreach bus',
+          blurb: 'Getting students to Sunday service and back.',
+          description: 'A dedicated shuttle bus to bring university students to and from Sunday services safely and reliably.',
+          targetAmount: BigInt(1_200_000_000), // ₦12,000,000 in kobo
+          raisedAmount: BigInt(372_000_000), // ₦3,720,000 in kobo
+          donorCount: 86,
+          deadline: new Date(Date.now() + 61 * 24 * 60 * 60 * 1000),
+          isActive: true,
+        },
+      }),
+    ]);
+
+    console.log(`✅ Created ${projects.length} projects`);
+
+    // Create the church's bank account for manual/default giving.
+    // ⚠️ Placeholder details - replace with the real account before production.
+    console.log('🏦 Creating sample church bank account...');
+    const bankAccount = await prisma.churchBankAccount.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        bankName: 'First Bank of Nigeria',
+        accountName: 'The Beacon Centre',
+        accountNumber: '0123456789',
+        instructions: 'Please use your name as the transfer narration/reference so we can identify your gift.',
+        isActive: true,
+        sortOrder: 0,
+      },
+    });
+
+    console.log('✅ Created church bank account');
+
+    // Create the live service schedule
+    console.log('📺 Creating live schedule...');
+    const liveSchedule = await Promise.all([
+      prisma.liveSchedule.upsert({
+        where: { id: 1 },
+        update: {},
+        create: {
+          name: 'Impart Service',
+          dayOfWeek: 0, // Sunday
+          time: '09:00',
+          timezone: 'Africa/Lagos',
+          isActive: true,
+        },
+      }),
+      prisma.liveSchedule.upsert({
+        where: { id: 2 },
+        update: {},
+        create: {
+          name: 'Refuel Service',
+          dayOfWeek: 3, // Wednesday
+          time: '18:00',
+          timezone: 'Africa/Lagos',
+          isActive: true,
+        },
+      }),
+    ]);
+
+    console.log(`✅ Created ${liveSchedule.length} live schedule entries`);
 
     // Create sample announcements
     console.log('📢 Creating sample announcements...');
@@ -242,6 +449,11 @@ async function main() {
     console.log(`  - Admin users: 1`);
     console.log(`  - Devotionals: ${devotionals.length}`);
     console.log(`  - Video sermons: ${videoSermons.length}`);
+    console.log(`  - Audio sermons: ${audioSermons.length}`);
+    console.log(`  - CSGs: ${csgs.length}`);
+    console.log(`  - Projects: ${projects.length}`);
+    console.log(`  - Bank accounts: 1`);
+    console.log(`  - Live schedule entries: ${liveSchedule.length}`);
     console.log(`  - Announcements: ${announcements.length}`);
     
     console.log('\n🔐 Admin Login Credentials:');

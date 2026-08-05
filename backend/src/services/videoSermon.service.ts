@@ -1,8 +1,18 @@
 // backend/src/services/videoSermon.service.ts
+import axios from 'axios';
 import { prisma } from '../config/database';
 import { ServiceResponse, CreateVideoSermonRequest, UpdateVideoSermonRequest, VideoSermonFilters } from '../types';
 import { VideoSermon } from '@prisma/client';
 import { UploadService } from './upload.service';
+
+export interface VideoComment {
+  id: string;
+  author: string;
+  authorProfileImageUrl: string | null;
+  text: string;
+  likeCount: number;
+  publishedAt: string;
+}
 
 export class VideoSermonService {
   static async getAllVideoSermons(filters: VideoSermonFilters): Promise<ServiceResponse<{
@@ -23,6 +33,7 @@ export class VideoSermonService {
         isActive = true,
         startDate,
         endDate,
+        kind,
         sortBy = 'createdAt',
         sortOrder = 'desc',
       } = filters;
@@ -46,6 +57,10 @@ export class VideoSermonService {
 
       if (categoryId) {
         where.categoryId = categoryId;
+      }
+
+      if (kind) {
+        where.kind = kind;
       }
 
       if (speaker) {
@@ -257,6 +272,8 @@ export class VideoSermonService {
           youtubeId: sermonData.youtubeId,
           description: sermonData.description || null,
           duration: sermonData.duration || null,
+          kind: sermonData.kind || 'SERMON',
+          series: sermonData.series || null,
           categoryId: sermonData.categoryId || null,
           sermonDate: sermonData.sermonDate ? new Date(sermonData.sermonDate) : null,
           thumbnailUrl: thumbnailUrl || null,
@@ -332,6 +349,8 @@ export class VideoSermonService {
           ...(updateData.youtubeId && { youtubeId: updateData.youtubeId }),
           ...(updateData.description !== undefined && { description: updateData.description }),
           ...(updateData.duration !== undefined && { duration: updateData.duration }),
+          ...(updateData.kind !== undefined && { kind: updateData.kind }),
+          ...(updateData.series !== undefined && { series: updateData.series }),
           ...(updateData.categoryId !== undefined && { categoryId: updateData.categoryId }),
           ...(updateData.sermonDate !== undefined && { sermonDate: updateData.sermonDate ? new Date(updateData.sermonDate) : null }),
           ...(updateData.thumbnailUrl !== undefined && { thumbnailUrl: updateData.thumbnailUrl }),
@@ -380,6 +399,29 @@ export class VideoSermonService {
       return {
         success: false,
         error: 'Failed to delete video sermon',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  static async bulkUpdateKind(
+    ids: number[],
+    kind: 'SERMON' | 'EXCERPT' | 'INSPIRATIONAL'
+  ): Promise<ServiceResponse<{ count: number }>> {
+    try {
+      const result = await prisma.videoSermon.updateMany({
+        where: { id: { in: ids } },
+        data: { kind, updatedAt: new Date() },
+      });
+
+      return {
+        success: true,
+        data: { count: result.count },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to bulk update videos',
         details: error instanceof Error ? error.message : 'Unknown error',
       };
     }
@@ -486,6 +528,79 @@ export class VideoSermonService {
       return {
         success: false,
         error: 'Failed to get video sermon stats',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /** Distinct series names already in use, for the admin form's "pick an
+   *  existing series or type a new one" picker. */
+  static async getDistinctSeries(): Promise<ServiceResponse<string[]>> {
+    try {
+      const rows = await prisma.videoSermon.findMany({
+        where: { series: { not: null } },
+        select: { series: true },
+        distinct: ['series'],
+        orderBy: { series: 'asc' },
+      });
+      return { success: true, data: rows.map((r) => r.series as string) };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to fetch series list',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  // ─── Real YouTube comments (not a fake/mocked feed) ───
+
+  static async getComments(id: number): Promise<ServiceResponse<VideoComment[]>> {
+    try {
+      const sermon = await prisma.videoSermon.findUnique({ where: { id }, select: { youtubeId: true } });
+      if (!sermon) {
+        return { success: false, error: 'Video sermon not found' };
+      }
+
+      const apiKey = process.env.YOUTUBE_API_KEY;
+      if (!apiKey) {
+        return { success: false, error: 'Comments are not configured (YOUTUBE_API_KEY unset)' };
+      }
+
+      const response = await axios.get('https://www.googleapis.com/youtube/v3/commentThreads', {
+        params: {
+          part: 'snippet',
+          videoId: sermon.youtubeId,
+          maxResults: 30,
+          order: 'relevance',
+          key: apiKey,
+        },
+      });
+
+      const comments: VideoComment[] = (response.data.items ?? []).map((item: any) => {
+        const top = item.snippet.topLevelComment.snippet;
+        return {
+          id: item.id,
+          author: top.authorDisplayName ?? 'Anonymous',
+          authorProfileImageUrl: top.authorProfileImageUrl ?? null,
+          // textOriginal is plain text - textDisplay is HTML (<a> tags,
+          // entities) and would render literally in a RN <Text>.
+          text: top.textOriginal ?? '',
+          likeCount: top.likeCount ?? 0,
+          publishedAt: top.publishedAt,
+        };
+      });
+
+      return { success: true, data: comments };
+    } catch (error) {
+      // YouTube 403s this with commentsDisabled when the video owner turned
+      // comments off - that's a normal, expected outcome, not a real error.
+      if (axios.isAxiosError(error) && error.response?.data?.error?.errors?.[0]?.reason === 'commentsDisabled') {
+        return { success: true, data: [] };
+      }
+      return {
+        success: false,
+        error: 'Failed to fetch comments',
         details: error instanceof Error ? error.message : 'Unknown error',
       };
     }

@@ -1,7 +1,7 @@
 // backend/src/routes/announcement.routes.ts
 import { Router } from 'express';
 import { AnnouncementController } from '../controllers/announcement.controller';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate, requireContentAccess } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -11,10 +11,10 @@ router.get('/active', AnnouncementController.getActiveAnnouncements);
 router.get('/:id', AnnouncementController.getAnnouncementById);
 
 // Protected admin routes
-router.post('/', authenticate, AnnouncementController.createAnnouncement);
-router.put('/:id', authenticate, AnnouncementController.updateAnnouncement);
-router.delete('/:id', authenticate, AnnouncementController.deleteAnnouncement);
-router.patch('/:id/activate', authenticate, AnnouncementController.toggleActive);
-router.get('/admin/stats', authenticate, AnnouncementController.getAnnouncementStats);
+router.post('/', authenticate, requireContentAccess, AnnouncementController.createAnnouncement);
+router.put('/:id', authenticate, requireContentAccess, AnnouncementController.updateAnnouncement);
+router.delete('/:id', authenticate, requireContentAccess, AnnouncementController.deleteAnnouncement);
+router.patch('/:id/activate', authenticate, requireContentAccess, AnnouncementController.toggleActive);
+router.get('/admin/stats', authenticate, requireContentAccess, AnnouncementController.getAnnouncementStats);
 
 export default router;

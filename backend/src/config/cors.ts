@@ -70,13 +70,7 @@ export const corsOptions: CorsOptions = {
 
     // Log rejected origins for debugging
     console.log(`🚫 CORS: Rejected origin: ${origin}`);
-    
-    // TEMPORARY: Allow all origins in production for debugging
-    if (process.env.NODE_ENV === 'production') {
-      console.log(`⚠️ CORS: Temporarily allowing rejected origin: ${origin} (production debug mode)`);
-      return callback(null, true);
-    }
-    
+
     callback(new Error(`CORS: Origin ${origin} not allowed`), false);
   },
 
@@ -122,29 +116,3 @@ export const corsOptions: CorsOptions = {
 if (process.env.NODE_ENV === 'development') {
   console.log('🌐 CORS: Allowed origins:', allowedOrigins);
 }
-
-// Alternative simple CORS configuration for debugging
-export const simpleCorsOptions: CorsOptions = {
-  origin: true, // Allow all origins
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-  allowedHeaders: [
-    'Origin',
-    'X-Requested-With',
-    'Content-Type',
-    'Accept',
-    'Authorization',
-    'Cache-Control',
-    'X-Device-Platform',
-    'X-App-Version',
-    'X-Device-ID',
-  ],
-  exposedHeaders: [
-    'X-Total-Count',
-    'X-Rate-Limit-Limit',
-    'X-Rate-Limit-Remaining',
-    'X-Rate-Limit-Reset',
-  ],
-  optionsSuccessStatus: 200,
-  maxAge: 86400,
-};

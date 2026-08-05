@@ -1,7 +1,7 @@
 // backend/src/routes/admin.routes.ts
 import { Router } from 'express';
 import { AdminController } from '../controllers/admin.controller';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate, requireSuperAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -10,11 +10,13 @@ router.post('/auth/login', AdminController.login);
 router.post('/auth/refresh', AdminController.refreshToken);
 router.post('/auth/logout', authenticate, AdminController.logout);
 router.get('/auth/me', authenticate, AdminController.getProfile);
+router.put('/me', authenticate, AdminController.updateSelf);
 
-// Admin management routes (for super admins)
-router.post('/create', authenticate, AdminController.createAdmin);
-router.get('/', authenticate, AdminController.getAllAdmins);
-router.put('/:id', authenticate, AdminController.updateAdmin);
-router.delete('/:id', authenticate, AdminController.deleteAdmin);
+// Admin-account management (SUPER_ADMIN only - creating/editing/deleting admin
+// accounts, including assigning CSG_ADMIN + csgId to make someone a CSG admin)
+router.post('/create', authenticate, requireSuperAdmin, AdminController.createAdmin);
+router.get('/', authenticate, requireSuperAdmin, AdminController.getAllAdmins);
+router.put('/:id', authenticate, requireSuperAdmin, AdminController.updateAdmin);
+router.delete('/:id', authenticate, requireSuperAdmin, AdminController.deleteAdmin);
 
 export default router;

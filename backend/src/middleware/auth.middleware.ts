@@ -15,7 +15,12 @@ try {
   prisma = null;
 }
 
-// JWT secrets with fallbacks for development
+// JWT secrets - fall back to a dev-only literal locally, but refuse to boot in
+// production with an unset secret rather than silently signing tokens with a
+// value that's sitting in this file in source control.
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET)) {
+  throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be set in production');
+}
 const JWT_SECRET = process.env.JWT_SECRET || 'beacon-centre-dev-secret-key';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'beacon-centre-dev-refresh-secret';
 
@@ -73,6 +78,7 @@ export const authenticate = async (
             name: true,
             role: true,
             permissions: true,
+            csgId: true,
             isActive: true,
             createdAt: true,
             updatedAt: true,
@@ -101,6 +107,7 @@ export const authenticate = async (
           name: 'Admin User', // Default name
           role: decoded.role || AdminRole.ADMIN,
           permissions: decoded.permissions || [],
+          csgId: decoded.csgId ?? null,
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -116,6 +123,7 @@ export const authenticate = async (
         name: 'Admin User',
         role: decoded.role || AdminRole.ADMIN,
         permissions: decoded.permissions || [],
+        csgId: decoded.csgId ?? null,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -186,6 +194,48 @@ export const requirePermission = (requiredPermissions: string[]) => {
 // Super admin only middleware
 export const requireSuperAdmin = requireRole([AdminRole.SUPER_ADMIN]);
 
+// Two-tier RBAC on top of the plain requireRole above:
+// - requireFullAccess: SUPER_ADMIN or ADMIN. CSG entity CRUD, admin-account
+//   creation, giving ledger, projects, prayer/contact inbox, push composer.
+// - requireContentAccess: also includes EDITOR - preserves the access every
+//   EDITOR already has today (devotional/sermon/announcement/category/upload
+//   CRUD) now that bare `authenticate` is being replaced with a real role
+//   check on those routes.
+// - requireCsgAccess: full-access roles pass through; CSG_ADMIN passes only
+//   for their own csgId; everyone else (incl. EDITOR) is 403'd. Used for
+//   posting CSG updates / removing members, where the target CSG is scoped
+//   per-request rather than fixed per-route.
+export const FULL_ACCESS_ROLES: AdminRole[] = [AdminRole.SUPER_ADMIN, AdminRole.ADMIN];
+export const requireFullAccess = requireRole(FULL_ACCESS_ROLES);
+export const requireContentAccess = requireRole([AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR]);
+
+export const requireCsgAccess = (getCsgId: (req: AuthenticatedRequest) => number | undefined) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.admin) {
+      sendError(res, 'Authentication required', 401);
+      return;
+    }
+
+    if (FULL_ACCESS_ROLES.includes(req.admin.role as AdminRole)) {
+      next();
+      return;
+    }
+
+    const targetCsgId = getCsgId(req);
+    const isScopedCsgAdmin =
+      req.admin.role === AdminRole.CSG_ADMIN &&
+      targetCsgId !== undefined &&
+      req.admin.csgId === targetCsgId;
+
+    if (!isScopedCsgAdmin) {
+      sendError(res, 'Insufficient permissions for this CSG', 403);
+      return;
+    }
+
+    next();
+  };
+};
+
 // JWT token generation utilities
 export const generateTokens = (admin: any) => {
   const payload: JWTPayload = {
@@ -193,6 +243,7 @@ export const generateTokens = (admin: any) => {
     email: admin.email,
     role: admin.role,
     permissions: admin.permissions || [],
+    csgId: admin.csgId ?? null,
   };
 
   const accessToken = jwt.sign(payload, JWT_SECRET, {
@@ -255,6 +306,7 @@ export const optionalAuth = async (
             name: true,
             role: true,
             permissions: true,
+            csgId: true,
             isActive: true,
             createdAt: true,
             updatedAt: true,
@@ -275,6 +327,7 @@ export const optionalAuth = async (
           name: 'Admin User',
           role: decoded.role || AdminRole.ADMIN,
           permissions: decoded.permissions || [],
+          csgId: decoded.csgId ?? null,
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -338,6 +391,9 @@ export default {
   requireRole,
   requirePermission,
   requireSuperAdmin,
+  requireFullAccess,
+  requireContentAccess,
+  requireCsgAccess,
   optionalAuth,
   generateTokens,
   verifyRefreshToken,

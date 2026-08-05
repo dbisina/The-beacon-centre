@@ -82,16 +82,16 @@ export class AdminController {
 
   static async createAdmin(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      // FIXED: Use enum comparison
-      if (req.admin?.role !== AdminRole.SUPER_ADMIN) {
-        sendError(res, 'Only super admins can create new admins', 403);
-        return;
-      }
-
-      const { email, password, name, role, permissions } = req.body;
+      // Route-level `requireSuperAdmin` middleware already gates this.
+      const { email, password, name, role, permissions, csgId } = req.body;
 
       if (!email || !password || !name) {
         sendError(res, 'Email, password, and name are required', 400);
+        return;
+      }
+
+      if (role === AdminRole.CSG_ADMIN && !csgId) {
+        sendError(res, 'csgId is required when role is CSG_ADMIN', 400);
         return;
       }
 
@@ -101,6 +101,7 @@ export class AdminController {
         name,
         role: role || AdminRole.ADMIN,
         permissions: permissions || [],
+        csgId,
       });
 
       if (result.success) {
@@ -115,12 +116,7 @@ export class AdminController {
 
   static async getAllAdmins(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      // FIXED: Use enum comparison
-      if (req.admin?.role !== AdminRole.SUPER_ADMIN) {
-        sendError(res, 'Only super admins can view all admins', 403);
-        return;
-      }
-
+      // Route-level `requireSuperAdmin` middleware already gates this.
       const { prisma } = await import('../config/database');
       const admins = await prisma.admin.findMany({
         select: {
@@ -130,6 +126,7 @@ export class AdminController {
           role: true,
           isActive: true,
           permissions: true,
+          csgId: true,
           createdAt: true,
           updatedAt: true,
           lastLogin: true,
@@ -146,24 +143,84 @@ export class AdminController {
     }
   }
 
+  // Self-service: any authenticated admin can update their own name/password.
+  // Deliberately cannot touch role/csgId/isActive - see updateAdmin below.
+  static async updateSelf(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req.admin) {
+        sendError(res, 'Authentication required', 401);
+        return;
+      }
+
+      const { name, currentPassword, newPassword } = req.body;
+      const { prisma } = await import('../config/database');
+
+      const updateData: any = {};
+      if (name) updateData.name = name;
+
+      if (newPassword) {
+        if (!currentPassword) {
+          sendError(res, 'currentPassword is required to set a new password', 400);
+          return;
+        }
+        const result = await AuthService.changePassword(req.admin.id, currentPassword, newPassword);
+        if (!result.success) {
+          sendError(res, result.error, 400);
+          return;
+        }
+      }
+
+      if (Object.keys(updateData).length === 0 && !newPassword) {
+        sendError(res, 'Nothing to update', 400);
+        return;
+      }
+
+      const updatedAdmin = Object.keys(updateData).length > 0
+        ? await prisma.admin.update({
+            where: { id: req.admin.id },
+            data: updateData,
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              isActive: true,
+              permissions: true,
+              csgId: true,
+              updatedAt: true,
+              createdAt: true,
+              lastLogin: true,
+              loginCount: true,
+            },
+          })
+        : req.admin;
+
+      sendSuccess(res, 'Profile updated successfully', updatedAdmin);
+    } catch (error) {
+      sendError(res, 'Failed to update profile', 500, error);
+    }
+  }
+
+  // SUPER_ADMIN only (route-level `requireSuperAdmin`): change anyone's
+  // role/csgId/isActive/name - this is the "assign a CSG admin" operation,
+  // done by setting role=CSG_ADMIN + csgId on an existing or new admin.
   static async updateAdmin(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const adminId = parseInt(req.params.id);
-      const { name, role, permissions, isActive } = req.body;
+      const { name, role, permissions, csgId, isActive } = req.body;
 
       if (isNaN(adminId)) {
         sendError(res, 'Invalid admin ID', 400);
         return;
       }
 
-      // FIXED: Use enum comparison
-      if (req.admin?.role !== AdminRole.SUPER_ADMIN && req.admin?.id !== adminId) {
-        sendError(res, 'Insufficient permissions', 403);
+      if (role === AdminRole.CSG_ADMIN && csgId === undefined) {
+        sendError(res, 'csgId is required when role is CSG_ADMIN', 400);
         return;
       }
 
       const { prisma } = await import('../config/database');
-      
+
       const existingAdmin = await prisma.admin.findUnique({
         where: { id: adminId },
       });
@@ -174,16 +231,19 @@ export class AdminController {
       }
 
       const updateData: any = {};
-      
       if (name) updateData.name = name;
-      
-      // FIXED: Use enum comparison
-      if (req.admin?.role === AdminRole.SUPER_ADMIN) {
-        if (role) updateData.role = role;
-        if (permissions !== undefined) updateData.permissions = permissions;
-        if (isActive !== undefined) updateData.isActive = isActive;
+      if (role) updateData.role = role;
+      if (permissions !== undefined) updateData.permissions = permissions;
+
+      const effectiveRole = role || existingAdmin.role;
+      if (effectiveRole === AdminRole.CSG_ADMIN) {
+        if (csgId !== undefined) updateData.csgId = csgId;
+      } else if (role) {
+        // Role explicitly changed away from CSG_ADMIN - clear stale csgId.
+        updateData.csgId = null;
       }
 
+      if (isActive !== undefined) updateData.isActive = isActive;
       updateData.updatedAt = new Date();
 
       const updatedAdmin = await prisma.admin.update({
@@ -196,6 +256,7 @@ export class AdminController {
           role: true,
           isActive: true,
           permissions: true,
+          csgId: true,
           updatedAt: true,
           createdAt: true,
           lastLogin: true,
@@ -218,12 +279,7 @@ export class AdminController {
         return;
       }
 
-      // FIXED: Use enum comparison
-      if (req.admin?.role !== AdminRole.SUPER_ADMIN) {
-        sendError(res, 'Only super admins can delete admins', 403);
-        return;
-      }
-
+      // Route-level `requireSuperAdmin` middleware already gates this.
       if (req.admin?.id === adminId) {
         sendError(res, 'Cannot delete your own account', 400);
         return;

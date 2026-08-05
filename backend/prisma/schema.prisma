@@ -39,6 +39,11 @@ model VideoSermon {
   youtubeId    String   @unique @map("youtube_id") @db.VarChar(50)
   description  String?  @db.Text
   duration     String?  @db.VarChar(20)
+  kind         VideoKind @default(SERMON)
+  // Free-text grouping like "Love Series" - distinct from Category, which is
+  // more like Sunday Service / Bible Study / etc. Nullable: most videos
+  // (especially shorts/inspirationals) aren't part of a series.
+  series       String?  @db.VarChar(255)
   categoryId   Int?     @map("category_id")
   sermonDate   DateTime? @map("sermon_date") @db.Date
   thumbnailUrl String?  @map("thumbnail_url") @db.VarChar(500)
@@ -132,11 +137,18 @@ model Admin {
   name         String   @db.VarChar(255)
   role         AdminRole @default(ADMIN)
   permissions  String[] @default([])
+  csgId        Int?     @map("csg_id")
   isActive     Boolean  @default(true) @map("is_active")
   lastLogin    DateTime? @map("last_login")
   loginCount   Int      @default(0) @map("login_count")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  csg                    Csg?             @relation(fields: [csgId], references: [id], onDelete: SetNull)
+  authoredCsgUpdates     CsgUpdate[]      @relation("CsgUpdateAuthor")
+  handledPrayerRequests  PrayerRequest[]  @relation("PrayerHandledBy")
+  handledContactMessages ContactMessage[] @relation("ContactHandledBy")
 
   @@map("admins")
 }
@@ -178,6 +190,342 @@ model ContentInteraction {
   @@map("content_interactions")
 }
 
+// ─── End users (mobile app, identified via verified Firebase ID token) ───
+
+model AppUser {
+  id            Int       @id @default(autoincrement())
+  // Nullable - the app's own email+passcode auth (passcodeHash) doesn't set
+  // this at all. Left in place for the Firebase path if that ever resumes.
+  firebaseUid   String?   @unique @map("firebase_uid") @db.VarChar(128)
+  email         String?   @unique @db.VarChar(255)
+  displayName   String?   @map("display_name") @db.VarChar(255)
+  photoUrl      String?   @map("photo_url") @db.VarChar(500)
+  // Bcrypt hash of a 4-6 digit passcode - the app's own lightweight auth,
+  // not a real password. Null for guest/Firebase-only rows.
+  passcodeHash  String?   @map("passcode_hash") @db.VarChar(255)
+  isGuestMerged Boolean   @default(false) @map("is_guest_merged")
+  lastSeenAt    DateTime? @map("last_seen_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  memberships        CsgMembership[]
+  pushTokens         PushToken[]
+  prayerRequests     PrayerRequest[]
+  contactMessages    ContactMessage[]
+  givingTransactions GivingTransaction[]
+  paymentMethods     PaymentMethod[]
+  saves              UserSave[]
+  notes              UserNote[]
+  progress           UserProgress[]
+
+  @@map("app_users")
+}
+
+// ─── Community Service Groups ───
+
+model Csg {
+  id                           Int      @id @default(autoincrement())
+  name                         String   @db.VarChar(255)
+  description                  String?  @db.Text
+  meetsOn                      String?  @map("meets_on") @db.VarChar(50)
+  meetingTime                  String?  @map("meeting_time") @db.VarChar(50)
+  address                      String?  @db.VarChar(500)
+  latitude                     Float?
+  longitude                    Float?
+  coverImageUrl                String?  @map("cover_image_url") @db.VarChar(500)
+  coverImageCloudinaryPublicId String?  @map("cover_image_cloudinary_public_id") @db.VarChar(255)
+  memberCount                  Int      @default(0) @map("member_count")
+  isActive                     Boolean  @default(true) @map("is_active")
+  createdAt                    DateTime @default(now()) @map("created_at")
+  updatedAt                    DateTime @updatedAt @map("updated_at")
+
+  admins          Admin[]
+  memberships     CsgMembership[]
+  updates         CsgUpdate[]
+  pushTokens      PushToken[]
+  contactMessages ContactMessage[]
+
+  @@map("csgs")
+}
+
+model CsgMembership {
+  id         Int       @id @default(autoincrement())
+  csgId      Int       @map("csg_id")
+  appUserId  Int       @map("app_user_id")
+  isActive   Boolean   @default(true) @map("is_active")
+  joinedAt   DateTime  @default(now()) @map("joined_at")
+  leftAt     DateTime? @map("left_at")
+  lastRsvpAt DateTime? @map("last_rsvp_at")
+
+  csg     Csg     @relation(fields: [csgId], references: [id], onDelete: Cascade)
+  appUser AppUser @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+
+  @@unique([csgId, appUserId])
+  @@index([appUserId])
+  @@map("csg_memberships")
+}
+
+model CsgUpdate {
+  id            Int      @id @default(autoincrement())
+  csgId         Int      @map("csg_id")
+  authorAdminId Int?     @map("author_admin_id")
+  title         String?  @db.VarChar(255)
+  body          String   @db.Text
+  notifyMembers Boolean  @default(false) @map("notify_members")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  csg         Csg    @relation(fields: [csgId], references: [id], onDelete: Cascade)
+  authorAdmin Admin? @relation("CsgUpdateAuthor", fields: [authorAdminId], references: [id], onDelete: SetNull)
+
+  @@index([csgId, createdAt])
+  @@map("csg_updates")
+}
+
+// ─── Push notifications ───
+
+model PushToken {
+  id               Int      @id @default(autoincrement())
+  token            String   @unique @db.VarChar(255)
+  appUserId        Int?     @map("app_user_id")
+  platform         String?  @db.VarChar(20)
+  csgId            Int?     @map("csg_id")
+  topics           String[] @default([])
+  isActive         Boolean  @default(true) @map("is_active")
+  lastRegisteredAt DateTime @default(now()) @map("last_registered_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  appUser AppUser? @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+  csg     Csg?     @relation(fields: [csgId], references: [id], onDelete: SetNull)
+
+  @@index([appUserId])
+  @@index([csgId])
+  @@map("push_tokens")
+}
+
+// ─── Prayer requests & contact ───
+
+model PrayerRequest {
+  id               Int                 @id @default(autoincrement())
+  appUserId        Int?                @map("app_user_id")
+  name             String?             @db.VarChar(255)
+  body             String              @db.Text
+  isPrivate        Boolean             @default(true) @map("is_private")
+  status           PrayerRequestStatus @default(NEW)
+  handledByAdminId Int?                @map("handled_by_admin_id")
+  handledAt        DateTime?           @map("handled_at")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+
+  appUser        AppUser? @relation(fields: [appUserId], references: [id], onDelete: SetNull)
+  handledByAdmin Admin?   @relation("PrayerHandledBy", fields: [handledByAdminId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@map("prayer_requests")
+}
+
+model ContactMessage {
+  id               Int                  @id @default(autoincrement())
+  appUserId        Int?                 @map("app_user_id")
+  name             String               @db.VarChar(255)
+  email            String               @db.VarChar(255)
+  phone            String?              @db.VarChar(50)
+  category         ContactCategory      @default(GENERAL)
+  csgId            Int?                 @map("csg_id")
+  message          String               @db.Text
+  status           ContactMessageStatus @default(NEW)
+  handledByAdminId Int?                 @map("handled_by_admin_id")
+  handledAt        DateTime?            @map("handled_at")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+
+  appUser        AppUser? @relation(fields: [appUserId], references: [id], onDelete: SetNull)
+  csg            Csg?     @relation(fields: [csgId], references: [id], onDelete: SetNull)
+  handledByAdmin Admin?   @relation("ContactHandledBy", fields: [handledByAdminId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@map("contact_messages")
+}
+
+// ─── Giving / Paystack ───
+
+// Church-owned bank account(s) for manual-transfer giving - the default path;
+// Paystack (below) is the online-card alternative. Admin-managed, no
+// reconciliation/auto-verification - just display details + instructions.
+model ChurchBankAccount {
+  id           Int      @id @default(autoincrement())
+  bankName     String   @map("bank_name") @db.VarChar(255)
+  accountName  String   @map("account_name") @db.VarChar(255)
+  accountNumber String  @map("account_number") @db.VarChar(50)
+  instructions String?  @db.Text
+  isActive     Boolean  @default(true) @map("is_active")
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("church_bank_accounts")
+}
+
+model Project {
+  id                 Int       @id @default(autoincrement())
+  title              String    @db.VarChar(255)
+  blurb              String?   @db.Text
+  description        String?   @db.Text
+  imageUrl           String?   @map("image_url") @db.VarChar(500)
+  cloudinaryPublicId String?   @map("cloudinary_public_id") @db.VarChar(255)
+  targetAmount       BigInt    @map("target_amount")
+  raisedAmount       BigInt    @default(0) @map("raised_amount")
+  donorCount         Int       @default(0) @map("donor_count")
+  deadline           DateTime? @db.Date
+  isActive           Boolean   @default(true) @map("is_active")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  givingTransactions GivingTransaction[]
+
+  @@map("projects")
+}
+
+model GivingTransaction {
+  id          Int                     @id @default(autoincrement())
+  reference   String                  @unique @db.VarChar(100)
+  appUserId   Int?                    @map("app_user_id")
+  email       String                  @db.VarChar(255)
+  amount      BigInt
+  currency    String                  @default("NGN") @db.VarChar(3)
+  purpose     GivingPurpose
+  projectId   Int?                    @map("project_id")
+  anonymous   Boolean                 @default(false)
+  status      GivingTransactionStatus @default(PENDING)
+  channel     String?                 @db.VarChar(50)
+  metadata    Json?
+  paidAt      DateTime?               @map("paid_at")
+  createdAt   DateTime                @default(now()) @map("created_at")
+  updatedAt   DateTime                @updatedAt @map("updated_at")
+
+  appUser AppUser? @relation(fields: [appUserId], references: [id], onDelete: SetNull)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([appUserId])
+  @@index([status])
+  @@index([projectId])
+  @@map("giving_transactions")
+}
+
+model PaymentMethod {
+  id                        Int      @id @default(autoincrement())
+  appUserId                 Int      @map("app_user_id")
+  paystackAuthorizationCode String   @unique @map("paystack_authorization_code") @db.VarChar(255)
+  cardType                  String?  @map("card_type") @db.VarChar(50)
+  last4                     String?  @db.VarChar(4)
+  bank                      String?  @db.VarChar(100)
+  expMonth                  String?  @map("exp_month") @db.VarChar(2)
+  expYear                   String?  @map("exp_year") @db.VarChar(4)
+  isDefault                 Boolean  @default(false) @map("is_default")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  appUser AppUser @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+
+  @@index([appUserId])
+  @@map("payment_methods")
+}
+
+// ─── User saves / notes / playback progress ───
+// Deliberately no enforced FK to the four content tables here (same polymorphic
+// convention as ContentInteraction above) - contentId + contentType only.
+
+model UserSave {
+  id          Int         @id @default(autoincrement())
+  appUserId   Int         @map("app_user_id")
+  contentType ContentType @map("content_type")
+  contentId   Int         @map("content_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  appUser AppUser @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+
+  @@unique([appUserId, contentType, contentId])
+  @@map("user_saves")
+}
+
+model UserNote {
+  id          Int         @id @default(autoincrement())
+  appUserId   Int         @map("app_user_id")
+  contentType ContentType @map("content_type")
+  contentId   Int         @map("content_id")
+  body        String      @db.Text
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  appUser AppUser @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+
+  @@index([appUserId, contentType, contentId])
+  @@map("user_notes")
+}
+
+model UserProgress {
+  id              Int         @id @default(autoincrement())
+  appUserId       Int         @map("app_user_id")
+  contentType     ContentType @map("content_type")
+  contentId       Int         @map("content_id")
+  positionSeconds Int         @default(0) @map("position_seconds")
+  durationSeconds Int?        @map("duration_seconds")
+  completed       Boolean     @default(false)
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  appUser AppUser @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+
+  @@unique([appUserId, contentType, contentId])
+  @@map("user_progress")
+}
+
+// ─── Live schedule ───
+
+model LiveSchedule {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  dayOfWeek Int      @map("day_of_week")
+  time      String   @db.VarChar(20)
+  timezone  String   @default("Africa/Lagos") @db.VarChar(50)
+  notes     String?  @db.Text
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("live_schedules")
+}
+
+// ─── Sunday photo collage ───
+
+model Collage {
+  id                           Int      @id @default(autoincrement())
+  // One collage per date - the day the photos were taken (a Sunday, usually).
+  date                         DateTime @unique @db.Date
+  coverImageUrl                String   @map("cover_image_url") @db.VarChar(500)
+  coverImageCloudinaryPublicId String   @map("cover_image_cloudinary_public_id") @db.VarChar(255)
+  isActive                     Boolean  @default(true) @map("is_active")
+  createdAt                    DateTime @default(now()) @map("created_at")
+  updatedAt                    DateTime @updatedAt @map("updated_at")
+
+  photos CollagePhoto[]
+
+  @@map("collages")
+}
+
+model CollagePhoto {
+  id                 Int      @id @default(autoincrement())
+  collageId          Int      @map("collage_id")
+  imageUrl           String   @map("image_url") @db.VarChar(500)
+  cloudinaryPublicId String   @map("cloudinary_public_id") @db.VarChar(255)
+  sortOrder          Int      @default(0) @map("sort_order")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  collage Collage @relation(fields: [collageId], references: [id], onDelete: Cascade)
+
+  @@map("collage_photos")
+}
+
 // Enums
 enum Priority {
   LOW
@@ -189,6 +537,7 @@ enum AdminRole {
   SUPER_ADMIN
   ADMIN
   EDITOR
+  CSG_ADMIN
 }
 
 enum ContentType {
@@ -206,4 +555,43 @@ enum InteractionType {
   FAVORITED
   SHARED
   BOOKMARKED
+}
+
+enum VideoKind {
+  SERMON
+  EXCERPT
+  INSPIRATIONAL
+}
+
+enum PrayerRequestStatus {
+  NEW
+  IN_PROGRESS
+  HANDLED
+}
+
+enum ContactCategory {
+  GENERAL
+  CSG
+  PRAYER
+  TECHNICAL
+  OTHER
+}
+
+enum ContactMessageStatus {
+  NEW
+  HANDLED
+}
+
+enum GivingPurpose {
+  TITHE
+  OFFERING
+  SEED
+  PROJECT
+}
+
+enum GivingTransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  ABANDONED
 }

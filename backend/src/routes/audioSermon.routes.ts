@@ -1,7 +1,7 @@
 // backend/src/routes/audioSermon.routes.ts
 import { Router } from 'express';
 import { AudioSermonController } from '../controllers/audioSermon.controller';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate, requireContentAccess } from '../middleware/auth.middleware';
 import { uploadAudio, uploadImage } from '../config/multer';
 
 const router = Router();
@@ -13,13 +13,13 @@ router.get('/category/:categoryId', AudioSermonController.getAudioSermonsByCateg
 router.get('/:id', AudioSermonController.getAudioSermonById);
 
 // Protected admin routes
-router.post('/', authenticate, AudioSermonController.createAudioSermon);
-router.post('/upload', authenticate, uploadAudio.single('audio'), AudioSermonController.createAudioSermonWithUpload);
+router.post('/', authenticate, requireContentAccess, AudioSermonController.createAudioSermon);
+router.post('/upload', authenticate, requireContentAccess, uploadAudio.single('audio'), AudioSermonController.createAudioSermonWithUpload);
 // New route for thumbnail upload
-router.post('/upload-thumbnail', authenticate, uploadImage.single('thumbnail'), require('../controllers/upload.controller').UploadController.uploadThumbnail);
-router.put('/:id', authenticate, AudioSermonController.updateAudioSermon);
-router.delete('/:id', authenticate, AudioSermonController.deleteAudioSermon);
-router.patch('/:id/featured', authenticate, AudioSermonController.toggleFeatured);
-router.get('/admin/stats', authenticate, AudioSermonController.getAudioSermonStats);
+router.post('/upload-thumbnail', authenticate, requireContentAccess, uploadImage.single('thumbnail'), require('../controllers/upload.controller').UploadController.uploadThumbnail);
+router.put('/:id', authenticate, requireContentAccess, AudioSermonController.updateAudioSermon);
+router.delete('/:id', authenticate, requireContentAccess, AudioSermonController.deleteAudioSermon);
+router.patch('/:id/featured', authenticate, requireContentAccess, AudioSermonController.toggleFeatured);
+router.get('/admin/stats', authenticate, requireContentAccess, AudioSermonController.getAudioSermonStats);
 
 export default router;

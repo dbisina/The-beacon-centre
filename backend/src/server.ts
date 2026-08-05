@@ -11,8 +11,14 @@ import path from 'path';
 // Load environment variables
 dotenv.config();
 
+// Prisma returns BigInt for money/file-size columns; JSON.stringify throws on
+// a raw BigInt, so every response serializer needs this shim in place first.
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 // Import configurations
-import { corsOptions, simpleCorsOptions } from './config/cors';
+import { corsOptions } from './config/cors';
 
 // Import enhanced rate limiting
 import { smartRateLimiter, createDevLimiter } from './middleware/rateLimiter';
@@ -26,11 +32,21 @@ import categoryRoutes from './routes/category.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import adminRoutes from './routes/admin.routes';
 import uploadRoutes from './routes/upload.routes';
+import csgRoutes from './routes/csg.routes';
+import givingRoutes from './routes/giving.routes';
+import projectRoutes from './routes/project.routes';
+import deviceRoutes from './routes/device.routes';
+import notifyRoutes from './routes/notify.routes';
+import prayerRequestRoutes from './routes/prayerRequest.routes';
+import contactRoutes from './routes/contact.routes';
+import userRoutes from './routes/user.routes';
+import appUserAuthRoutes from './routes/appUserAuth.routes';
+import liveScheduleRoutes from './routes/liveSchedule.routes';
+import collageRoutes from './routes/collage.routes';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
-import adminVideoSermonRoutes from './routes/admin.videoSermon.routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,12 +60,20 @@ app.use(helmet({
 }));
 
 // CORS configuration - Using simple config for debugging
-app.use(cors(simpleCorsOptions));
+app.use(cors(corsOptions));
 
 // Compression and parsing
 app.use(compression());
 app.use(cookieParser());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({
+  limit: '50mb',
+  // Capture the raw body bytes alongside the parsed JSON - the Paystack
+  // webhook needs to HMAC the exact bytes Paystack sent, and re-stringifying
+  // req.body isn't guaranteed to produce an identical byte sequence.
+  verify: (req, _res, buf) => {
+    (req as any).rawBody = buf;
+  },
+}));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Logging
@@ -86,6 +110,15 @@ app.get('/', (req, res) => {
       analytics: '/api/analytics',
       admin: '/api/admin',
       upload: '/api/upload',
+      csgs: '/api/csgs',
+      giving: '/api/giving',
+      projects: '/api/projects',
+      devices: '/api/devices',
+      notify: '/api/notify',
+      prayerRequests: '/api/prayer-requests',
+      contact: '/api/contact',
+      users: '/api/users',
+      liveSchedule: '/api/live-schedule',
     },
   });
 });
@@ -123,6 +156,17 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/csgs', csgRoutes);
+app.use('/api/giving', givingRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/devices', deviceRoutes);
+app.use('/api/notify', notifyRoutes);
+app.use('/api/prayer-requests', prayerRequestRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/auth', appUserAuthRoutes);
+app.use('/api/live-schedule', liveScheduleRoutes);
+app.use('/api/collages', collageRoutes);
 
 // Error handling middleware
 app.use(notFound);
