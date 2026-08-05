@@ -188,10 +188,10 @@ const CategoryForm = ({ category, onSubmit, onCancel, isLoading }: CategoryFormP
         >
           Cancel
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={isLoading || !name.trim()}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg rounded-xl px-6"
+          className="bg-blue-600 hover:bg-blue-700 text-white border-0 rounded-xl px-6"
         >
           {category ? 'Update Category' : 'Create Category'}
         </Button>
@@ -301,18 +301,18 @@ export default function CategoriesPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-6">
+      <div className="min-h-screen bg-slate-50 p-6">
         <div className="max-w-4xl mx-auto">
-          <Card className="bg-white border-0 shadow-2xl rounded-2xl overflow-hidden">
+          <Card className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
             <CardContent className="text-center py-16">
-              <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FolderOpen className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-slate-800 mb-2">Error loading categories</h3>
               <p className="text-slate-600 mb-6">{error.message}</p>
-              <Button 
-                onClick={() => queryClient.invalidateQueries(['categories'])} 
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg"
+              <Button
+                onClick={() => queryClient.invalidateQueries(['categories'])}
+                className="bg-blue-600 hover:bg-blue-700 text-white border-0"
               >
                 Try Again
               </Button>
@@ -324,21 +324,21 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-6 space-y-8">
+    <div className="min-h-screen bg-slate-50 p-6 space-y-8">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-slate-800">
             Categories
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl">
             Organize your content with beautiful, customizable categories
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => setIsCreateDialogOpen(true)}
           size="lg"
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 px-8"
+          className="bg-blue-600 hover:bg-blue-700 text-white border-0 px-8"
         >
           <Plus className="mr-2 h-5 w-5" />
           New Category
@@ -347,10 +347,10 @@ export default function CategoriesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl hover:bg-blue-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Total Categories</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
               <Layers className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -362,10 +362,10 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-green-50 hover:to-emerald-50">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl hover:bg-green-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">For Devotionals</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
+            <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
               <BookOpen className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -377,10 +377,10 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl hover:bg-purple-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">For Sermons</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25">
+            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center">
               <Video className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -392,10 +392,10 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-amber-50 hover:to-orange-50">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl hover:bg-amber-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Most Used</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+            <div className="w-10 h-10 bg-amber-600 rounded-xl flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -409,8 +409,8 @@ export default function CategoriesPage() {
       </div>
 
       {/* Categories List */}
-      <Card className="bg-white border-0 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 pb-6">
+      <Card className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <CardHeader className="bg-slate-50 border-b border-slate-200 pb-6">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl font-bold text-slate-800">Manage Categories</CardTitle>
@@ -437,7 +437,7 @@ export default function CategoriesPage() {
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-150 border-b border-slate-200">
+                <TableRow className="bg-slate-50 hover:bg-slate-100 border-b border-slate-200">
                   <TableHead className="font-semibold text-slate-700 py-4">Category</TableHead>
                   <TableHead className="font-semibold text-slate-700">Description</TableHead>
                   <TableHead className="font-semibold text-slate-700 w-[120px]">Color</TableHead>
@@ -468,10 +468,10 @@ export default function CategoriesPage() {
                     <TableCell colSpan={6} className="text-center py-16">
                       <div className="flex flex-col items-center space-y-6">
                         <div className="relative">
-                          <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/25">
+                          <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center">
                             <FolderOpen className="h-12 w-12 text-white" />
                           </div>
-                          <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center">
+                          <div className="absolute -top-2 -right-2 w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center">
                             <Plus className="h-4 w-4 text-white" />
                           </div>
                         </div>
@@ -479,10 +479,10 @@ export default function CategoriesPage() {
                           <h3 className="text-xl font-semibold text-slate-800">No categories found</h3>
                           <p className="text-slate-500 max-w-sm">Create your first category to start organizing your content effectively.</p>
                         </div>
-                        <Button 
+                        <Button
                           onClick={() => setIsCreateDialogOpen(true)}
-                          size="lg" 
-                          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 px-8"
+                          size="lg"
+                          className="bg-blue-600 hover:bg-blue-700 text-white border-0 px-8"
                         >
                           <Plus className="mr-2 h-5 w-5" />
                           Create First Category
@@ -643,7 +643,7 @@ export default function CategoriesPage() {
             <AlertDialogCancel className="hover:bg-slate-100 rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && handleDelete(deleteId)}
-              className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0 shadow-lg rounded-xl"
+              className="bg-red-600 hover:bg-red-700 text-white border-0 rounded-xl"
             >
               Delete Category
             </AlertDialogAction>

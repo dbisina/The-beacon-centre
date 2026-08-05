@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Settings as SettingsIcon, 
-  Bell, 
-  Shield, 
-  Database, 
-  Palette, 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Settings as SettingsIcon,
+  Bell,
+  Shield,
+  Database,
+  Palette,
   Globe,
   Save,
   Loader2,
@@ -22,14 +21,17 @@ import {
   Upload,
   Trash2,
   AlertTriangle,
-  Youtube,
   Zap,
   Users,
   Activity,
   Server,
   Clock,
   FileText,
-  Sliders
+  Sliders,
+  Radio,
+  Plus,
+  Pencil,
+  Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +54,22 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -62,9 +80,47 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '../../../contexts/authContext';
-import { YouTubeAPIStatus } from '@/components/admin/YouTubeAPIStatus';
+import { liveScheduleApi } from '@/lib/api';
+
+// Live Schedule types (local to this page - mirrors backend LiveSchedule model)
+interface LiveScheduleEntry {
+  id: number;
+  name: string;
+  dayOfWeek: number; // 0 = Sunday ... 6 = Saturday
+  time: string;
+  timezone: string;
+  notes?: string | null;
+  isActive?: boolean;
+}
+
+interface LiveScheduleFormData {
+  name: string;
+  dayOfWeek: number;
+  time: string;
+  timezone: string;
+  notes: string;
+}
+
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
+
+const emptyLiveScheduleForm: LiveScheduleFormData = {
+  name: '',
+  dayOfWeek: 0,
+  time: '09:00',
+  timezone: 'Africa/Lagos',
+  notes: '',
+};
 
 interface AppSettings {
   appName: string;
@@ -109,7 +165,13 @@ export default function SettingsPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
+  // Live Schedule tab state
+  const [showLiveScheduleDialog, setShowLiveScheduleDialog] = useState(false);
+  const [editingLiveSchedule, setEditingLiveSchedule] = useState<LiveScheduleEntry | null>(null);
+  const [liveScheduleForm, setLiveScheduleForm] = useState<LiveScheduleFormData>(emptyLiveScheduleForm);
+  const [deleteLiveScheduleId, setDeleteLiveScheduleId] = useState<number | null>(null);
+
   const { admin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -154,6 +216,108 @@ export default function SettingsPage() {
       requireSpecialChars: true,
     },
   });
+
+  // Live Schedule query
+  const { data: liveSchedules = [], isLoading: isLoadingLiveSchedules } = useQuery({
+    queryKey: ['live-schedule'],
+    queryFn: () => liveScheduleApi.getAll(),
+  });
+
+  const closeLiveScheduleDialog = () => {
+    setShowLiveScheduleDialog(false);
+    setEditingLiveSchedule(null);
+    setLiveScheduleForm(emptyLiveScheduleForm);
+  };
+
+  const createLiveScheduleMutation = useMutation({
+    mutationFn: (data: LiveScheduleFormData) => liveScheduleApi.create(data),
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Live schedule entry created successfully',
+        variant: 'success',
+      });
+      queryClient.invalidateQueries({ queryKey: ['live-schedule'] });
+      closeLiveScheduleDialog();
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to create live schedule entry',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const updateLiveScheduleMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: LiveScheduleFormData }) =>
+      liveScheduleApi.update(id, data),
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Live schedule entry updated successfully',
+        variant: 'success',
+      });
+      queryClient.invalidateQueries({ queryKey: ['live-schedule'] });
+      closeLiveScheduleDialog();
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to update live schedule entry',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteLiveScheduleMutation = useMutation({
+    mutationFn: (id: number) => liveScheduleApi.delete(id),
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Live schedule entry deleted successfully',
+        variant: 'success',
+      });
+      queryClient.invalidateQueries({ queryKey: ['live-schedule'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to delete live schedule entry',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const openAddLiveScheduleDialog = () => {
+    setEditingLiveSchedule(null);
+    setLiveScheduleForm(emptyLiveScheduleForm);
+    setShowLiveScheduleDialog(true);
+  };
+
+  const openEditLiveScheduleDialog = (entry: LiveScheduleEntry) => {
+    setEditingLiveSchedule(entry);
+    setLiveScheduleForm({
+      name: entry.name,
+      dayOfWeek: entry.dayOfWeek,
+      time: entry.time,
+      timezone: entry.timezone,
+      notes: entry.notes || '',
+    });
+    setShowLiveScheduleDialog(true);
+  };
+
+  const handleSubmitLiveSchedule = () => {
+    const payload = {
+      ...liveScheduleForm,
+      notes: liveScheduleForm.notes || undefined,
+    };
+    if (editingLiveSchedule) {
+      updateLiveScheduleMutation.mutate({ id: editingLiveSchedule.id, data: payload });
+    } else {
+      createLiveScheduleMutation.mutate(payload);
+    }
+  };
 
   // Save settings mutation
   const saveSettingsMutation = useMutation({
@@ -241,11 +405,11 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-6 space-y-8">
+    <div className="min-h-screen bg-slate-50 p-6 space-y-8">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-slate-800">
             Settings
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl">
@@ -272,10 +436,10 @@ export default function SettingsPage() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">App Status</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
+            <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
               <Activity className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -287,10 +451,10 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-amber-50 hover:to-orange-50">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl hover:bg-amber-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Security</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+            <div className="w-10 h-10 bg-amber-600 rounded-xl flex items-center justify-center">
               <Shield className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -304,10 +468,10 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl hover:bg-purple-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Notifications</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25">
+            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center">
               <Bell className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -321,10 +485,10 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl hover:bg-gradient-to-br hover:from-red-50 hover:to-rose-50">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl hover:bg-red-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Cache Size</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25">
+            <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center">
               <Server className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -337,34 +501,41 @@ export default function SettingsPage() {
         </Card>
       </div>
 
-      <Card className="bg-white border-0 shadow-xl shadow-slate-200/50 rounded-2xl">
+      <Card className="bg-white border border-slate-200 rounded-2xl">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
-            <TabsList className="grid w-full grid-cols-4 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-              <TabsTrigger 
-                value="general" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-200 font-medium"
+          <CardHeader className="bg-slate-50 border-b border-slate-200">
+            <TabsList className="grid w-full grid-cols-5 bg-white border border-slate-200 rounded-xl p-1">
+              <TabsTrigger
+                value="general"
+                className="data-[state=active]:bg-slate-900 data-[state=active]:text-white rounded-lg transition-all duration-200 font-medium"
               >
                 <SettingsIcon className="mr-2 h-4 w-4" />
                 General
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="notifications"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-200 font-medium"
+                className="data-[state=active]:bg-slate-900 data-[state=active]:text-white rounded-lg transition-all duration-200 font-medium"
               >
                 <Bell className="mr-2 h-4 w-4" />
                 Notifications
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="security"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-200 font-medium"
+                className="data-[state=active]:bg-slate-900 data-[state=active]:text-white rounded-lg transition-all duration-200 font-medium"
               >
                 <Shield className="mr-2 h-4 w-4" />
                 Security
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
+                value="live"
+                className="data-[state=active]:bg-slate-900 data-[state=active]:text-white rounded-lg transition-all duration-200 font-medium"
+              >
+                <Radio className="mr-2 h-4 w-4" />
+                Live Schedule
+              </TabsTrigger>
+              <TabsTrigger
                 value="advanced"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-lg transition-all duration-200 font-medium"
+                className="data-[state=active]:bg-slate-900 data-[state=active]:text-white rounded-lg transition-all duration-200 font-medium"
               >
                 <Database className="mr-2 h-4 w-4" />
                 Advanced
@@ -376,7 +547,7 @@ export default function SettingsPage() {
           <TabsContent value="general" className="p-8 space-y-8">
             <div className="space-y-6">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                   <SettingsIcon className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -515,11 +686,11 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex justify-end">
-                <Button 
+                <Button
                   onClick={() => handleSaveSettings('General', appSettings)}
                   disabled={saveSettingsMutation.isLoading}
                   size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg rounded-xl px-8"
+                  className="bg-blue-600 hover:bg-blue-700 text-white border-0 rounded-xl px-8"
                 >
                   {saveSettingsMutation.isLoading ? (
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -536,7 +707,7 @@ export default function SettingsPage() {
           <TabsContent value="notifications" className="p-8 space-y-8">
             <div className="space-y-6">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25">
+                <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
                   <Bell className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -631,11 +802,11 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex justify-end">
-                <Button 
+                <Button
                   onClick={() => handleSaveSettings('Notification', notificationSettings)}
                   disabled={saveSettingsMutation.isLoading}
                   size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg rounded-xl px-8"
+                  className="bg-purple-600 hover:bg-purple-700 text-white border-0 rounded-xl px-8"
                 >
                   {saveSettingsMutation.isLoading ? (
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -652,7 +823,7 @@ export default function SettingsPage() {
           <TabsContent value="security" className="p-8 space-y-8">
             <div className="space-y-6">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+                <div className="w-12 h-12 bg-amber-600 rounded-xl flex items-center justify-center">
                   <Shield className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -669,7 +840,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center space-x-3">
                     {securitySettings.twoFactorEnabled && (
-                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">Enabled</Badge>
+                      <Badge className="bg-green-600 text-white border-0">Enabled</Badge>
                     )}
                     <Switch
                       checked={securitySettings.twoFactorEnabled}
@@ -790,11 +961,11 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex justify-end">
-                <Button 
+                <Button
                   onClick={() => handleSaveSettings('Security', securitySettings)}
                   disabled={saveSettingsMutation.isLoading}
                   size="lg"
-                  className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white border-0 shadow-lg rounded-xl px-8"
+                  className="bg-amber-600 hover:bg-amber-700 text-white border-0 rounded-xl px-8"
                 >
                   {saveSettingsMutation.isLoading ? (
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -807,11 +978,106 @@ export default function SettingsPage() {
             </div>
           </TabsContent>
 
+          {/* Live Schedule Settings */}
+          <TabsContent value="live" className="p-8 space-y-8">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                    <Radio className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-slate-800">Live Service Schedule</h3>
+                    <p className="text-slate-600">Manage the recurring times the app shows as "Live"</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={openAddLiveScheduleDialog}
+                  className="bg-blue-600 hover:bg-blue-700 text-white border-0 rounded-xl px-6"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Schedule
+                </Button>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                {isLoadingLiveSchedules ? (
+                  <div className="p-6 space-y-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-14 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-slate-50 border-b border-slate-200">
+                        <TableHead className="font-semibold text-slate-700">Name</TableHead>
+                        <TableHead className="font-semibold text-slate-700">Day</TableHead>
+                        <TableHead className="font-semibold text-slate-700">Time</TableHead>
+                        <TableHead className="font-semibold text-slate-700">Timezone</TableHead>
+                        <TableHead className="font-semibold text-slate-700">Notes</TableHead>
+                        <TableHead className="w-[100px] text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {liveSchedules.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-16">
+                            <div className="flex flex-col items-center space-y-3">
+                              <Calendar className="h-10 w-10 text-slate-300" />
+                              <p className="text-slate-500">No live schedule entries yet.</p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        liveSchedules.map((entry: LiveScheduleEntry) => (
+                          <TableRow key={entry.id} className="border-b border-slate-100 last:border-0">
+                            <TableCell className="py-4 font-medium text-slate-800">{entry.name}</TableCell>
+                            <TableCell className="py-4">
+                              <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0">
+                                {WEEKDAY_NAMES[entry.dayOfWeek] || entry.dayOfWeek}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="py-4 text-slate-600">{entry.time}</TableCell>
+                            <TableCell className="py-4 text-slate-600">{entry.timezone}</TableCell>
+                            <TableCell className="py-4 text-slate-600 max-w-[240px] truncate">
+                              {entry.notes || 'N/A'}
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="flex items-center justify-end space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 rounded-lg"
+                                  onClick={() => openEditLiveScheduleDialog(entry)}
+                                >
+                                  <Pencil className="h-4 w-4 text-amber-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 rounded-lg"
+                                  onClick={() => setDeleteLiveScheduleId(entry.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
           {/* Advanced Settings */}
           <TabsContent value="advanced" className="p-8 space-y-8">
             <div className="space-y-6">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25">
+                <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center">
                   <Database className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -848,7 +1114,7 @@ export default function SettingsPage() {
                   Data Management
                 </h4>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
                       <p className="font-semibold text-slate-800">Export All Data</p>
@@ -857,10 +1123,10 @@ export default function SettingsPage() {
                     <p className="text-sm text-slate-600 mb-4">
                       Download a complete backup of all application data
                     </p>
-                    <Button 
-                      variant="outline" 
-                      onClick={handleExportData} 
-                      disabled={isExporting} 
+                    <Button
+                      variant="outline"
+                      onClick={handleExportData}
+                      disabled={isExporting}
                       className="w-full border-blue-300 hover:bg-blue-50 text-blue-700 rounded-xl"
                     >
                       {isExporting ? (
@@ -880,39 +1146,23 @@ export default function SettingsPage() {
                     <p className="text-sm text-slate-600 mb-4">
                       Import data from a backup file
                     </p>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full border-green-300 hover:bg-green-50 text-green-700 rounded-xl"
                     >
                       <Upload className="mr-2 h-4 w-4" />
                       Import Data
                     </Button>
                   </div>
-                  
-                  <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="font-semibold text-slate-800">YouTube API Testing</p>
-                      <Youtube className="h-5 w-5 text-red-600" />
-                    </div>
-                    <p className="text-sm text-slate-600 mb-4">
-                      Test YouTube API integration and validate configuration
-                    </p>
-                    <Button variant="outline" asChild className="w-full border-red-300 hover:bg-red-50 text-red-700 rounded-xl">
-                      <Link href="/dashboard/settings/youtube-api">
-                        <Youtube className="mr-2 h-4 w-4" />
-                        Test YouTube API
-                      </Link>
-                    </Button>
-                  </div>
                 </div>
 
-                <div className="p-6 bg-gradient-to-r from-red-50 to-rose-50 rounded-xl border-2 border-red-200">
+                <div className="p-6 bg-red-50 rounded-xl border border-red-200">
                   <h4 className="text-lg font-semibold text-red-800 flex items-center mb-4">
                     <AlertTriangle className="mr-2 h-5 w-5" />
                     Danger Zone
                   </h4>
-                  
-                  <div className="p-6 bg-white rounded-xl border-2 border-red-300">
+
+                  <div className="p-6 bg-white rounded-xl border border-red-300">
                     <div className="flex items-center justify-between mb-3">
                       <p className="font-semibold text-red-900">Reset All Settings</p>
                       <Trash2 className="h-5 w-5 text-red-600" />
@@ -920,9 +1170,9 @@ export default function SettingsPage() {
                     <p className="text-sm text-red-700 mb-4">
                       This will reset all settings to their default values. This action cannot be undone.
                     </p>
-                    <Button 
+                    <Button
                       onClick={() => setShowDeleteDialog(true)}
-                      className="w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0 shadow-lg rounded-xl"
+                      className="w-full bg-red-600 hover:bg-red-700 text-white border-0 rounded-xl"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Reset All Settings
@@ -934,6 +1184,131 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </Card>
+
+      {/* Add / Edit Live Schedule Dialog */}
+      <Dialog open={showLiveScheduleDialog} onOpenChange={(open) => (open ? setShowLiveScheduleDialog(true) : closeLiveScheduleDialog())}>
+        <DialogContent className="bg-white border border-slate-200 shadow-2xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-800">
+              {editingLiveSchedule ? 'Edit Schedule Entry' : 'Add Schedule Entry'}
+            </DialogTitle>
+            <DialogDescription className="text-slate-600">
+              Set the recurring day and time the app should display as a live service.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="scheduleName">Name</Label>
+              <Input
+                id="scheduleName"
+                value={liveScheduleForm.name}
+                onChange={(e) => setLiveScheduleForm({ ...liveScheduleForm, name: e.target.value })}
+                placeholder="e.g. Sunday Worship Service"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="scheduleDay">Day of Week</Label>
+                <Select
+                  value={String(liveScheduleForm.dayOfWeek)}
+                  onValueChange={(value) => setLiveScheduleForm({ ...liveScheduleForm, dayOfWeek: parseInt(value) })}
+                >
+                  <SelectTrigger id="scheduleDay">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WEEKDAY_NAMES.map((day, index) => (
+                      <SelectItem key={index} value={String(index)}>
+                        {day}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="scheduleTime">Time</Label>
+                <Input
+                  id="scheduleTime"
+                  value={liveScheduleForm.time}
+                  onChange={(e) => setLiveScheduleForm({ ...liveScheduleForm, time: e.target.value })}
+                  placeholder="09:00"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="scheduleTimezone">Timezone</Label>
+              <Input
+                id="scheduleTimezone"
+                value={liveScheduleForm.timezone}
+                onChange={(e) => setLiveScheduleForm({ ...liveScheduleForm, timezone: e.target.value })}
+                placeholder="Africa/Lagos"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="scheduleNotes">Notes (optional)</Label>
+              <Textarea
+                id="scheduleNotes"
+                value={liveScheduleForm.notes}
+                onChange={(e) => setLiveScheduleForm({ ...liveScheduleForm, notes: e.target.value })}
+                rows={3}
+                placeholder="Any additional context for this schedule entry"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={closeLiveScheduleDialog}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitLiveSchedule}
+              disabled={
+                !liveScheduleForm.name ||
+                !liveScheduleForm.time ||
+                createLiveScheduleMutation.isPending ||
+                updateLiveScheduleMutation.isPending
+              }
+              className="bg-blue-600 hover:bg-blue-700 text-white border-0"
+            >
+              {(createLiveScheduleMutation.isPending || updateLiveScheduleMutation.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {editingLiveSchedule ? 'Save Changes' : 'Add Schedule'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Live Schedule Confirmation */}
+      <AlertDialog open={deleteLiveScheduleId !== null} onOpenChange={() => setDeleteLiveScheduleId(null)}>
+        <AlertDialogContent className="bg-white border border-slate-200 shadow-2xl rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold text-slate-800">Delete Schedule Entry?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600 leading-relaxed">
+              This action cannot be undone. This will permanently remove this live schedule entry.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="space-x-3">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteLiveScheduleId) {
+                  deleteLiveScheduleMutation.mutate(deleteLiveScheduleId);
+                  setDeleteLiveScheduleId(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white border-0"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Reset Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -966,7 +1341,7 @@ export default function SettingsPage() {
                   variant: 'success',
                 });
               }}
-              className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0 shadow-lg rounded-xl"
+              className="bg-red-600 hover:bg-red-700 text-white border-0 rounded-xl"
             >
               Reset Settings
             </AlertDialogAction>

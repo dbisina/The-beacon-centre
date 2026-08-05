@@ -17,10 +17,15 @@ import {
   Menu,
   X,
   LogOut,
-  Leaf,
   Bell,
   Search,
   ChevronDown,
+  Users,
+  ShieldCheck,
+  Wallet,
+  HeartHandshake,
+  BellRing,
+  Images,
 } from "lucide-react";
 import { useAuth } from "../../contexts/authContext";
 import { Button } from "@/components/ui/button";
@@ -36,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { AdminRole } from "@/lib/types";
 
 const navigation = [
   {
@@ -47,31 +53,73 @@ const navigation = [
     name: "Devotionals",
     href: "/dashboard/devotionals",
     icon: BookOpen,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR],
   },
   {
     name: "Video Sermons",
     href: "/dashboard/video-sermons",
     icon: Video,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR],
   },
   {
     name: "Audio Sermons",
     href: "/dashboard/audio-sermons",
     icon: Headphones,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR],
   },
   {
     name: "Announcements",
     href: "/dashboard/announcements",
     icon: Megaphone,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR],
   },
   {
     name: "Categories",
     href: "/dashboard/categories",
     icon: FolderOpen,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR],
   },
   {
     name: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR],
+  },
+  {
+    name: "Community Groups",
+    href: "/dashboard/csgs",
+    icon: Users,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.CSG_ADMIN],
+  },
+  {
+    name: "Photo Collages",
+    href: "/dashboard/collages",
+    icon: Images,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR],
+  },
+  {
+    name: "Admin Management",
+    href: "/dashboard/admin-users",
+    icon: ShieldCheck,
+    roles: [AdminRole.SUPER_ADMIN],
+  },
+  {
+    name: "Giving",
+    href: "/dashboard/giving",
+    icon: Wallet,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN],
+  },
+  {
+    name: "Prayer & Contact",
+    href: "/dashboard/prayer-requests",
+    icon: HeartHandshake,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN],
+  },
+  {
+    name: "Notifications",
+    href: "/dashboard/notifications",
+    icon: BellRing,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN],
   },
   {
     name: "Settings",
@@ -93,8 +141,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     await logout();
   };
 
-  // Use navigation directly since we removed role-based filtering
-  const filteredNavigation = navigation;
+  // Filter nav items by admin role; items without a roles array are visible to everyone
+  const filteredNavigation = navigation
+    .filter((item) => !item.roles || (admin?.role && item.roles.includes(admin.role as AdminRole)))
+    .map((item) => {
+      // A CSG_ADMIN should land directly on their own CSG's detail page, not the list
+      if (
+        item.href === "/dashboard/csgs" &&
+        admin?.role === "CSG_ADMIN" &&
+        admin?.csgId
+      ) {
+        return { ...item, href: `/dashboard/csgs/${admin.csgId}` };
+      }
+      return item;
+    });
 
   const getInitials = (name: string) => {
     return name
@@ -126,9 +186,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
             <div className="flex items-center space-x-3">
-              <div className="h-8 w-8 bg-teal-600 rounded-full flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-white" />
-              </div>
+              <img src="/logo-mark.png" alt="The Beacon Centre" className="h-8 w-8" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">
                   TBC Admin
@@ -158,7 +216,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   className={cn(
                     "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                     isActive
-                      ? "bg-teal-50 text-teal-700 border-r-2 border-teal-600"
+                      ? "bg-slate-900 text-white"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   )}
                   onClick={() => setSidebarOpen(false)}
@@ -166,7 +224,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <item.icon
                     className={cn(
                       "mr-3 h-5 w-5",
-                      isActive ? "text-teal-600" : "text-gray-400"
+                      isActive ? "text-white" : "text-gray-400"
                     )}
                   />
                   {item.name}

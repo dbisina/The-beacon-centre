@@ -21,6 +21,11 @@ export const setAuthToken = (token: string | null) => {
   accessToken = token;
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    try {
+      localStorage.setItem('tbc_admin_token', token);
+    } catch (error) {
+      console.error('Failed to persist auth token:', error);
+    }
   } else {
     delete api.defaults.headers.common['Authorization'];
   }
@@ -63,34 +68,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
-);
-
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        await refreshToken();
-        const token = getAuthToken();
-        if (token) {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        clearAuth();
-        // Redirect to login
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login';
-        }
-      }
-    }
-    
-    return Promise.reject(error);
-  }
 );
 
 // Response interceptor for handling token refresh
@@ -168,6 +145,13 @@ const apiRequest = async (requestFn: () => Promise<any>) => {
     return response.data?.data ?? response.data;
   } catch (error: any) {
     console.error('API request failed:', error.response?.data || error.message);
+    // Backend error responses use `{ error: "..." }` (see backend/src/utils/
+    // responses.ts sendError) - not `.message`. Callers across the admin
+    // check `error?.response?.data?.message` first (always undefined) then
+    // fall back to `error.message`, so patch the real backend reason in
+    // here rather than fixing every call site.
+    const backendMessage = error.response?.data?.error;
+    if (backendMessage) error.message = backendMessage;
     throw error;
   }
 };
@@ -179,14 +163,13 @@ export const authApi = {
     const response = await api.post('/admin/auth/login', credentials);
     
     const { admin, accessToken: token, refreshToken: refresh } = response.data.data;
-    
-    // Store tokens and user data
+
+    // Store tokens (admin object is persisted separately by authContext's setStoredAdmin)
     setAuthToken(token);
     if (refresh) {
-      localStorage.setItem('refreshToken', refresh);
+      localStorage.setItem('tbc_admin_refresh_token', refresh);
     }
-    localStorage.setItem('adminUser', JSON.stringify(admin));
-    
+
     console.log('✅ Login successful:', admin.email);
     return { admin, token };
   },
@@ -206,17 +189,17 @@ export const authApi = {
   },
 
   async refreshToken() {
-    const refresh = localStorage.getItem('refreshToken');
+    const refresh = localStorage.getItem('tbc_admin_refresh_token');
     if (!refresh) throw new Error('No refresh token available');
-    
+
     const response = await api.post('/admin/auth/refresh', { refreshToken: refresh });
     const { accessToken, refreshToken: newRefresh } = response.data.data;
-    
+
     setAuthToken(accessToken);
     if (newRefresh) {
-      localStorage.setItem('refreshToken', newRefresh);
+      localStorage.setItem('tbc_admin_refresh_token', newRefresh);
     }
-    
+
     return response.data;
   },
 };
@@ -292,6 +275,22 @@ export const videoSermonsApi = {
 
   async getStats() {
     return apiRequest(() => api.get('/video-sermons/admin/stats'));
+  },
+
+  async syncFromYoutube() {
+    console.log('📡 Syncing video sermons from YouTube channel...');
+    // Overrides the 30s default - this processes every new video sequentially
+    // (one Gemini classification call each), which can genuinely take minutes
+    // on a channel with a lot of uploads.
+    return apiRequest(() => api.post('/video-sermons/admin/sync-youtube', undefined, { timeout: 10 * 60 * 1000 }));
+  },
+
+  async getSeriesList() {
+    return apiRequest(() => api.get('/video-sermons/admin/series'));
+  },
+
+  async bulkUpdateKind(ids: number[], kind: 'SERMON' | 'EXCERPT' | 'INSPIRATIONAL') {
+    return apiRequest(() => api.patch('/video-sermons/admin/bulk-kind', { ids, kind }));
   },
 };
 
@@ -491,12 +490,219 @@ export const uploadApi = {
 
   async extractYouTubeThumbnail(youtubeId: string) {
     console.log('📺 Extracting YouTube thumbnail for:', youtubeId);
-    
+
     const response = await api.post('/upload/youtube-thumbnail', {
       youtubeId,
     });
-    
+
     return response.data.data;
   },
 };
+
+// CSGs (Community Small Groups) API
+export const csgsApi = {
+  async getAll() {
+    return apiRequest(() => api.get('/csgs'));
+  },
+
+  async getById(id: number) {
+    return apiRequest(() => api.get(`/csgs/${id}`));
+  },
+
+  async getAdminMembers(id: number) {
+    return apiRequest(() => api.get(`/csgs/${id}/admin/members`));
+  },
+
+  async create(data: any) {
+    return apiRequest(() => api.post('/csgs', data));
+  },
+
+  async update(id: number, data: any) {
+    return apiRequest(() => api.put(`/csgs/${id}`, data));
+  },
+
+  async delete(id: number) {
+    return apiRequest(() => api.delete(`/csgs/${id}`));
+  },
+
+  async removeMember(id: number, membershipId: number) {
+    return apiRequest(() => api.delete(`/csgs/${id}/members/${membershipId}`));
+  },
+
+  async postUpdate(id: number, data: { title?: string; body: string; notifyMembers?: boolean }) {
+    return apiRequest(() => api.post(`/csgs/${id}/updates`, data));
+  },
+
+  async getStats() {
+    return apiRequest(() => api.get('/csgs/admin/stats'));
+  },
+};
+
+// Sunday photo collages API
+export const collagesApi = {
+  async getAll() {
+    return apiRequest(() => api.get('/collages'));
+  },
+
+  async getById(id: number) {
+    return apiRequest(() => api.get(`/collages/${id}`));
+  },
+
+  async create(data: { date: string; photos: { url: string; publicId: string }[]; coverIndex: number }) {
+    return apiRequest(() => api.post('/collages', data));
+  },
+
+  async delete(id: number) {
+    return apiRequest(() => api.delete(`/collages/${id}`));
+  },
+};
+
+// Admins API (admin user management - distinct from authApi's /admin/auth/* endpoints)
+export const adminsApi = {
+  async getAll() {
+    return apiRequest(() => api.get('/admin'));
+  },
+
+  async create(data: { email: string; password: string; name: string; role: string; csgId?: number }) {
+    return apiRequest(() => api.post('/admin/create', data));
+  },
+
+  async update(id: number, data: { name?: string; role?: string; csgId?: number; isActive?: boolean }) {
+    return apiRequest(() => api.put(`/admin/${id}`, data));
+  },
+
+  async delete(id: number) {
+    return apiRequest(() => api.delete(`/admin/${id}`));
+  },
+
+  async updateSelf(data: { name?: string; currentPassword?: string; newPassword?: string }) {
+    return apiRequest(() => api.put('/admin/me', data));
+  },
+};
+
+// Giving API
+export const givingApi = {
+  async getBankAccounts() {
+    return apiRequest(() => api.get('/giving/bank-accounts'));
+  },
+
+  async createBankAccount(data: any) {
+    return apiRequest(() => api.post('/giving/bank-accounts', data));
+  },
+
+  async updateBankAccount(id: number, data: any) {
+    return apiRequest(() => api.put(`/giving/bank-accounts/${id}`, data));
+  },
+
+  async deleteBankAccount(id: number) {
+    return apiRequest(() => api.delete(`/giving/bank-accounts/${id}`));
+  },
+
+  async getAdminTransactions(filters?: Record<string, any>) {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    return apiRequest(() => api.get(`/giving/admin/transactions?${params.toString()}`));
+  },
+};
+
+// Projects API
+export const projectsApi = {
+  async getAll() {
+    return apiRequest(() => api.get('/projects'));
+  },
+
+  async getById(id: number) {
+    return apiRequest(() => api.get(`/projects/${id}`));
+  },
+
+  async create(data: any) {
+    return apiRequest(() => api.post('/projects', data));
+  },
+
+  async update(id: number, data: any) {
+    return apiRequest(() => api.put(`/projects/${id}`, data));
+  },
+
+  async delete(id: number) {
+    return apiRequest(() => api.delete(`/projects/${id}`));
+  },
+};
+
+// Prayer Requests API
+export const prayerRequestsApi = {
+  async getAll(filters?: Record<string, any>) {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    return apiRequest(() => api.get(`/prayer-requests?${params.toString()}`));
+  },
+
+  async updateStatus(id: number, status: string) {
+    return apiRequest(() => api.patch(`/prayer-requests/${id}/status`, { status }));
+  },
+};
+
+// Contact API
+export const contactApi = {
+  async getAll(filters?: Record<string, any>) {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+    }
+    return apiRequest(() => api.get(`/contact?${params.toString()}`));
+  },
+
+  async updateStatus(id: number, status: string) {
+    return apiRequest(() => api.patch(`/contact/${id}/status`, { status }));
+  },
+};
+
+// Notify API
+export const notifyApi = {
+  async send(data: {
+    audience: 'all' | 'topic' | 'csg';
+    topic?: string;
+    csgId?: number;
+    title: string;
+    body: string;
+    data?: Record<string, any>;
+  }) {
+    return apiRequest(() => api.post('/notify/send', data));
+  },
+};
+
+// Live Schedule API
+export const liveScheduleApi = {
+  async getAll() {
+    return apiRequest(() => api.get('/live-schedule'));
+  },
+
+  async create(data: any) {
+    return apiRequest(() => api.post('/live-schedule', data));
+  },
+
+  async update(id: number, data: any) {
+    return apiRequest(() => api.put(`/live-schedule/${id}`, data));
+  },
+
+  async delete(id: number) {
+    return apiRequest(() => api.delete(`/live-schedule/${id}`));
+  },
+};
+
 export default api;

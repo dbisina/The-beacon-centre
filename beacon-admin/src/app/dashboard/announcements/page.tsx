@@ -97,22 +97,22 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
     switch (priority) {
       case 'HIGH':
         return {
-          className: 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-lg shadow-red-500/25',
+          className: 'bg-red-600 text-white border-0',
           icon: <Zap className="w-3 h-3" />
         };
       case 'MEDIUM':
         return {
-          className: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg shadow-amber-500/25',
+          className: 'bg-amber-600 text-white border-0',
           icon: <Star className="w-3 h-3" />
         };
       case 'LOW':
         return {
-          className: 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-0 shadow-lg shadow-slate-500/25',
+          className: 'bg-slate-600 text-white border-0',
           icon: <Calendar className="w-3 h-3" />
         };
       default:
         return {
-          className: 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-0',
+          className: 'bg-slate-600 text-white border-0',
           icon: <Calendar className="w-3 h-3" />
         };
     }
@@ -128,7 +128,7 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+            <TableRow className="bg-slate-50 border-b border-slate-200">
               <TableHead className="w-[100px] font-semibold text-slate-700 py-4">Preview</TableHead>
               <TableHead className="font-semibold text-slate-700">Announcement Details</TableHead>
               <TableHead className="font-semibold text-slate-700 w-[120px]">Priority</TableHead>
@@ -144,10 +144,10 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                 <TableCell colSpan={7} className="text-center py-16">
                   <div className="flex flex-col items-center space-y-6">
                     <div className="relative">
-                      <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/25">
+                      <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center">
                         <Megaphone className="h-12 w-12 text-white" />
                       </div>
-                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center">
                         <Plus className="h-4 w-4 text-white" />
                       </div>
                     </div>
@@ -155,7 +155,7 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                       <h3 className="text-xl font-semibold text-slate-800">No announcements yet</h3>
                       <p className="text-slate-500 max-w-sm">Get started by creating your first announcement to keep your community informed.</p>
                     </div>
-                    <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 px-8">
+                    <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white border-0 px-8">
                       <Link href="/dashboard/announcements/new">
                         <Plus className="mr-2 h-5 w-5" />
                         Create First Announcement
@@ -172,7 +172,7 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <TableCell className="py-4">
-                    <div className="relative w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                    <div className="relative w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
                       {announcement.imageUrl ? (
                         <>
                           <img
@@ -248,17 +248,17 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                   </TableCell>
                   <TableCell className="py-4">
                     <div className="flex flex-col space-y-2">
-                      <Badge 
+                      <Badge
                         variant={announcement.isActive ? 'default' : 'secondary'}
-                        className={announcement.isActive 
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-sm' 
+                        className={announcement.isActive
+                          ? 'bg-green-600 text-white border-0'
                           : 'bg-slate-200 text-slate-700'
                         }
                       >
                         {announcement.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                       {isExpired(announcement.expiryDate) && (
-                        <Badge className="bg-gradient-to-r from-red-500 to-rose-500 text-white border-0 text-xs">
+                        <Badge className="bg-red-600 text-white border-0 text-xs">
                           Expired
                         </Badge>
                       )}
@@ -343,7 +343,7 @@ function AnnouncementsTable({ announcements, isLoading, onDelete, onToggleActive
                   setDeleteId(null);
                 }
               }}
-              className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white border-0 shadow-lg"
+              className="bg-red-600 hover:bg-red-700 text-white border-0"
             >
               Delete Announcement
             </AlertDialogAction>
@@ -426,10 +426,10 @@ export default function AnnouncementsPage() {
   const totalViews = announcements.reduce((sum, a) => sum + (a.viewCount || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 p-6 space-y-8">
+    <div className="min-h-screen bg-slate-50 p-6 space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-slate-800">
             Announcements
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl">
@@ -441,10 +441,10 @@ export default function AnnouncementsPage() {
             <Download className="mr-2 h-5 w-5" />
             Export Data
           </Button>
-          <Button 
-            asChild 
-            size="lg" 
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/25 px-8"
+          <Button
+            asChild
+            size="lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white border-0 px-8"
           >
             <Link href="/dashboard/announcements/new">
               <Plus className="mr-2 h-5 w-5" />
@@ -455,10 +455,10 @@ export default function AnnouncementsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Total Announcements</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
               <Megaphone className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -470,10 +470,10 @@ export default function AnnouncementsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Active Now</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
+            <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -485,10 +485,10 @@ export default function AnnouncementsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">High Priority</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/25">
+            <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center">
               <Zap className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -500,10 +500,10 @@ export default function AnnouncementsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow duration-200 rounded-2xl">
+        <Card className="bg-white border border-slate-200 hover:shadow-md transition-shadow duration-200 rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-semibold text-slate-700">Total Views</CardTitle>
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/25">
+            <div className="w-10 h-10 bg-amber-600 rounded-xl flex items-center justify-center">
               <Users className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
@@ -516,8 +516,8 @@ export default function AnnouncementsPage() {
         </Card>
       </div>
 
-      <Card className="bg-white border-0 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 pb-6">
+      <Card className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <CardHeader className="bg-slate-50 border-b border-slate-200 pb-6">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl font-bold text-slate-800">Manage Announcements</CardTitle>
@@ -581,8 +581,8 @@ export default function AnnouncementsPage() {
                         size="sm"
                         onClick={() => setCurrentPage(page)}
                         className={`w-10 h-10 rounded-lg ${
-                          currentPage === page 
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-md' 
+                          currentPage === page
+                            ? 'bg-blue-600 text-white border-0'
                             : 'border-slate-300'
                         }`}
                       >

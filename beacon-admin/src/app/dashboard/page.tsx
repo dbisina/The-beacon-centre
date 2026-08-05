@@ -50,44 +50,33 @@ function WelcomeSection({ admin }: { admin: Admin }) {
   const IconComponent = icon;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600 p-8 text-white mb-8">
-      <div className="absolute inset-0 bg-black/10"></div>
-      <div className="relative z-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <IconComponent className="h-6 w-6 text-yellow-300" />
-              <span className="text-lg font-medium opacity-90">
-                {greeting}, {admin?.name?.split(" ")[0] || "Admin"}!
-              </span>
-            </div>
-            <h1 className="text-4xl font-bold mb-2">
-              Ready to share God's devotional today?
-            </h1>
-            <p className="text-lg opacity-90 max-w-md">
-              Your devotional community is growing. Here's what's happening with
-              your content today.
+    <div className="rounded-2xl bg-slate-900 p-8 text-white mb-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <IconComponent className="h-6 w-6 text-yellow-300" />
+            <span className="text-lg font-medium text-slate-300">
+              {greeting}, {admin?.name?.split(" ")[0] || "Admin"}!
+            </span>
+          </div>
+          <h1 className="text-4xl font-bold mb-2">
+            Ready to share God's devotional today?
+          </h1>
+          <p className="text-lg text-slate-300 max-w-md">
+            Your devotional community is growing. Here's what's happening with
+            your content today.
+          </p>
+        </div>
+        <div className="hidden md:flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-lg font-semibold">
+              {format(new Date(), "EEEE")}
+            </p>
+            <p className="text-sm text-slate-300">
+              {format(new Date(), "MMMM d, yyyy")}
             </p>
           </div>
-          <div className="hidden md:flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-lg font-semibold">
-                {format(new Date(), "EEEE")}
-              </p>
-              <p className="text-sm opacity-75">
-                {format(new Date(), "MMMM d, yyyy")}
-              </p>
-            </div>
-          </div>
         </div>
-      </div>
-
-      {/* Decorative elements */}
-      <div className="absolute top-4 right-4 opacity-20">
-        <Heart className="h-32 w-32" />
-      </div>
-      <div className="absolute bottom-4 left-4 opacity-10">
-        <BookOpen className="h-24 w-24" />
       </div>
     </div>
   );
@@ -114,21 +103,20 @@ function StatsCard({
   href,
 }: StatsCardProps) {
   const colorClasses = {
-    teal: "from-teal-500 to-teal-600",
-    blue: "from-blue-500 to-blue-600",
-    green: "from-green-500 to-green-600",
-    orange: "from-orange-500 to-orange-600",
-    purple: "from-purple-500 to-purple-600",
-    red: "from-red-500 to-red-600",
+    teal: "bg-teal-600",
+    blue: "bg-blue-600",
+    green: "bg-green-600",
+    orange: "bg-orange-600",
+    purple: "bg-purple-600",
+    red: "bg-red-600",
   };
 
   const content = (
     <div className="group relative overflow-hidden rounded-2xl bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-      <div className="absolute inset-0 bg-gradient-to-br opacity-5 group-hover:opacity-10 transition-opacity"></div>
       <div className="relative p-6">
         <div className="flex items-center justify-between mb-4">
           <div
-            className={`p-3 rounded-xl bg-gradient-to-br ${colorClasses[color]} text-white`}
+            className={`p-3 rounded-xl ${colorClasses[color]} text-white`}
           >
             <Icon className="h-6 w-6" />
           </div>
@@ -385,7 +373,7 @@ function QuickActions() {
       description: "Create daily devotional",
       href: "/dashboard/devotionals/new",
       icon: BookOpen,
-      color: "from-teal-500 to-cyan-500",
+      color: "bg-teal-600",
       bgColor: "bg-teal-50 hover:bg-teal-100",
     },
     {
@@ -393,7 +381,7 @@ function QuickActions() {
       description: "Upload sermon video",
       href: "/dashboard/video-sermons/new",
       icon: Video,
-      color: "from-red-500 to-rose-500",
+      color: "bg-red-600",
       bgColor: "bg-red-50 hover:bg-red-100",
     },
     {
@@ -401,7 +389,7 @@ function QuickActions() {
       description: "Add audio sermon",
       href: "/dashboard/audio-sermons/new",
       icon: Headphones,
-      color: "from-purple-500 to-indigo-500",
+      color: "bg-purple-600",
       bgColor: "bg-purple-50 hover:bg-purple-100",
     },
     {
@@ -409,7 +397,7 @@ function QuickActions() {
       description: "Create announcement",
       href: "/dashboard/announcements/new",
       icon: Megaphone,
-      color: "from-orange-500 to-yellow-500",
+      color: "bg-orange-600",
       bgColor: "bg-orange-50 hover:bg-orange-100",
     },
   ];
@@ -429,7 +417,7 @@ function QuickActions() {
                 className={`p-4 rounded-xl ${action.bgColor} border border-gray-100 transition-all hover:shadow-md group cursor-pointer`}
               >
                 <div
-                  className={`w-10 h-10 rounded-lg bg-gradient-to-br ${action.color} text-white flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
+                  className={`w-10 h-10 rounded-lg ${action.color} text-white flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
                 >
                   <action.icon className="h-5 w-5" />
                 </div>
@@ -557,12 +545,8 @@ export default function DashboardPage() {
     queryFn: () => announcementsApi.getAll(),
   });
 
-  // Debug analytics data
-  console.log('📊 Analytics data:', analytics);
-  console.log('❌ Analytics error:', analyticsError);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Enhanced Welcome Header */}
         <WelcomeSection admin={admin} />
@@ -744,7 +728,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">
-                      💡 Recommendation
+                      Recommendation
                     </h4>
                     <p className="text-sm text-gray-600 mt-1">
                       Your video sermons have 23% higher engagement than audio.

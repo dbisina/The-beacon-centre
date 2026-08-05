@@ -86,6 +86,7 @@ export interface Devotional {
     email: string;
     name: string;
     role: AdminRole;
+    csgId?: number | null;
     is_active: boolean;
     last_login?: string; // ISO date string
     login_count: number;
@@ -294,7 +295,8 @@ export interface Devotional {
   export enum AdminRole {
     SUPER_ADMIN = 'SUPER_ADMIN',
     ADMIN = 'ADMIN',
-    EDITOR = 'EDITOR'
+    EDITOR = 'EDITOR',
+    CSG_ADMIN = 'CSG_ADMIN'
   }
   
   export enum AnnouncementPriority {

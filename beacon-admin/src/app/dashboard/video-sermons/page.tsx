@@ -17,13 +17,14 @@ import {
   Play,
   Clock,
   Calendar,
-  Upload,
-  Filter,
   Youtube,
-  PlayCircle,
+  Zap,
   Heart,
   Share2,
-  TrendingUp
+  TrendingUp,
+  Loader2,
+  Check,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,47 +59,46 @@ import { useToast } from '@/hooks/use-toast';
 import { videoSermonsApi, categoriesApi } from '@/lib/api';
 import { VideoSermon } from '@/lib/types';
 
-function PageHeader() {
+function PageHeader({ onSync, syncing }: { onSync: () => void; syncing: boolean }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 p-8 text-white mb-8">
-      <div className="absolute inset-0 bg-black/10"></div>
-      <div className="relative z-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Video className="h-8 w-8" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold">Video Sermons</h1>
-                <p className="text-lg opacity-90 mt-1">
-                  Manage your YouTube sermon collection
-                </p>
-              </div>
+    <div className="rounded-2xl bg-slate-900 p-8 text-white mb-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-slate-800 rounded-xl">
+              <Video className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">Video Sermons</h1>
+              <p className="text-lg text-slate-300 mt-1">
+                Manage your YouTube sermon collection
+              </p>
             </div>
           </div>
-          
-          <div className="hidden md:flex items-center gap-3">
-            <button className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 hover:bg-white/30 transition-colors">
-              <Upload className="h-4 w-4" />
-              Bulk Import
-            </button>
-            <Button asChild className="bg-white text-red-600 hover:bg-white/90">
-              <Link href="/dashboard/video-sermons/new">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Video
-              </Link>
-            </Button>
-          </div>
         </div>
-      </div>
-      
-      {/* Decorative elements */}
-      <div className="absolute top-4 right-4 opacity-20">
-        <PlayCircle className="h-32 w-32" />
-      </div>
-      <div className="absolute bottom-4 left-4 opacity-10">
-        <Star className="h-24 w-24" />
+
+        <div className="hidden md:flex items-center gap-3">
+          <button
+            onClick={onSync}
+            disabled={syncing}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 rounded-xl px-4 py-2 transition-colors disabled:opacity-60"
+          >
+            {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Youtube className="h-4 w-4" />}
+            {syncing ? 'Syncing…' : 'Sync from YouTube'}
+          </button>
+          <Button variant="outline" asChild className="bg-transparent border-slate-600 text-white hover:bg-slate-800 hover:text-white">
+            <Link href="/dashboard/video-sermons/shorts/new">
+              <Zap className="mr-2 h-4 w-4" />
+              Add Short
+            </Link>
+          </Button>
+          <Button asChild className="bg-white text-slate-900 hover:bg-slate-100">
+            <Link href="/dashboard/video-sermons/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Video
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -114,28 +114,28 @@ function StatsSection({ data }: StatsProps) {
       label: "Total Videos",
       value: data?.total || 0,
       icon: Video,
-      color: "from-blue-500 to-blue-600",
+      color: "bg-blue-600",
       description: "All video sermons"
     },
     {
       label: "Featured",
       value: data?.sermons?.filter((s: any) => s.isFeatured).length || 0,
       icon: Star,
-      color: "from-yellow-500 to-yellow-600", 
+      color: "bg-amber-600",
       description: "Featured videos"
     },
     {
       label: "Total Views",
       value: data?.sermons?.reduce((sum: number, s: any) => sum + (s.viewCount || 0), 0) || 0,
       icon: Eye,
-      color: "from-purple-500 to-purple-600",
+      color: "bg-purple-600",
       description: "Across all videos"
     },
     {
       label: "This Month",
       value: 8, // You can calculate this from your data
       icon: TrendingUp,
-      color: "from-green-500 to-green-600",
+      color: "bg-green-600",
       description: "Added this month"
     }
   ];
@@ -146,7 +146,7 @@ function StatsSection({ data }: StatsProps) {
         <div key={index} className="group relative overflow-hidden rounded-2xl bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} text-white`}>
+              <div className={`p-3 rounded-xl ${stat.color} text-white`}>
                 <stat.icon className="h-6 w-6" />
               </div>
               <div className="text-right">
@@ -169,10 +169,27 @@ interface SearchAndFiltersProps {
   setSearchQuery: (query: string) => void;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
+  selectedKind: string;
+  setSelectedKind: (kind: string) => void;
   categories: any[];
 }
 
-function SearchAndFilters({ searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, categories }: SearchAndFiltersProps) {
+const KIND_OPTIONS = [
+  { value: 'all', label: 'All types' },
+  { value: 'SERMON', label: 'Sermons' },
+  { value: 'EXCERPT', label: 'Shorts' },
+  { value: 'INSPIRATIONAL', label: 'Inspirational' },
+];
+
+function SearchAndFilters({
+  searchQuery,
+  setSearchQuery,
+  selectedCategory,
+  setSelectedCategory,
+  selectedKind,
+  setSelectedKind,
+  categories,
+}: SearchAndFiltersProps) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -187,8 +204,20 @@ function SearchAndFilters({ searchQuery, setSearchQuery, selectedCategory, setSe
             />
           </div>
         </div>
-        
+
         <div className="flex gap-3">
+          <Select value={selectedKind} onValueChange={setSelectedKind}>
+            <SelectTrigger className="w-36 rounded-xl">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              {KIND_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-40 rounded-xl">
               <SelectValue placeholder="Category" />
@@ -202,10 +231,6 @@ function SearchAndFilters({ searchQuery, setSearchQuery, selectedCategory, setSe
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" className="rounded-xl">
-            <Filter className="mr-2 h-4 w-4" />
-            More Filters
-          </Button>
         </div>
       </div>
     </div>
@@ -216,13 +241,25 @@ interface VideoCardProps {
   sermon: VideoSermon;
   onToggleFeatured: (id: number, currentFeatured: boolean) => void;
   onDelete: (id: number) => void;
+  selected: boolean;
+  onToggleSelected: (id: number) => void;
 }
 
-function VideoCard({ sermon, onToggleFeatured, onDelete }: VideoCardProps) {
+function VideoCard({ sermon, onToggleFeatured, onDelete, selected, onToggleSelected }: VideoCardProps) {
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden">
+    <div className={`group bg-white rounded-2xl border hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden ${selected ? 'border-slate-900 ring-1 ring-slate-900' : 'border-gray-100'}`}>
       {/* Video Thumbnail */}
       <div className="relative">
+        <button
+          type="button"
+          onClick={() => onToggleSelected(sermon.id)}
+          aria-label={selected ? 'Deselect video' : 'Select video'}
+          className={`absolute top-3 right-3 z-10 h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors ${
+            selected ? 'bg-slate-900 border-slate-900' : 'bg-white/90 border-gray-300'
+          }`}
+        >
+          {selected && <Check className="h-4 w-4 text-white" />}
+        </button>
         <img
           src={sermon.thumbnailUrl || `https://img.youtube.com/vi/${sermon.youtubeId}/maxresdefault.jpg`}
           alt={sermon.title}
@@ -232,8 +269,8 @@ function VideoCard({ sermon, onToggleFeatured, onDelete }: VideoCardProps) {
           }}
         />
         <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             size="sm"
             onClick={() => window.open(`https://youtube.com/watch?v=${sermon.youtubeId}`, '_blank')}
             className="bg-white/90 text-gray-900 hover:bg-white"
@@ -242,7 +279,7 @@ function VideoCard({ sermon, onToggleFeatured, onDelete }: VideoCardProps) {
             Watch
           </Button>
         </div>
-        
+
         {/* Featured Badge */}
         {sermon.isFeatured && (
           <div className="absolute top-3 left-3">
@@ -400,18 +437,23 @@ export default function VideoSermonsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedKind, setSelectedKind] = useState<string>('all');
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['video-sermons', currentPage, searchQuery, selectedCategory],
+    queryKey: ['video-sermons', currentPage, searchQuery, selectedCategory, selectedKind],
     queryFn: () => videoSermonsApi.getAll({
       page: currentPage,
       limit: 10,
       search: searchQuery || undefined,
       categoryId: selectedCategory === 'all' ? undefined : parseInt(selectedCategory),
+      kind: selectedKind === 'all' ? undefined : selectedKind,
+      sortBy: 'sermonDate',
+      sortOrder: 'desc',
     }),
     keepPreviousData: true,
   });
@@ -438,6 +480,50 @@ export default function VideoSermonsPage() {
       toast({
         title: 'Error',
         description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: videoSermonsApi.syncFromYoutube,
+    onSuccess: (result: any) => {
+      queryClient.invalidateQueries(['video-sermons']);
+      const summary = result?.data ?? result;
+      toast({
+        title: 'YouTube sync complete',
+        description: `Imported ${summary?.imported ?? 0} new video${summary?.imported === 1 ? '' : 's'}` +
+          (summary?.skippedExisting ? `, ${summary.skippedExisting} already existed` : '') +
+          (summary?.reclassified ? `, ${summary.reclassified} re-tagged as Shorts` : '') +
+          (summary?.failed ? `, ${summary.failed} failed` : ''),
+        variant: summary?.failed ? 'destructive' : 'success',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Sync failed',
+        description: error?.response?.data?.message || error?.message || 'Could not sync from YouTube',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const bulkKindMutation = useMutation({
+    mutationFn: ({ ids, kind }: { ids: number[]; kind: 'SERMON' | 'EXCERPT' | 'INSPIRATIONAL' }) =>
+      videoSermonsApi.bulkUpdateKind(ids, kind),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries(['video-sermons']);
+      setSelectedIds([]);
+      toast({
+        title: 'Success',
+        description: `${variables.ids.length} video${variables.ids.length === 1 ? '' : 's'} updated`,
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error?.response?.data?.message || error.message || 'Failed to update videos',
         variant: 'destructive',
       });
     },
@@ -477,9 +563,18 @@ export default function VideoSermonsPage() {
     toggleFeaturedMutation.mutate({ id, isFeatured: !currentFeatured });
   };
 
+  const handleToggleSelected = (id: number) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const handleBulkKind = (kind: 'SERMON' | 'EXCERPT' | 'INSPIRATIONAL') => {
+    if (selectedIds.length === 0) return;
+    bulkKindMutation.mutate({ ids: selectedIds, kind });
+  };
+
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50/30 p-6">
+      <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-16">
             <div className="p-6 bg-red-100 rounded-full w-fit mx-auto mb-6">
@@ -500,15 +595,17 @@ export default function VideoSermonsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50/30 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <PageHeader />
+        <PageHeader onSync={() => syncMutation.mutate()} syncing={syncMutation.isPending} />
         <StatsSection data={data} />
-        <SearchAndFilters 
+        <SearchAndFilters
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
+          selectedKind={selectedKind}
+          setSelectedKind={setSelectedKind}
           categories={Array.isArray(categories) ? categories : []}
         />
         
@@ -523,7 +620,44 @@ export default function VideoSermonsPage() {
               {data ? `${data.total} total videos` : ''}
             </div>
           </div>
-          
+
+          {selectedIds.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <span className="text-sm font-medium text-slate-700">{selectedIds.length} selected</span>
+              <div className="flex flex-wrap gap-2 ml-auto">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={bulkKindMutation.isPending}
+                  onClick={() => handleBulkKind('EXCERPT')}
+                >
+                  Mark as Short
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={bulkKindMutation.isPending}
+                  onClick={() => handleBulkKind('SERMON')}
+                >
+                  Mark as Sermon
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={bulkKindMutation.isPending}
+                  onClick={() => handleBulkKind('INSPIRATIONAL')}
+                >
+                  Mark as Inspirational
+                </Button>
+                {bulkKindMutation.isPending && <Loader2 className="h-4 w-4 animate-spin text-slate-500" />}
+                <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>
+                  <X className="h-4 w-4 mr-1" />
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -546,7 +680,7 @@ export default function VideoSermonsPage() {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">No video sermons found</h3>
                   <p className="text-gray-500 mb-6">Add your first YouTube sermon to get started</p>
-                  <Button asChild size="lg" className="bg-gradient-to-r from-red-500 to-rose-600">
+                  <Button asChild size="lg" className="bg-slate-900 hover:bg-slate-800">
                     <Link href="/dashboard/video-sermons/new">
                       <Plus className="mr-2 h-5 w-5" />
                       Add Video Sermon
@@ -563,6 +697,8 @@ export default function VideoSermonsPage() {
                   sermon={sermon}
                   onToggleFeatured={handleToggleFeatured}
                   onDelete={handleDelete}
+                  selected={selectedIds.includes(sermon.id)}
+                  onToggleSelected={handleToggleSelected}
                 />
               ))}
             </div>

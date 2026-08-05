@@ -121,7 +121,7 @@ export class YouTubeAPI {
    */
   static extractVideoId(url: string): string | null {
     const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|m\.youtube\.com\/watch\?v=|youtube\.com\/watch\?.*&v=)([^#&?]*)/,
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/|m\.youtube\.com\/watch\?v=|m\.youtube\.com\/shorts\/|youtube\.com\/watch\?.*&v=)([^#&?]*)/,
       /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
     ];
 

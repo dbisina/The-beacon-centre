@@ -71,49 +71,38 @@ const formatFullDate = (dateString: string) => {
 
 function PageHeader() {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 p-8 text-white mb-8">
-      <div className="absolute inset-0 bg-black/10"></div>
-      <div className="relative z-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <BookOpen className="h-8 w-8" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold">Devotionals</h1>
-                <p className="text-lg opacity-90 mt-1">
-                  Share daily inspiration with your community
-                </p>
-              </div>
+    <div className="rounded-2xl bg-slate-900 p-8 text-white mb-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-slate-800 rounded-xl">
+              <BookOpen className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">Devotionals</h1>
+              <p className="text-lg text-slate-300 mt-1">
+                Share daily inspiration with your community
+              </p>
             </div>
           </div>
-          
-          <div className="hidden md:flex items-center gap-3">
-            <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
-              <Upload className="mr-2 h-4 w-4" />
-              Import
-            </Button>
-            <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-            <Button asChild className="bg-white text-purple-600 hover:bg-white/90">
-              <Link href="/dashboard/devotionals/new">
-                <Plus className="mr-2 h-4 w-4" />
-                New Devotional
-              </Link>
-            </Button>
-          </div>
         </div>
-      </div>
-      
-      {/* Decorative elements */}
-      <div className="absolute top-4 right-4 opacity-20">
-        <Heart className="h-32 w-32" />
-      </div>
-      <div className="absolute bottom-4 left-4 opacity-10">
-        <Star className="h-24 w-24" />
+
+        <div className="hidden md:flex items-center gap-3">
+          <Button variant="secondary" size="sm" className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700">
+            <Upload className="mr-2 h-4 w-4" />
+            Import
+          </Button>
+          <Button variant="secondary" size="sm" className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700">
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          <Button asChild className="bg-white text-slate-900 hover:bg-slate-100">
+            <Link href="/dashboard/devotionals/new">
+              <Plus className="mr-2 h-4 w-4" />
+              New Devotional
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -132,28 +121,28 @@ function StatsSection({ data, devotionals }: StatsProps) {
       label: "Total Devotionals",
       value: data?.total || 0,
       icon: BookOpen,
-      color: "from-blue-500 to-blue-600",
+      color: "bg-blue-600",
       description: "All time content"
     },
     {
       label: "This Month",
       value: 12, // You can calculate this from your data
       icon: Calendar,
-      color: "from-green-500 to-green-600", 
+      color: "bg-green-600",
       description: "Recently published"
     },
     {
       label: "Total Views",
       value: totalViews > 1000 ? `${(totalViews / 1000).toFixed(1)}K` : totalViews,
       icon: Eye,
-      color: "from-purple-500 to-purple-600",
+      color: "bg-purple-600",
       description: "Community engagement"
     },
     {
       label: "Scheduled",
       value: 7, // You can calculate this from your data
       icon: Clock,
-      color: "from-orange-500 to-orange-600",
+      color: "bg-orange-600",
       description: "Upcoming content"
     }
   ];
@@ -164,7 +153,7 @@ function StatsSection({ data, devotionals }: StatsProps) {
         <div key={index} className="group relative overflow-hidden rounded-2xl bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} text-white`}>
+              <div className={`p-3 rounded-xl ${stat.color} text-white`}>
                 <stat.icon className="h-6 w-6" />
               </div>
               <div className="text-right">
@@ -477,7 +466,7 @@ function DevotionalsGrid({ devotionals, isLoading, onDelete, data, currentPage, 
           <div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No devotionals found</h3>
             <p className="text-gray-500 mb-6">Get started by creating your first devotional</p>
-            <Button asChild size="lg" className="bg-gradient-to-r from-purple-500 to-indigo-600">
+            <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
               <Link href="/dashboard/devotionals/new">
                 <Plus className="mr-2 h-5 w-5" />
                 Create First Devotional
@@ -581,7 +570,7 @@ export default function DevotionalsPage() {
   const devotionals = data?.devotionals || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50/30 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <PageHeader />
         <StatsSection data={data} devotionals={devotionals} />

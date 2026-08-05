@@ -5,17 +5,20 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/authContext';
+import { AdminRole } from '@/lib/types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
   requireSuperAdmin?: boolean;
+  requireRole?: AdminRole[];
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requireAdmin = true,
   requireSuperAdmin = false,
+  requireRole,
 }) => {
   const { admin, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -32,12 +35,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return;
       }
 
+      if (requireRole && (!admin || !requireRole.includes(admin.role))) {
+        router.push('/dashboard'); // Redirect to dashboard if role not permitted
+        return;
+      }
+
       if (requireAdmin && !admin) {
         router.push('/login');
         return;
       }
     }
-  }, [isLoading, isAuthenticated, admin, router, requireAdmin, requireSuperAdmin]);
+  }, [isLoading, isAuthenticated, admin, router, requireAdmin, requireSuperAdmin, requireRole]);
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -52,7 +60,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Show nothing while redirecting
-  if (!isAuthenticated || (requireSuperAdmin && admin?.role !== 'SUPER_ADMIN')) {
+  if (
+    !isAuthenticated ||
+    (requireSuperAdmin && admin?.role !== 'SUPER_ADMIN') ||
+    (requireRole && (!admin || !requireRole.includes(admin.role)))
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

@@ -157,48 +157,37 @@ function AudioPlayer({ src, title }: AudioPlayerProps) {
 
 function PageHeader() {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 p-8 text-white mb-8">
-      <div className="absolute inset-0 bg-black/10"></div>
-      <div className="relative z-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <Headphones className="h-8 w-8" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold">Audio Sermons</h1>
-                <p className="text-lg opacity-90 mt-1">
-                  Manage audio sermon files and organize your content
-                </p>
-              </div>
+    <div className="rounded-2xl bg-slate-900 p-8 text-white mb-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-slate-800 rounded-xl">
+              <Headphones className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">Audio Sermons</h1>
+              <p className="text-lg text-slate-300 mt-1">
+                Manage audio sermon files and organize your content
+              </p>
             </div>
           </div>
-
-          <div className="hidden md:flex items-center gap-3">
-            <button className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 hover:bg-white/30 transition-colors">
-              <Download className="h-4 w-4" />
-              Export
-            </button>
-            <Button
-              asChild
-              className="bg-white text-purple-600 hover:bg-white/90"
-            >
-              <Link href="/dashboard/audio-sermons/new">
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Audio
-              </Link>
-            </Button>
-          </div>
         </div>
-      </div>
 
-      {/* Decorative elements */}
-      <div className="absolute top-4 right-4 opacity-20">
-        <Volume2 className="h-32 w-32" />
-      </div>
-      <div className="absolute bottom-4 left-4 opacity-10">
-        <Music className="h-24 w-24" />
+        <div className="hidden md:flex items-center gap-3">
+          <button className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 rounded-xl px-4 py-2 transition-colors">
+            <Download className="h-4 w-4" />
+            Export
+          </button>
+          <Button
+            asChild
+            className="bg-white text-slate-900 hover:bg-slate-100"
+          >
+            <Link href="/dashboard/audio-sermons/new">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Audio
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -229,28 +218,28 @@ function StatsSection({ data, sermons }: StatsProps) {
       label: "Total Audio",
       value: data?.total || 0,
       icon: Headphones,
-      color: "from-blue-500 to-blue-600",
+      color: "bg-blue-600",
       description: "Audio sermons",
     },
     {
       label: "Featured",
       value: featuredCount,
       icon: Star,
-      color: "from-yellow-500 to-yellow-600",
+      color: "bg-yellow-600",
       description: "Featured audio",
     },
     {
       label: "Total Plays",
       value: totalPlays,
       icon: Play,
-      color: "from-green-500 to-green-600",
+      color: "bg-green-600",
       description: "Across all audio",
     },
     {
       label: "Storage Used",
       value: formatFileSize(totalSize),
       icon: Volume2,
-      color: "from-purple-500 to-purple-600",
+      color: "bg-purple-600",
       description: "Total file size",
     },
   ];
@@ -265,7 +254,7 @@ function StatsSection({ data, sermons }: StatsProps) {
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div
-                className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} text-white`}
+                className={`p-3 rounded-xl ${stat.color} text-white`}
               >
                 <stat.icon className="h-6 w-6" />
               </div>
@@ -668,7 +657,7 @@ export default function AudioSermonsPage() {
   const totalPages = data?.totalPages || 1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50/30 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <PageHeader />
         <StatsSection data={data} sermons={sermons} />
@@ -733,7 +722,7 @@ export default function AudioSermonsPage() {
                   <Button
                     asChild
                     size="lg"
-                    className="bg-gradient-to-r from-purple-500 text-white to-indigo-600"
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
                   >
                     <Link href="/dashboard/audio-sermons/new">
                       <Upload className="mr-2 h-5 w-5 text-white" />

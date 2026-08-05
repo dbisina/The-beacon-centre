@@ -42,8 +42,14 @@ import {
   Wand2,
 } from 'lucide-react';
 import { getYouTubeAPI, YouTubeVideoInfo, YouTubeAPIError, youtubeUtils } from '@/lib/youtube';
-import { categoriesApi } from '@/lib/api';
+import { categoriesApi, videoSermonsApi } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
+
+const KIND_OPTIONS = [
+  { value: 'SERMON', label: 'Sermon (full message)' },
+  { value: 'EXCERPT', label: 'Excerpt (short clip from a sermon)' },
+  { value: 'INSPIRATIONAL', label: 'Inspirational (standalone short)' },
+] as const;
 
 // Form validation schema
 const videoSermonSchema = z.object({
@@ -52,6 +58,8 @@ const videoSermonSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   speaker: z.string().min(1, 'Speaker is required'),
   description: z.string().optional(),
+  kind: z.enum(['SERMON', 'EXCERPT', 'INSPIRATIONAL']).default('SERMON'),
+  series: z.string().optional(),
   categoryId: z.string().optional(),
   sermonDate: z.string().optional(),
   isFeatured: z.boolean().default(false),
@@ -65,6 +73,9 @@ interface YouTubeVideoFormProps {
   initialData?: Partial<VideoSermonFormData>;
   isLoading?: boolean;
   mode?: 'create' | 'edit';
+  /** Locks the kind field and hides the selector - used by the dedicated
+   *  Shorts upload page so admin doesn't have to remember to pick it. */
+  lockKind?: 'SERMON' | 'EXCERPT' | 'INSPIRATIONAL';
 }
 
 interface VideoPreviewProps {
@@ -171,11 +182,12 @@ function VideoPreview({ videoInfo, isLoading }: VideoPreviewProps) {
   );
 }
 
-export default function YouTubeVideoForm({ 
-  onSubmit, 
-  initialData, 
+export default function YouTubeVideoForm({
+  onSubmit,
+  initialData,
   isLoading: submitLoading = false,
-  mode = 'create' 
+  mode = 'create',
+  lockKind,
 }: YouTubeVideoFormProps) {
   const [videoInfo, setVideoInfo] = useState<YouTubeVideoInfo | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -188,6 +200,13 @@ export default function YouTubeVideoForm({
     queryFn: () => categoriesApi.getAll(),
   });
 
+  // Existing series names, so admin can pick one instead of retyping it
+  // (and risking a typo that splits one series into two).
+  const { data: seriesList = [] } = useQuery({
+    queryKey: ['video-sermon-series'],
+    queryFn: () => videoSermonsApi.getSeriesList(),
+  });
+
   const form = useForm<VideoSermonFormData>({
     resolver: zodResolver(videoSermonSchema),
     defaultValues: {
@@ -196,6 +215,8 @@ export default function YouTubeVideoForm({
       title: '',
       speaker: '',
       description: '',
+      kind: lockKind ?? 'SERMON',
+      series: '',
       categoryId: '',
       sermonDate: '',
       isFeatured: false,
@@ -417,6 +438,36 @@ export default function YouTubeVideoForm({
                     )}
                   />
 
+                  {!lockKind && (
+                    <FormField
+                      control={form.control}
+                      name="kind"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {KIND_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Duration alone can't tell a short excerpt from a standalone inspirational clip - pick manually.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
                   <FormField
                     control={form.control}
                     name="description"
@@ -478,6 +529,42 @@ export default function YouTubeVideoForm({
                       )}
                     />
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="series"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Series</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g. Love Series - leave blank if this isn't part of one"
+                            {...field}
+                          />
+                        </FormControl>
+                        {Array.isArray(seriesList) && seriesList.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {seriesList.map((name: string) => (
+                              <button
+                                key={name}
+                                type="button"
+                                onClick={() => form.setValue('series', name, { shouldValidate: true })}
+                                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                  field.value === name
+                                    ? 'bg-teal-600 border-teal-600 text-white'
+                                    : 'border-gray-200 text-gray-600 hover:border-teal-300'
+                                }`}
+                              >
+                                {name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <FormDescription>Groups related messages (e.g. a 4-week series) - pick an existing one above or type a new name.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <FormField
                     control={form.control}

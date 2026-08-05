@@ -95,8 +95,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           try {
             console.log('🔍 Validating token...');
             const currentAdmin = await authApi.getProfile();
-            setAdmin(currentAdmin.data);
-            setStoredAdmin(currentAdmin.data);
+            setAdmin(currentAdmin);
+            setStoredAdmin(currentAdmin);
             console.log('✅ Token validation successful');
           } catch (error) {
             console.warn('❌ Token validation failed, clearing auth data:', error);
@@ -156,8 +156,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshProfile = useCallback(async () => {
     try {
       const response = await authApi.getProfile();
-      setAdmin(response.data);
-      setStoredAdmin(response.data);
+      setAdmin(response);
+      setStoredAdmin(response);
     } catch (error) {
       console.error('Failed to refresh profile:', error);
       // On profile refresh failure, logout user

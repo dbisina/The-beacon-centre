@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Loader2, Leaf, Shield, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Shield, Mail, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,13 +77,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-teal-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-teal-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo and Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-500 rounded-full mb-4">
-            <Leaf className="w-8 h-8 text-white" />
-          </div>
+          <img src="/logo-mark.png" alt="The Beacon Centre" className="mx-auto w-16 h-16 mb-4" />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">The Beacon Centre</h1>
           <p className="text-gray-600">Admin Dashboard</p>
         </div>

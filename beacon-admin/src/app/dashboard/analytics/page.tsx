@@ -55,8 +55,8 @@ const SimpleBarChart = ({ data, height = 200 }: SimpleBarChartProps) => {
           <div className="w-20 text-sm font-medium text-gray-700 truncate">{item.name}</div>
           <div className="flex-1 flex items-center space-x-3">
             <div className="flex-1 bg-gray-100 rounded-full h-3">
-              <div 
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-700 ease-out"
+              <div
+                className="bg-indigo-600 h-3 rounded-full transition-all duration-700 ease-out"
                 style={{ width: `${(item.value / maxValue) * 100}%` }}
               />
             </div>
@@ -70,50 +70,39 @@ const SimpleBarChart = ({ data, height = 200 }: SimpleBarChartProps) => {
 
 function PageHeader({ timeRange, setTimeRange, handleRefresh }: any) {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-700 p-8 text-white mb-8">
-      <div className="absolute inset-0 bg-black/10"></div>
-      <div className="relative z-10">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                <BarChart3 className="h-8 w-8" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold">Analytics Dashboard</h1>
-                <p className="text-lg opacity-90 mt-1">
-                  Monitor your content performance and user engagement
-                </p>
-              </div>
+    <div className="rounded-2xl bg-slate-900 p-8 text-white mb-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-slate-800 rounded-xl">
+              <BarChart3 className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">Analytics Dashboard</h1>
+              <p className="text-lg text-slate-300 mt-1">
+                Monitor your content performance and user engagement
+              </p>
             </div>
           </div>
-          
-          <div className="hidden md:flex items-center gap-3">
-            <Select value={timeRange} onValueChange={(value: '7d' | '30d' | '90d' | '1y') => setTimeRange(value)}>
-              <SelectTrigger className="w-36 bg-white/20 backdrop-blur-sm border-white/30 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7d">Last 7 days</SelectItem>
-                <SelectItem value="30d">Last 30 days</SelectItem>
-                <SelectItem value="90d">Last 90 days</SelectItem>
-                <SelectItem value="1y">Last year</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="secondary" onClick={handleRefresh} className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
-            </Button>
-          </div>
         </div>
-      </div>
-      
-      {/* Decorative elements */}
-      <div className="absolute top-4 right-4 opacity-20">
-        <Activity className="h-32 w-32" />
-      </div>
-      <div className="absolute bottom-4 left-4 opacity-10">
-        <Target className="h-24 w-24" />
+
+        <div className="hidden md:flex items-center gap-3">
+          <Select value={timeRange} onValueChange={(value: '7d' | '30d' | '90d' | '1y') => setTimeRange(value)}>
+            <SelectTrigger className="w-36 bg-slate-800 border-slate-700 text-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 90 days</SelectItem>
+              <SelectItem value="1y">Last year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="secondary" onClick={handleRefresh} className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -131,21 +120,20 @@ interface StatsCardProps {
 
 const StatsCard = ({ title, value, description, icon: Icon, trend, color = 'indigo' }: StatsCardProps) => {
   const colorClasses = {
-    indigo: 'from-indigo-500 to-indigo-600',
-    blue: 'from-blue-500 to-blue-600',
-    green: 'from-green-500 to-green-600',
-    orange: 'from-orange-500 to-orange-600',
-    purple: 'from-purple-500 to-purple-600',
-    red: 'from-red-500 to-red-600',
-    teal: 'from-teal-500 to-teal-600',
+    indigo: 'bg-indigo-600',
+    blue: 'bg-blue-600',
+    green: 'bg-green-600',
+    orange: 'bg-orange-600',
+    purple: 'bg-purple-600',
+    red: 'bg-red-600',
+    teal: 'bg-teal-600',
   };
 
   return (
     <div className="group relative overflow-hidden rounded-2xl bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-      <div className="absolute inset-0 bg-gradient-to-br opacity-5 group-hover:opacity-10 transition-opacity"></div>
       <div className="relative p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className={`p-3 rounded-xl bg-gradient-to-br ${colorClasses[color]} text-white`}>
+          <div className={`p-3 rounded-xl ${colorClasses[color]} text-white`}>
             <Icon className="h-6 w-6" />
           </div>
           {trend !== undefined && (
@@ -192,7 +180,7 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 p-6">
+      <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-16">
             <div className="p-6 bg-red-100 rounded-full w-fit mx-auto mb-6">
@@ -211,7 +199,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/30 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         <PageHeader timeRange={timeRange} setTimeRange={setTimeRange} handleRefresh={handleRefresh} />
 
@@ -233,7 +221,7 @@ export default function AnalyticsPage() {
             <>
               <StatsCard
                 title="Total Users"
-                value={analytics?.overview.totalDevices || 0}
+                value={analytics?.overview?.totalDevices || 0}
                 description="Unique devices tracked"
                 icon={Users}
                 trend={12}
@@ -241,7 +229,7 @@ export default function AnalyticsPage() {
               />
               <StatsCard
                 title="Active Users"
-                value={analytics?.overview.activeDevices || 0}
+                value={analytics?.overview?.activeDevices || 0}
                 description="Active in last 30 days"
                 icon={Eye}
                 trend={8}
@@ -249,7 +237,7 @@ export default function AnalyticsPage() {
               />
               <StatsCard
                 title="Total Content"
-                value={analytics?.overview.totalContent.total || 0}
+                value={analytics?.overview?.totalContent?.total || 0}
                 description="Published content pieces"
                 icon={BookOpen}
                 trend={5}
@@ -257,7 +245,7 @@ export default function AnalyticsPage() {
               />
               <StatsCard
                 title="Interactions"
-                value={analytics?.overview.totalInteractions || 0}
+                value={analytics?.overview?.totalInteractions || 0}
                 description="User content interactions"
                 icon={Play}
                 trend={15}
@@ -286,28 +274,28 @@ export default function AnalyticsPage() {
                   <div className="text-sm font-medium text-gray-600">Devotionals</div>
                   <BookOpen className="h-4 w-4 text-teal-500" />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{analytics?.overview.totalContent.devotionals || 0}</div>
+                <div className="text-2xl font-bold text-gray-900">{analytics?.overview?.totalContent?.devotionals || 0}</div>
               </div>
               <div className="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium text-gray-600">Video Sermons</div>
                   <Video className="h-4 w-4 text-red-500" />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{analytics?.overview.totalContent.videos || 0}</div>
+                <div className="text-2xl font-bold text-gray-900">{analytics?.overview?.totalContent?.videos || 0}</div>
               </div>
               <div className="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium text-gray-600">Audio Sermons</div>
                   <Headphones className="h-4 w-4 text-purple-500" />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{analytics?.overview.totalContent.audios || 0}</div>
+                <div className="text-2xl font-bold text-gray-900">{analytics?.overview?.totalContent?.audios || 0}</div>
               </div>
               <div className="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium text-gray-600">Announcements</div>
                   <Megaphone className="h-4 w-4 text-orange-500" />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{analytics?.overview.totalContent.announcements || 0}</div>
+                <div className="text-2xl font-bold text-gray-900">{analytics?.overview?.totalContent?.announcements || 0}</div>
               </div>
             </>
           )}
@@ -344,7 +332,7 @@ export default function AnalyticsPage() {
                       By Platform
                     </h4>
                     <SimpleBarChart 
-                      data={analytics?.demographics.byPlatform?.map(item => ({
+                      data={analytics?.demographics?.byPlatform?.map(item => ({
                         name: item.platform,
                         value: item.count
                       })) || []}
@@ -357,7 +345,7 @@ export default function AnalyticsPage() {
                       By Country
                     </h4>
                     <SimpleBarChart 
-                      data={analytics?.demographics.byCountry?.slice(0, 5).map(item => ({
+                      data={analytics?.demographics?.byCountry?.slice(0, 5).map(item => ({
                         name: item.country,
                         value: item.count
                       })) || []}
@@ -470,7 +458,7 @@ export default function AnalyticsPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">New users</span>
-                    <span className="font-bold text-green-600">+{analytics?.overview.recentInteractions || 0}</span>
+                    <span className="font-bold text-green-600">+{analytics?.overview?.recentInteractions || 0}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Content views</span>
