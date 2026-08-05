@@ -2,7 +2,7 @@ import { collection, getDocs, query, limit as qLimit } from 'firebase/firestore'
 import { getDownloadURL, ref } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db, storage, C } from '@/config/firebase';
-import { apiGet, apiPost } from '@/config/api';
+import { apiGet } from '@/config/api';
 import { embedUrl } from '@/services/youtube';
 
 /**
@@ -43,6 +43,7 @@ export type Devotional = {
   passage: string;
   prayer: string | null;
   date: string | null;
+  cardImageUrl: string | null;
 };
 
 /** Shape of GET /api/devotionals/today (see backend/prisma/schema.prisma Devotional model). */
@@ -54,6 +55,7 @@ interface BackendDevotional {
   content: string;
   prayer?: string | null;
   date?: string | null;
+  cardImageUrl?: string | null;
 }
 
 /** GET /api/devotionals/today - 404 when the admin hasn't set one for today. */
@@ -68,6 +70,7 @@ export async function fetchDevotional(): Promise<Devotional | null> {
       passage: d.verseReference ?? '',
       prayer: d.prayer ?? null,
       date: d.date ?? null,
+      cardImageUrl: d.cardImageUrl ?? null,
     };
   } catch {
     // No devotional live for today (404) - or any other failure - return null
@@ -83,14 +86,6 @@ export async function fetchDevotional(): Promise<Devotional | null> {
  * if GEMINI_API_KEY isn't configured on the backend yet - let it propagate to
  * the UI rather than swallowing it.
  */
-export async function generateDevotionalCard(params: {
-  title: string;
-  passage: string;
-  reference: string;
-}): Promise<{ imageUrl: string }> {
-  return apiPost<{ imageUrl: string }>('/devotionals/card', params);
-}
-
 /* ------------------------------------------------------- verse of the day --- */
 
 export type DailyQuote = { id: string; content: string; author: string; image: string | null };

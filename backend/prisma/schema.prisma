@@ -21,6 +21,8 @@ model Devotional {
   verseReference String   @map("verse_reference") @db.VarChar(100)
   content       String   @db.Text
   prayer        String?  @db.Text
+  cardImageUrl  String?  @map("card_image_url") @db.VarChar(500)
+  cardImageCloudinaryPublicId String? @map("card_image_cloudinary_public_id") @db.VarChar(255)
   isActive      Boolean  @default(true) @map("is_active")
   viewCount     Int      @default(0) @map("view_count")
   createdAt     DateTime @default(now()) @map("created_at")

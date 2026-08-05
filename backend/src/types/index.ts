@@ -107,6 +107,8 @@ export interface CreateDevotionalRequest {
   verseReference: string;
   content: string;
   prayer?: string;
+  cardImageUrl?: string;
+  cardImageCloudinaryPublicId?: string;
   isActive?: boolean;
 }
 

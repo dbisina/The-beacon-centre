@@ -2,14 +2,6 @@
 import { prisma } from '../config/database';
 import { ServiceResponse, CreateDevotionalRequest, UpdateDevotionalRequest, DevotionalFilters } from '../types';
 import { Devotional } from '@prisma/client';
-import { GeminiService } from './gemini.service';
-import { cloudinary } from '../config/cloudinary';
-
-export interface GenerateCardRequest {
-  title: string;
-  passage: string;
-  reference: string;
-}
 
 export class DevotionalService {
   static async getAllDevotionals(filters: DevotionalFilters): Promise<ServiceResponse<{
@@ -188,6 +180,8 @@ export class DevotionalService {
           verseReference: devotionalData.verseReference,
           content: devotionalData.content,
           prayer: devotionalData.prayer || null,
+          cardImageUrl: devotionalData.cardImageUrl || null,
+          cardImageCloudinaryPublicId: devotionalData.cardImageCloudinaryPublicId || null,
         },
       });
 
@@ -244,6 +238,8 @@ export class DevotionalService {
           ...(updateData.verseReference && { verseReference: updateData.verseReference }),
           ...(updateData.content && { content: updateData.content }),
           ...(updateData.prayer !== undefined && { prayer: updateData.prayer }),
+          ...(updateData.cardImageUrl !== undefined && { cardImageUrl: updateData.cardImageUrl }),
+          ...(updateData.cardImageCloudinaryPublicId !== undefined && { cardImageCloudinaryPublicId: updateData.cardImageCloudinaryPublicId }),
           updatedAt: new Date(),
         },
       });
@@ -331,74 +327,4 @@ export class DevotionalService {
     }
   }
 
-  // ─── Shareable verse card (Gemini background photo + Cloudinary text overlay) ───
-
-  static async generateCard(req: GenerateCardRequest): Promise<ServiceResponse<{ imageUrl: string }>> {
-    try {
-      const prompt =
-        `A high quality, cinematic photograph - not an illustration, not clipart, no text or words anywhere in the image - ` +
-        `that visually captures the mood and theme of this Bible verse, shot with warm natural lighting and a shallow depth ` +
-        `of field: "${req.passage}" (${req.reference}). The bottom third of the frame should already read as naturally ` +
-        `darker/dimmer (like a soft cinematic gradient toward the base), since white text will be overlaid there. Serene, ` +
-        `reverent, uncluttered composition.`;
-
-      let image;
-      try {
-        image = await GeminiService.generateImage(prompt, '3:4');
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        return {
-          success: false,
-          error: message.includes('not configured')
-            ? 'Card generation is not configured yet'
-            : 'Failed to generate background image',
-          details: message,
-        };
-      }
-
-      // Keep the overlaid verse readable on a card-sized image - long
-      // passages get truncated rather than shrinking the font illegibly.
-      const verseText = req.passage.length > 160 ? `${req.passage.slice(0, 157).trimEnd()}…` : req.passage;
-
-      const upload = await cloudinary.uploader.upload(`data:${image.mimeType};base64,${image.data}`, {
-        resource_type: 'image',
-        folder: 'beacon-devotionals/cards',
-        tags: ['devotional-card', 'beacon-centre'],
-        transformation: [
-          { width: 1080, height: 1440, crop: 'fill', gravity: 'auto', quality: 'auto:good' },
-          {
-            overlay: { font_family: 'Arial', font_size: 54, font_weight: 'bold', text: verseText },
-            color: 'white',
-            width: 900,
-            crop: 'fit',
-            gravity: 'south',
-            y: 230,
-          },
-          {
-            overlay: { font_family: 'Arial', font_size: 32, font_weight: 'bold', text: req.reference.toUpperCase() },
-            color: '#41BBAC',
-            width: 900,
-            crop: 'fit',
-            gravity: 'south',
-            y: 150,
-          },
-          {
-            overlay: { font_family: 'Arial', font_size: 22, text: 'THE BEACON CENTRE' },
-            color: 'white',
-            opacity: 70,
-            gravity: 'south',
-            y: 60,
-          },
-        ],
-      });
-
-      return { success: true, data: { imageUrl: upload.secure_url } };
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to generate card',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  }
 }

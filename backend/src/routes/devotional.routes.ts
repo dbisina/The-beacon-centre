@@ -9,9 +9,6 @@ const router = Router();
 router.get('/', DevotionalController.getAllDevotionals);
 router.get('/today', DevotionalController.getTodaysDevotional);
 router.get('/date/:date', DevotionalController.getDevotionalByDate);
-// Literal path declared before the generic /:id route below so it isn't
-// swallowed by /:id matching "card" as an id.
-router.post('/card', DevotionalController.generateCard);
 router.get('/:id', DevotionalController.getDevotionalById);
 
 // Protected admin routes

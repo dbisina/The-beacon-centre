@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Pressable, Alert, Share, ActivityIndicator } from 'react-native';
+import { View, Pressable, Alert, Share } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,7 +7,7 @@ import { colors, radius, font, useResponsive } from '@/theme';
 import { Screen, Text, Row, Btn, Kicker } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
 import { useSaved } from '@/hooks/useSaved';
-import { fetchDevotional, fetchDailyQuote, generateDevotionalCard } from '@/services/api';
+import { fetchDevotional, fetchDailyQuote } from '@/services/api';
 import { upsertProgress } from '@/services/userData';
 import { useAuth } from '@/services/auth';
 import { devotional as fallback } from '@/data/content';
@@ -29,7 +29,6 @@ export default function DevotionalScreen() {
   const { saved, toggle: toggleSaved } = useSaved('DEVOTIONAL', devotionalId);
   const { isMember } = useAuth();
   const [markedRead, setMarkedRead] = useState(false);
-  const [cardLoading, setCardLoading] = useState(false);
 
   async function markAsRead() {
     if (!isMember || devotionalId == null) {
@@ -49,17 +48,13 @@ export default function DevotionalScreen() {
   const ref = data.d?.passage || fallback.ref;
   const prayer = data.d?.prayer || fallback.prayer;
 
-  async function makeCard() {
-    setCardLoading(true);
+  async function shareToday() {
+    const message = `"${passage}" — ${ref}\n\n${title}\n\nThe Beacon Centre`;
     try {
-      const { imageUrl } = await generateDevotionalCard({ title, passage, reference: ref });
-      await Share.share({ url: imageUrl, message: `"${passage}" — ${ref}\n\nThe Beacon Centre` });
-    } catch (e: any) {
-      Alert.alert('Could not make a card', e?.message ?? 'Please try again in a moment.');
-    } finally {
-      setCardLoading(false);
-    }
+      await Share.share(data.d?.cardImageUrl ? { url: data.d.cardImageUrl, message } : { message });
+    } catch {}
   }
+
   const day = data.d?.date
     ? new Date(data.d.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
     : fallback.day;
@@ -127,23 +122,12 @@ export default function DevotionalScreen() {
           maxWidth: r.contentWidth, alignSelf: 'center',
         }}
       >
-        <Pressable
-          onPress={() => Share.share({ message: `"${passage}" — ${ref}\n\n${title}\n\nThe Beacon Centre` }).catch(() => {})}
-          style={{ flex: 1 }}
-        >
+        <Pressable onPress={shareToday} style={{ flex: 1 }}>
           <Row gap={12} style={{ paddingVertical: r.s(11), paddingHorizontal: r.s(16), borderRadius: radius.lg, backgroundColor: colors.ink }}>
             <Ionicons name="share-outline" size={r.s(18)} color={colors.teal} />
             <Text size={13} weight="bold" color="#fff" numberOfLines={1}>Share today's word</Text>
           </Row>
         </Pressable>
-        <Btn
-          label={cardLoading ? 'Making…' : 'Make a card'}
-          tone="teal"
-          disabled={cardLoading}
-          left={cardLoading ? <ActivityIndicator size="small" color={colors.tealInk} /> : undefined}
-          style={{ paddingVertical: r.s(11), paddingHorizontal: r.s(14) }}
-          onPress={makeCard}
-        />
       </Row>
     </>
   );

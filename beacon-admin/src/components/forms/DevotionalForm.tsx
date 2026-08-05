@@ -2,13 +2,14 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Save, Eye, X } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import { CalendarIcon, Save, Eye, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +22,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { uploadApi } from '@/lib/api';
 import { Devotional, CreateDevotionalForm } from '@/lib/types';
+
+interface CardImageFile {
+  file: File;
+  url: string;
+}
 
 const devotionalSchema = z.object({
   date: z.string().min(1, 'Date is required'),
@@ -46,8 +53,42 @@ export default function DevotionalForm({ devotional, onSubmit, isLoading = false
     devotional ? new Date(devotional.date) : new Date()
   );
   const [previewMode, setPreviewMode] = useState(false);
+  const [cardImage, setCardImage] = useState<CardImageFile | null>(null);
+  const [cardImageRemoved, setCardImageRemoved] = useState(false);
+  const [isUploadingCard, setIsUploadingCard] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+
+  const existingCardImageUrl = (devotional as any)?.cardImageUrl as string | undefined;
+
+  const onDropCardImage = useCallback(
+    (acceptedFiles: File[]) => {
+      const file = acceptedFiles[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast({ title: 'Error', description: 'Please select a valid image file', variant: 'destructive' });
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast({ title: 'Error', description: 'Image size must be less than 10MB', variant: 'destructive' });
+        return;
+      }
+      setCardImage({ file, url: URL.createObjectURL(file) });
+      setCardImageRemoved(false);
+    },
+    [toast]
+  );
+
+  const { getRootProps: getCardImageRootProps, getInputProps: getCardImageInputProps, isDragActive: isCardImageDragActive } = useDropzone({
+    onDrop: onDropCardImage,
+    accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'] },
+    multiple: false,
+  });
+
+  const removeCardImage = () => {
+    setCardImage(null);
+    setCardImageRemoved(true);
+  };
 
   const {
     register,
@@ -80,7 +121,18 @@ export default function DevotionalForm({ devotional, onSubmit, isLoading = false
 
   const handleFormSubmit = async (data: DevotionalFormData) => {
     try {
-      await onSubmit(data);
+      let cardImagePayload: { cardImageUrl?: string; cardImageCloudinaryPublicId?: string } = {};
+
+      if (cardImage) {
+        setIsUploadingCard(true);
+        const uploadResult = await uploadApi.image(cardImage.file);
+        setIsUploadingCard(false);
+        cardImagePayload = { cardImageUrl: uploadResult.url, cardImageCloudinaryPublicId: uploadResult.publicId };
+      } else if (cardImageRemoved) {
+        cardImagePayload = { cardImageUrl: '', cardImageCloudinaryPublicId: '' };
+      }
+
+      await onSubmit({ ...data, ...cardImagePayload } as any);
       toast({
         title: 'Success',
         description: `Devotional ${devotional ? 'updated' : 'created'} successfully`,
@@ -88,8 +140,11 @@ export default function DevotionalForm({ devotional, onSubmit, isLoading = false
       if (!devotional) {
         reset();
         setSelectedDate(new Date());
+        setCardImage(null);
+        setCardImageRemoved(false);
       }
     } catch (error: any) {
+      setIsUploadingCard(false);
       toast({
         title: 'Error',
         description: error?.message || `Failed to ${devotional ? 'update' : 'create'} devotional`,
@@ -286,6 +341,78 @@ export default function DevotionalForm({ devotional, onSubmit, isLoading = false
                 </CardContent>
               </Card>
 
+              {/* Card Image */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Shareable Card Image</CardTitle>
+                  <CardDescription>
+                    Upload a background image for this devotional's shareable card
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {!cardImage && !cardImageRemoved && !existingCardImageUrl && (
+                    <div
+                      {...getCardImageRootProps()}
+                      className={cn(
+                        'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
+                        isCardImageDragActive
+                          ? 'border-teal-500 bg-teal-50'
+                          : 'border-gray-300 hover:border-teal-400 hover:bg-gray-50'
+                      )}
+                    >
+                      <input {...getCardImageInputProps()} />
+                      <ImageIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                      <p className="text-lg font-medium text-gray-900 mb-2">
+                        {isCardImageDragActive ? 'Drop the image here' : 'Drag & drop image here'}
+                      </p>
+                      <p className="text-gray-600 mb-4">or click to browse files</p>
+                      <Button type="button" variant="outline">
+                        <Upload className="mr-2 h-4 w-4" />
+                        Choose Image
+                      </Button>
+                      <p className="text-xs text-gray-500 mt-4">
+                        Maximum file size: 10MB. Supported formats: PNG, JPG, JPEG, GIF, WebP
+                      </p>
+                    </div>
+                  )}
+
+                  {(cardImage || (existingCardImageUrl && !cardImageRemoved)) && (
+                    <div className="border rounded-lg p-4 bg-gray-50">
+                      <div className="flex items-start space-x-4">
+                        <img
+                          src={cardImage?.url || existingCardImageUrl || ''}
+                          alt="Devotional card"
+                          className="w-24 h-24 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium">{cardImage ? cardImage.file.name : 'Current card image'}</p>
+                          <p className="text-sm text-gray-600">
+                            {cardImage && `${(cardImage.file.size / 1024 / 1024).toFixed(2)} MB`}
+                          </p>
+                          <div className="mt-2">
+                            <Button type="button" variant="outline" size="sm" onClick={removeCardImage}>
+                              <X className="h-4 w-4 mr-1" />
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {cardImageRemoved && (
+                    <div
+                      {...getCardImageRootProps()}
+                      className="border border-dashed border-gray-300 rounded p-4 text-center cursor-pointer hover:border-teal-400 hover:bg-gray-50"
+                    >
+                      <input {...getCardImageInputProps()} />
+                      <Upload className="h-6 w-6 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600">Click or drag to upload a new image</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Content Section */}
               <Card>
                 <CardHeader>
@@ -354,11 +481,11 @@ export default function DevotionalForm({ devotional, onSubmit, isLoading = false
                   <div className="space-y-3">
                     <Button
                       type="submit"
-                      disabled={isLoading}
+                      disabled={isLoading || isUploadingCard}
                       className="w-full"
                     >
                       <Save className="mr-2 h-4 w-4" />
-                      {isLoading ? 'Saving...' : devotional ? 'Update Devotional' : 'Create Devotional'}
+                      {isUploadingCard ? 'Uploading image...' : isLoading ? 'Saving...' : devotional ? 'Update Devotional' : 'Create Devotional'}
                     </Button>
                     
                     {!devotional && (

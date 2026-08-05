@@ -88,28 +88,6 @@ export class DevotionalController {
     }
   }
 
-  static async generateCard(req: Request, res: Response): Promise<void> {
-    try {
-      const { title, passage, reference } = req.body as { title?: string; passage?: string; reference?: string };
-
-      if (!passage || !reference) {
-        sendError(res, 'passage and reference are required', 400);
-        return;
-      }
-
-      const result = await DevotionalService.generateCard({ title: title ?? '', passage, reference });
-
-      if (result.success) {
-        sendSuccess(res, 'Card generated successfully', result.data);
-      } else {
-        const statusCode = result.error.includes('not configured') ? 503 : 500;
-        sendError(res, result.error, statusCode, result.details);
-      }
-    } catch (error) {
-      sendError(res, 'Failed to generate card', 500, error);
-    }
-  }
-
   static async createDevotional(req: Request, res: Response): Promise<void> {
     try {
       const devotionalData: CreateDevotionalRequest = req.body;
