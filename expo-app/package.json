@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "verify:eas-install": "npx --yes npm@10 ci --include=dev --dry-run"
   },
   "dependencies": {
     "@expo-google-fonts/instrument-serif": "^0.3.0",
@@ -41,6 +42,9 @@
     "@babel/core": "^7.24.0",
     "@types/react": "~19.1.10",
     "typescript": "~5.9.2"
+  },
+  "overrides": {
+    "@react-native-async-storage/async-storage": "$@react-native-async-storage/async-storage"
   },
   "private": true
 }
