@@ -40,6 +40,8 @@ export type Devotional = {
   id: string;
   title: string;
   content: string;
+  /** The verse itself. `passage` is only its reference, e.g. "Matthew 5:14". */
+  verse: string;
   passage: string;
   prayer: string | null;
   date: string | null;
@@ -67,6 +69,7 @@ export async function fetchDevotional(): Promise<Devotional | null> {
       id: String(d.id),
       title: d.title ?? '',
       content: d.content ?? '',
+      verse: d.verseText ?? '',
       passage: d.verseReference ?? '',
       prayer: d.prayer ?? null,
       date: d.date ?? null,

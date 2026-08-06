@@ -1,9 +1,14 @@
 /**
- * Placeholder content layer.
+ * Shared assets and small formatting helpers.
  *
- * Swap these arrays for your Firestore reads (the old app used
- * `collection(db, 'audioSermon' | 'devotionals' | 'announcements')`) — the
- * screens only depend on the shapes below.
+ * Audio sermons and the daily devotional used to be hardcoded here and served
+ * as fallbacks when a fetch failed. They are gone: both screens now read the
+ * backend only and show an explicit empty state, because placeholder scripture
+ * and a library of tracks that will not play are worse than an honest "nothing
+ * published yet".
+ *
+ * The arrays that remain below are legacy placeholders for screens not yet
+ * wired to the backend.
  */
 
 export const COVER = require('../assets/cover.jpg');
@@ -17,25 +22,11 @@ export const LOGO_WHITE = require('../assets/logo-mark-white.png');
 
 export type Short = { id: string; title: string; duration: string; views: string; thumb: any };
 export type Message = { id: string; title: string; meta: string; duration: string; thumb: any };
-export type AudioSermon = { id: string; title: string; meta: string; duration: string; art: any; downloaded?: boolean };
 
 export const verse = {
   text: 'You are the light of the world.',
   highlight: 'light',
   ref: 'Matthew 5:14',
-};
-
-export const devotional = {
-  day: 'Sunday 2 August · Day 214',
-  title: "Light that doesn't flicker",
-  passage: 'You are the light of the world. A city set on a hill cannot be hidden.',
-  ref: 'Matthew 5:14',
-  body: [
-    "A lamp is a small thing. It doesn't argue, it doesn't shout, it doesn't wait until the room deserves it. It simply keeps burning, and the room changes around it.",
-    "Most of us are not asked to do anything dramatic this week. We're asked to stay lit — in the office, in the traffic, in the group chat, at the table where nobody says grace. Faithfulness is unglamorous and it is everything.",
-    'Ask one question today: where has my flame gone quiet, and what would it cost me to let it burn there again?',
-  ],
-  prayer: 'Father, make me steady. Not spectacular — steady. Let the people nearest me see it first.',
 };
 
 export const shorts: Short[] = [
@@ -48,12 +39,6 @@ export const messages: Message[] = [
   { id: 'm1', title: 'Carry The Flame — Beacon Series 03', meta: 'The Beacon Centre · 4 days ago', duration: '42:18', thumb: COVER },
   { id: 'm2', title: 'Ordinary People, Uncommon Grace', meta: 'Refuel · 1.2K views', duration: '38:02', thumb: COVER },
   { id: 'm3', title: 'The Weight of Light', meta: 'Impart · 890 views', duration: '27:44', thumb: COVER },
-];
-
-export const audio: AudioSermon[] = [
-  { id: 'a1', title: 'Stay Lit — Part 1', meta: 'Impart Service', duration: '32 min', art: COVER, downloaded: true },
-  { id: 'a2', title: 'The God Who Sees', meta: 'Refuel Service', duration: '41 min', art: COVER },
-  { id: 'a3', title: 'Rooted — Midweek Refuel', meta: 'Refuel Service', duration: '27 min', art: COVER },
 ];
 
 export const services = [

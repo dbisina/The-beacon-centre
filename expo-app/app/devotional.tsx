@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Pressable, Alert, Share } from 'react-native';
+import { View, Pressable, Alert, Share, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,13 +10,12 @@ import { useSaved } from '@/hooks/useSaved';
 import { fetchDevotional, fetchDailyQuote } from '@/services/api';
 import { upsertProgress } from '@/services/userData';
 import { useAuth } from '@/services/auth';
-import { devotional as fallback } from '@/data/content';
 
 export default function DevotionalScreen() {
   const r = useResponsive();
   const insets = useSafeAreaInsets();
 
-  const { data } = useAsync(
+  const { data, loading } = useAsync(
     async () => {
       const [d, q] = await Promise.all([fetchDevotional().catch(() => null), fetchDailyQuote().catch(() => null)]);
       return { d, q };
@@ -43,10 +42,14 @@ export default function DevotionalScreen() {
     }
   }
 
-  const title = data.d?.title || fallback.title;
-  const passage = data.q?.content || fallback.passage;
-  const ref = data.d?.passage || fallback.ref;
-  const prayer = data.d?.prayer || fallback.prayer;
+  // Everything comes from the backend. There is no placeholder devotional to
+  // fall back on - showing invented scripture and prayer when the admin hasn't
+  // published for the day is worse than showing nothing, so an empty day gets
+  // an explicit empty state below instead.
+  const title = data.d?.title ?? '';
+  const passage = data.d?.verse || data.q?.content || '';
+  const ref = data.d?.passage ?? '';
+  const prayer = data.d?.prayer ?? '';
 
   async function shareToday() {
     const message = `"${passage}" — ${ref}\n\n${title}\n\nThe Beacon Centre`;
@@ -57,9 +60,9 @@ export default function DevotionalScreen() {
 
   const day = data.d?.date
     ? new Date(data.d.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-    : fallback.day;
-  // Firestore stores the body as one blob; split on blank lines into paragraphs.
-  const paras = data.d?.content ? data.d.content.split(/\n{2,}|\r\n\r\n/).filter(Boolean) : fallback.body;
+    : '';
+  // The backend stores the body as one blob; split on blank lines into paragraphs.
+  const paras = data.d?.content ? data.d.content.split(/\n{2,}|\r\n\r\n/).filter(Boolean) : [];
 
   return (
     <>
@@ -84,51 +87,76 @@ export default function DevotionalScreen() {
           </Row>
         </Row>
 
-        <Kicker color={colors.tealDeep} style={{ marginTop: r.s(28) }}>{day}</Kicker>
-        <Text size={33} weight="extra" lh={1.12} track={-0.035} style={{ marginTop: r.s(12) }}>{title}</Text>
+        {loading ? (
+          <ActivityIndicator color={colors.teal} style={{ marginTop: r.s(48) }} />
+        ) : !data.d ? (
+          <View style={{ marginTop: r.s(36), padding: r.s(24), borderRadius: radius.lg, backgroundColor: colors.surface, alignItems: 'center' }}>
+            <Ionicons name="book-outline" size={r.s(26)} color={colors.faint} />
+            <Text size={15.5} weight="extra" style={{ marginTop: r.s(12), textAlign: 'center' }}>
+              No devotional yet today
+            </Text>
+            <Text size={12.5} lh={1.6} color={colors.muted} style={{ marginTop: r.s(7), textAlign: 'center' }}>
+              Today's word hasn't been published. Please check back a little later.
+            </Text>
+          </View>
+        ) : (
+          <>
+            {day ? <Kicker color={colors.tealDeep} style={{ marginTop: r.s(28) }}>{day}</Kicker> : null}
+            <Text size={33} weight="extra" lh={1.12} track={-0.035} style={{ marginTop: r.s(12) }}>{title}</Text>
 
-        {/* the second and last magenta surface in the app */}
-        <View style={{ marginTop: r.s(20), padding: r.s(20), borderRadius: radius.lg, backgroundColor: colors.verse }}>
-          <Text size={22} lh={1.42} color="#fff" style={{ fontFamily: font.serif }}>{passage}</Text>
-          <Text size={11} weight="extra" track={0.1} color="rgba(255,255,255,0.8)" style={{ marginTop: r.s(14) }}>
-            {ref.toUpperCase()}
-          </Text>
-        </View>
+            {/* the second and last magenta surface in the app */}
+            {passage ? (
+              <View style={{ marginTop: r.s(20), padding: r.s(20), borderRadius: radius.lg, backgroundColor: colors.verse }}>
+                <Text size={22} lh={1.42} color="#fff" style={{ fontFamily: font.serif }}>{passage}</Text>
+                {ref ? (
+                  <Text size={11} weight="extra" track={0.1} color="rgba(255,255,255,0.8)" style={{ marginTop: r.s(14) }}>
+                    {ref.toUpperCase()}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
 
-        {paras.map((p, i) => (
-          <Text key={i} size={15.5} lh={1.85} weight="regular" color="#3C3833" style={{ marginTop: r.s(i ? 16 : 22) }}>
-            {p}
-          </Text>
-        ))}
+            {paras.map((p, i) => (
+              <Text key={i} size={15.5} lh={1.85} weight="regular" color="#3C3833" style={{ marginTop: r.s(i ? 16 : 22) }}>
+                {p}
+              </Text>
+            ))}
 
-        <View style={{ marginTop: r.s(22), padding: r.s(20), borderRadius: radius.lg, backgroundColor: colors.surface }}>
-          <Kicker>Pray</Kicker>
-          <Text size={14} lh={1.75} style={{ marginTop: r.s(9) }}>{prayer}</Text>
-        </View>
+            {prayer ? (
+              <View style={{ marginTop: r.s(22), padding: r.s(20), borderRadius: radius.lg, backgroundColor: colors.surface }}>
+                <Kicker>Pray</Kicker>
+                <Text size={14} lh={1.75} style={{ marginTop: r.s(9) }}>{prayer}</Text>
+              </View>
+            ) : null}
 
-        <Btn
-          label={markedRead ? 'Marked as read' : 'Mark as read'}
-          tone={markedRead ? 'plain' : 'ink'}
-          full
-          style={{ marginTop: r.s(22) }}
-          onPress={markAsRead}
-        />
+            <Btn
+              label={markedRead ? 'Marked as read' : 'Mark as read'}
+              tone={markedRead ? 'plain' : 'ink'}
+              full
+              style={{ marginTop: r.s(22) }}
+              onPress={markAsRead}
+            />
+          </>
+        )}
       </Screen>
 
-      <Row
-        gap={10}
-        style={{
-          position: 'absolute', left: r.s(16), right: r.s(16), bottom: insets.bottom + r.s(14),
-          maxWidth: r.contentWidth, alignSelf: 'center',
-        }}
-      >
-        <Pressable onPress={shareToday} style={{ flex: 1 }}>
-          <Row gap={12} style={{ paddingVertical: r.s(11), paddingHorizontal: r.s(16), borderRadius: radius.lg, backgroundColor: colors.ink }}>
-            <Ionicons name="share-outline" size={r.s(18)} color={colors.teal} />
-            <Text size={13} weight="bold" color="#fff" numberOfLines={1}>Share today's word</Text>
-          </Row>
-        </Pressable>
-      </Row>
+      {/* Nothing to share on a day with no devotional. */}
+      {data.d ? (
+        <Row
+          gap={10}
+          style={{
+            position: 'absolute', left: r.s(16), right: r.s(16), bottom: insets.bottom + r.s(14),
+            maxWidth: r.contentWidth, alignSelf: 'center',
+          }}
+        >
+          <Pressable onPress={shareToday} style={{ flex: 1 }}>
+            <Row gap={12} style={{ paddingVertical: r.s(11), paddingHorizontal: r.s(16), borderRadius: radius.lg, backgroundColor: colors.ink }}>
+              <Ionicons name="share-outline" size={r.s(18)} color={colors.teal} />
+              <Text size={13} weight="bold" color="#fff" numberOfLines={1}>Share today's word</Text>
+            </Row>
+          </Pressable>
+        </Row>
+      ) : null}
     </>
   );
 }

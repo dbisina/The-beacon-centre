@@ -7,7 +7,7 @@ import { Screen, Text, Chip, Row, Kicker } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
 import { fetchAudioSermons, fetchGoaks } from '@/services/api';
 import { usePlayer } from '@/services/player';
-import { COVER, audio as fallbackAudio } from '@/data/content';
+import { COVER } from '@/data/content';
 
 export default function Listen() {
   const r = useResponsive();
@@ -26,16 +26,17 @@ export default function Listen() {
     []
   );
 
-  const list = tab === 'goaks' ? data.goaks : data.sermons;
-  const items = list.length
-    ? list
-    : fallbackAudio.map((a) => ({ id: a.id, title: a.title, preacher: a.meta, series: '', audioUrl: null, imageUrl: null }));
+  // Backend only - placeholder sermons used to stand in here, which meant a
+  // fetch failure looked like a stocked library of tracks that would not play.
+  const items = tab === 'goaks' ? data.goaks : data.sermons;
 
   return (
     <Screen padBottom={110} refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.teal} />}>
       <Text size={32} weight="extra" track={-0.035}>Listen</Text>
       <Text size={13} lh={1.6} color={colors.muted} style={{ marginTop: r.s(8) }}>
-        {items.length} messages you can play offline.
+        {items.length
+          ? `${items.length} message${items.length === 1 ? '' : 's'} you can play offline.`
+          : 'Messages you can play offline.'}
       </Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: r.s(7), marginTop: r.s(18) }}>
@@ -52,6 +53,18 @@ export default function Listen() {
           <Text size={17} weight="extra" style={{ marginTop: r.s(18) }}>Nothing downloaded yet</Text>
           <Text size={12.5} lh={1.65} color={colors.muted} style={{ marginTop: r.s(8), textAlign: 'center' }}>
             Download any message and it plays without data, useful for the drive to church.
+          </Text>
+        </View>
+      ) : !loading && items.length === 0 ? (
+        <View style={{ marginTop: r.s(40), alignItems: 'center', paddingHorizontal: r.s(30) }}>
+          <View style={{ width: r.s(64), height: r.s(64), borderRadius: r.s(20), backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="musical-notes-outline" size={r.s(28)} color={colors.muted} />
+          </View>
+          <Text size={17} weight="extra" style={{ marginTop: r.s(18) }}>
+            {tab === 'goaks' ? 'No GOAKS yet' : 'No audio sermons yet'}
+          </Text>
+          <Text size={12.5} lh={1.65} color={colors.muted} style={{ marginTop: r.s(8), textAlign: 'center' }}>
+            Nothing has been published here yet. Pull down to refresh.
           </Text>
         </View>
       ) : (
