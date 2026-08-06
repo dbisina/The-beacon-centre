@@ -11,13 +11,13 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://backend-production-26ff.up.railway.app/api"
+        "EXPO_PUBLIC_API_URL": "https://the-beacon-centre-production.up.railway.app/api"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://backend-production-26ff.up.railway.app/api"
+        "EXPO_PUBLIC_API_URL": "https://the-beacon-centre-production.up.railway.app/api"
       }
     }
   },
