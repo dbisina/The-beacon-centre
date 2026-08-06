@@ -93,6 +93,15 @@ model AudioSermon {
   @@map("audio_sermons")
 }
 
+/// Announcements and events share one table: an event is an announcement that
+/// additionally has a time, a place and something for the reader to do (RSVP,
+/// or a registration form). Keeping them together means the app's News feed,
+/// the push pipeline and the admin list all keep working unchanged, and an
+/// announcement can be promoted to an event without moving rows.
+///
+/// `csgId` scopes the row. Null means church-wide (posted by SUPER_ADMIN/ADMIN);
+/// set means it belongs to that community group and only its members see it -
+/// this is what a CSG_ADMIN is allowed to create.
 model Announcement {
   id                 Int      @id @default(autoincrement())
   title              String   @db.VarChar(255)
@@ -109,10 +118,113 @@ model Announcement {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
+  kind               AnnouncementKind @default(ANNOUNCEMENT)
+  csgId              Int?     @map("csg_id")
+
+  // ─── Event fields (null unless kind = EVENT) ───
+  /// Start of the event, with time. `startDate` above stays date-only and drives feed ordering. 
+  startsAt           DateTime? @map("starts_at")
+  endsAt             DateTime? @map("ends_at")
+  locationName       String?   @map("location_name") @db.VarChar(255)
+  address            String?   @db.VarChar(500)
+  latitude           Float?
+  longitude          Float?
+  /// Opens the "I'm going" control in the app. 
+  rsvpEnabled        Boolean   @default(false) @map("rsvp_enabled")
+  /// Optional cap; null means unlimited. Counted against RSVPs or registrations. 
+  capacity           Int?
+
   // Relations
   interactions       ContentInteraction[]
+  csg                Csg?     @relation(fields: [csgId], references: [id], onDelete: Cascade)
+  rsvps              EventRsvp[]
+  registrationForm   EventForm?
 
+  @@index([kind, startsAt])
+  @@index([csgId, startDate])
   @@map("announcements")
+}
+
+/// A registration form attached to one event. Admins compose the fields
+/// themselves, so nothing here is hardcoded to a particular kind of event.
+model EventForm {
+  id             Int      @id @default(autoincrement())
+  announcementId Int      @unique @map("announcement_id")
+  title          String   @db.VarChar(255)
+  description    String?  @db.Text
+  /// Closes the form without deleting it or its responses. 
+  isOpen         Boolean  @default(true) @map("is_open")
+  closesAt       DateTime? @map("closes_at")
+  /// Shown to the person after they submit. 
+  confirmationMessage String? @map("confirmation_message") @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  announcement   Announcement       @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  fields         EventFormField[]
+  registrations  EventRegistration[]
+
+  @@map("event_forms")
+}
+
+/// One question on a registration form. `options` carries the choices for
+/// SELECT / RADIO / CHECKBOX and is empty for every other type.
+model EventFormField {
+  id          Int                @id @default(autoincrement())
+  formId      Int                @map("form_id")
+  label       String             @db.VarChar(255)
+  type        EventFormFieldType @default(TEXT)
+  placeholder String?            @db.VarChar(255)
+  helpText    String?            @map("help_text") @db.VarChar(500)
+  required    Boolean            @default(false)
+  options     String[]           @default([])
+  sortOrder   Int                @default(0) @map("sort_order")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  form        EventForm          @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId, sortOrder])
+  @@map("event_form_fields")
+}
+
+/// A submitted registration. Answers are stored as a JSON object keyed by field
+/// id so a form can be edited later without rewriting historical responses;
+/// `EventFormField` still defines the ordering and labels used to render and
+/// export them.
+model EventRegistration {
+  id           Int      @id @default(autoincrement())
+  formId       Int      @map("form_id")
+  appUserId    Int?     @map("app_user_id")
+  /// Denormalised so an export is readable even if the account is later removed. 
+  name         String?  @db.VarChar(255)
+  email        String?  @db.VarChar(255)
+  phone        String?  @db.VarChar(50)
+  answers      Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  form         EventForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  appUser      AppUser?  @relation(fields: [appUserId], references: [id], onDelete: SetNull)
+
+  @@index([formId, createdAt])
+  @@map("event_registrations")
+}
+
+/// "I'm going" on an event that has rsvpEnabled but no registration form. 
+model EventRsvp {
+  id             Int            @id @default(autoincrement())
+  announcementId Int            @map("announcement_id")
+  appUserId      Int            @map("app_user_id")
+  status         EventRsvpStatus @default(GOING)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  appUser        AppUser      @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, appUserId])
+  @@index([announcementId])
+  @@map("event_rsvps")
 }
 
 model Category {
@@ -219,6 +331,8 @@ model AppUser {
   saves              UserSave[]
   notes              UserNote[]
   progress           UserProgress[]
+  eventRsvps         EventRsvp[]
+  eventRegistrations EventRegistration[]
 
   @@map("app_users")
 }
@@ -246,6 +360,7 @@ model Csg {
   updates         CsgUpdate[]
   pushTokens      PushToken[]
   contactMessages ContactMessage[]
+  announcements   Announcement[]
 
   @@map("csgs")
 }
@@ -596,4 +711,30 @@ enum GivingTransactionStatus {
   SUCCESS
   FAILED
   ABANDONED
+}
+enum AnnouncementKind {
+  ANNOUNCEMENT
+  EVENT
+}
+
+enum EventRsvpStatus {
+  GOING
+  MAYBE
+  NOT_GOING
+}
+
+/// Field types an admin can pick when building a registration form. Rendering
+/// for each lives in the app's form renderer and the admin preview.
+enum EventFormFieldType {
+  TEXT
+  TEXTAREA
+  EMAIL
+  PHONE
+  NUMBER
+  DATE
+  TIME
+  SELECT
+  RADIO
+  CHECKBOX
+  YES_NO
 }
