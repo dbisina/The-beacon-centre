@@ -83,7 +83,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '../../../contexts/authContext';
-import { liveScheduleApi } from '@/lib/api';
+import { adminsApi, liveScheduleApi } from '@/lib/api';
 
 // Live Schedule types (local to this page - mirrors backend LiveSchedule model)
 interface LiveScheduleEntry {
@@ -161,7 +161,15 @@ interface SecuritySettings {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('general');
+  const [activeTab, setActiveTab] = useState('account');
+
+  // My Account tab state. PUT /admin/me has always accepted these, but nothing
+  // in the dashboard called it, so an admin had no way to change their own
+  // password without someone editing the account for them.
+  const emptyAccountForm = { name: '', currentPassword: '', newPassword: '', confirmPassword: '' };
+  const [accountForm, setAccountForm] = useState(emptyAccountForm);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -227,6 +235,56 @@ export default function SettingsPage() {
     setShowLiveScheduleDialog(false);
     setEditingLiveSchedule(null);
     setLiveScheduleForm(emptyLiveScheduleForm);
+  };
+
+  const updateAccountMutation = useMutation({
+    mutationFn: (data: { name?: string; currentPassword?: string; newPassword?: string }) =>
+      adminsApi.updateSelf(data),
+    onSuccess: () => {
+      toast({
+        title: 'Saved',
+        description: accountForm.newPassword
+          ? 'Your password has been changed. Use it the next time you sign in.'
+          : 'Your account details have been updated.',
+        variant: 'success',
+      });
+      setAccountForm((f) => ({ ...f, currentPassword: '', newPassword: '', confirmPassword: '' }));
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Could not save',
+        description: error?.message || 'Check your current password and try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleAccountSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const wantsPasswordChange = Boolean(accountForm.newPassword || accountForm.currentPassword);
+
+    if (wantsPasswordChange) {
+      if (!accountForm.currentPassword) {
+        toast({ title: 'Current password required', description: 'Enter your existing password to set a new one.', variant: 'destructive' });
+        return;
+      }
+      if (accountForm.newPassword.length < 6) {
+        toast({ title: 'Password too short', description: 'Use at least 6 characters.', variant: 'destructive' });
+        return;
+      }
+      if (accountForm.newPassword !== accountForm.confirmPassword) {
+        toast({ title: 'Passwords do not match', description: 'The new password and confirmation are different.', variant: 'destructive' });
+        return;
+      }
+    }
+
+    const trimmedName = accountForm.name.trim();
+    updateAccountMutation.mutate({
+      ...(trimmedName && trimmedName !== admin?.name ? { name: trimmedName } : {}),
+      ...(wantsPasswordChange
+        ? { currentPassword: accountForm.currentPassword, newPassword: accountForm.newPassword }
+        : {}),
+    });
   };
 
   const createLiveScheduleMutation = useMutation({
@@ -504,7 +562,14 @@ export default function SettingsPage() {
       <Card className="bg-white border border-slate-200 rounded-2xl">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <CardHeader className="bg-slate-50 border-b border-slate-200">
-            <TabsList className="grid w-full grid-cols-5 bg-white border border-slate-200 rounded-xl p-1">
+            <TabsList className="grid w-full grid-cols-6 bg-white border border-slate-200 rounded-xl p-1">
+              <TabsTrigger
+                value="account"
+                className="data-[state=active]:bg-slate-900 data-[state=active]:text-white rounded-lg transition-all duration-200 font-medium"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                My Account
+              </TabsTrigger>
               <TabsTrigger
                 value="general"
                 className="data-[state=active]:bg-slate-900 data-[state=active]:text-white rounded-lg transition-all duration-200 font-medium"
@@ -542,6 +607,106 @@ export default function SettingsPage() {
               </TabsTrigger>
             </TabsList>
           </CardHeader>
+
+          {/* My Account */}
+          <TabsContent value="account" className="p-8 space-y-8">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
+                <Shield className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-slate-800">My Account</h3>
+                <p className="text-slate-600">Your own sign-in details</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleAccountSubmit} className="max-w-xl space-y-6">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm text-slate-600">Signed in as</p>
+                <p className="text-base font-semibold text-slate-900">{admin?.email}</p>
+                <p className="text-sm text-slate-500 mt-1">
+                  {admin?.role?.replace('_', ' ').toLowerCase()}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="account-name">Display Name</Label>
+                <Input
+                  id="account-name"
+                  value={accountForm.name}
+                  placeholder={admin?.name || 'Your name'}
+                  onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })}
+                />
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="text-lg font-semibold text-slate-800">Change Password</h4>
+                <p className="text-sm text-slate-600 mt-1">
+                  Leave these blank if you only want to change your name.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="current-password">Current Password</Label>
+                <div className="relative">
+                  <Input
+                    id="current-password"
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={accountForm.currentPassword}
+                    onChange={(e) => setAccountForm({ ...accountForm, currentPassword: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    type={showNewPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={accountForm.newPassword}
+                    onChange={(e) => setAccountForm({ ...accountForm, newPassword: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500">At least 6 characters.</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={accountForm.confirmPassword}
+                  onChange={(e) => setAccountForm({ ...accountForm, confirmPassword: e.target.value })}
+                />
+              </div>
+
+              <Button type="submit" disabled={updateAccountMutation.isPending}>
+                {updateAccountMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </form>
+          </TabsContent>
 
           {/* General Settings */}
           <TabsContent value="general" className="p-8 space-y-8">

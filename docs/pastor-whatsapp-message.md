@@ -1,6 +1,6 @@
 # WhatsApp message for the pastor
 
-Fill in the values in {{ }} before sending. List of what is needed is at the bottom.
+Copy the message below. Type the admin password in yourself, it is deliberately not written down here.
 
 ---
 
@@ -10,25 +10,38 @@ Good morning Pastor,
 
 The Beacon Centre app is ready for you to try before we put it out to everyone, and the admin dashboard is ready for you to look through as well.
 
-First thing I need from you: please send me the email address you want to use. Apple requires me to add your email to the tester list before I can put the iPhone app on your phone. Once I add it, Apple will email you an invite.
+One thing I need from you first: please send me the email address you want to use. Apple requires me to add your email to the tester list before you can install the iPhone app. Once you send it, I will add you straight away.
 
-For the iPhone:
-{{TESTFLIGHT_LINK}}
+FOR IPHONE
 
-You will need to install TestFlight from the App Store first. It is free, and it is what Apple uses for apps that are still being tested. After that, open the link above on your phone and the app installs from there.
+Step 1. Open the App Store and search for TestFlight. Install it. It is free, made by Apple, and it is what Apple uses for apps that are still being tested. You only need it while we are testing.
 
-For Android:
-{{PLAY_TEST_LINK}}
+Step 2. Open this link on your iPhone:
+https://testflight.apple.com/join/KhwDWC8k
 
-Open that on your Android phone, tap Become a tester, then install from the Play Store the normal way.
+Step 3. It will open TestFlight and show The Beacon Centre. Tap Accept, then tap Install.
 
-For the admin dashboard, this is where everything in the app is managed. Devotionals, sermons, announcements, giving, community groups, all of it.
+Step 4. The app then sits on your home screen like any other app. When I send an update you will get a notification from TestFlight, and you tap Update in there.
 
-{{ADMIN_URL}}
-Email: {{PASTOR_ADMIN_EMAIL}}
-Password: {{PASTOR_ADMIN_TEMP_PASSWORD}}
+If tapping the link opens a web page instead of TestFlight, it means TestFlight is not installed yet. Go back to step 1.
 
-Please change that password once you are in. It is under Settings.
+FOR ANDROID
+
+Open this link on your Android phone:
+https://play.google.com/apps/testing/org.thebeaconcentre.app
+
+Tap Become a tester. It will then give you a link to download the app from the Play Store. It can take a few minutes before the Play Store lets you in, so if it says the app is not available, wait a little and try again.
+
+THE ADMIN DASHBOARD
+
+This is where everything in the app is managed. Devotionals, sermons, announcements, giving, community groups, all of it.
+
+https://beacon-admin-sigma.vercel.app
+
+Email: {{TYPE THE EMAIL HERE}}
+Password: {{TYPE THE PASSWORD HERE}}
+
+Please change that password once you are in. Go to Settings, then the My Account tab, and there is a Change Password section. Enter the current password, then your new one twice, and press Save Changes.
 
 I have attached a guide that goes through every screen step by step, so you can follow along while you click around.
 
@@ -39,21 +52,15 @@ Daniel
 
 ---
 
-## What to fill in
-
-| Placeholder | Where to get it |
-|---|---|
-| TESTFLIGHT_LINK | App Store Connect, TestFlight, your build, Testers |
-| PLAY_TEST_LINK | Play Console, Testing, Internal testing, Copy link |
-| ADMIN_URL | https://beacon-admin-sigma.vercel.app unless you have a custom domain |
-| PASTOR_ADMIN_EMAIL | The account you create for him |
-| PASTOR_ADMIN_TEMP_PASSWORD | The password you set on that account, 6 characters minimum |
-
 ## Before you send
 
-Create him his own account rather than giving him yours. Admin Management, then New Admin, role Admin. That gives him content, giving, prayer and contact, but not the ability to add or remove other admins. If you share your own login instead, every action he takes is recorded as you, and the only way to take access back is to change your own password.
+Type the email and password directly into WhatsApp. I have not written them into this file because it lives in the code repository.
 
-Also worth checking: the login page used to print admin@beaconcentre.org and admin123 on screen for anyone who opened it. That is fixed now, but if that account is real, change its password.
+The Android link is the tester opt in page, not the one you sent me. The link you sent, play.google.com/store/apps/details?id=org.thebeaconcentre.app, returns a 404 because the app is not publicly listed yet, so it would not work for him. Open the opt in link yourself first to check it loads, since I cannot see which testing track you have running.
+
+The TestFlight link works. I checked it and it returns 200.
+
+Consider making him his own account instead of sharing yours. Admin Management, then New Admin, role Admin. That gives him content, giving, prayer and contact, but not the ability to add or remove other admins. If you share your own login, everything he does is recorded as you, and the only way to take access back is to change your own password.
 
 ## Attachment
 
