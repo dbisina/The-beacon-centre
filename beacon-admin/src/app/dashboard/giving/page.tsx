@@ -281,10 +281,32 @@ function GivingPageContent() {
   const bankAccountSaving = createBankAccountMutation.isPending || updateBankAccountMutation.isPending;
 
   // ─── Projects ───
+  const [deleteProjectId, setDeleteProjectId] = useState<number | null>(null);
+
   const { data: projects, isLoading: projectsLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: () => projectsApi.getAll() as Promise<Project[]>,
   });
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: (id: number) => projectsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast({ title: 'Success', description: 'Project deleted successfully', variant: 'success' });
+      setDeleteProjectId(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error?.message || 'Failed to delete project',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Named in the confirmation copy so a mis-click on the wrong row is caught
+  // before it is confirmed, not after.
+  const projectPendingDelete = (projects || []).find((p) => p.id === deleteProjectId);
 
   const activeProjectsCount = (projects || []).filter((p) => p.isActive).length;
   const totalRaisedKobo = (projects || []).reduce((sum, p) => sum + Number(p.raisedAmount), 0);
@@ -639,11 +661,23 @@ function GivingPageContent() {
                           </TableCell>
                           <TableCell>{project.deadline ? formatDate(project.deadline) : '—'}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link href={`/dashboard/giving/projects/${project.id}/edit`}>
-                                <Edit className="h-4 w-4" />
-                              </Link>
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" asChild title="Edit project">
+                                <Link href={`/dashboard/giving/projects/${project.id}/edit`}>
+                                  <Edit className="h-4 w-4" />
+                                </Link>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Delete project"
+                                aria-label={`Delete ${project.title}`}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => setDeleteProjectId(project.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -743,6 +777,32 @@ function GivingPageContent() {
               className="bg-red-600 hover:bg-red-700"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Project Delete Confirmation */}
+      <AlertDialog open={deleteProjectId !== null} onOpenChange={() => setDeleteProjectId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {projectPendingDelete ? `"${projectPendingDelete.title}"` : 'project'}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the project from the mobile app, so it can no longer receive
+              project-designated giving. Past transactions are kept in the ledger. This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteProjectId && deleteProjectMutation.mutate(deleteProjectId)}
+              disabled={deleteProjectMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteProjectMutation.isPending ? 'Deleting…' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

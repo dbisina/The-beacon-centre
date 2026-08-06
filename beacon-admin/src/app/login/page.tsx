@@ -81,7 +81,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo and Branding */}
         <div className="text-center mb-8">
-          <img src="/logo-mark.png" alt="The Beacon Centre" className="mx-auto w-16 h-16 mb-4" />
+          <img src="/logo-black.PNG" alt="The Beacon Centre" className="mx-auto w-16 h-16 mb-4 object-contain" />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">The Beacon Centre</h1>
           <p className="text-gray-600">Admin Dashboard</p>
         </div>
@@ -116,7 +116,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@beaconcentre.org"
+                  placeholder="Enter your email"
                   autoComplete="email"
                   className={`h-11 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
                   {...register('email')}
@@ -177,13 +177,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-
-            {/* Demo Credentials Note */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2 font-medium">Demo Credentials:</p>
-              <p className="text-xs text-gray-500">Email: admin@beaconcentre.org</p>
-              <p className="text-xs text-gray-500">Password: admin123</p>
-            </div>
 
             {/* Footer */}
             <div className="mt-6 text-center">

@@ -11,7 +11,9 @@ export const metadata: Metadata = {
   title: 'TBC Admin - The Beacon Centre',
   description: 'Content Management System for The Beacon Centre',
   icons: {
-    icon: '/favicon.png',
+    icon: '/logo-black.PNG',
+    shortcut: '/logo-black.PNG',
+    apple: '/logo-black.PNG',
   },
 };
 

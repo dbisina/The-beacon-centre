@@ -30,7 +30,11 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
+        default: "border bg-white text-gray-900",
+        // Callers across the dashboard already pass variant="success" on every
+        // save/delete confirmation; it was never declared here, so those toasts
+        // silently fell back to `default` and the call sites were type errors.
+        success: "border-green-200 bg-green-50 text-green-900",
         destructive:
           "destructive border-destructive bg-destructive text-destructive-foreground",
       },
