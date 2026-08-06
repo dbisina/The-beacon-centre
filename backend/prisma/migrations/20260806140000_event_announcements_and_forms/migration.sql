@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "AnnouncementKind" AS ENUM ('ANNOUNCEMENT', 'EVENT');
 
 -- CreateEnum

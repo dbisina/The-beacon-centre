@@ -1,63 +1,60 @@
-# WhatsApp message — Pastor (app testing invite)
+# WhatsApp message for the pastor
 
-Placeholders in `{{ }}` need real values before sending. See "What I still need" at the bottom.
+Fill in the values in {{ }} before sending. List of what is needed is at the bottom.
 
 ---
 
 ## Message
 
-Good morning Pastor 🙏
+Good morning Pastor,
 
-The Beacon Centre app is ready for you to test before it goes public, and the admin dashboard is ready for you to look through as well.
+The Beacon Centre app is ready for you to try before we put it out to everyone, and the admin dashboard is ready for you to look through as well.
 
-*1. Your email — please send it to me*
+First thing I need from you: please send me the email address you want to use. Apple requires me to add your email to the tester list before I can put the iPhone app on your phone. Once I add it, Apple will email you an invite.
 
-To put the iPhone app on your phone, Apple needs your email address added to the tester list first. Please send me the email you'd like to use and I'll add you right away. Once added, you'll get an invite from Apple by email.
+For the iPhone:
+{{TESTFLIGHT_LINK}}
 
-*2. The apps*
+You will need to install TestFlight from the App Store first. It is free, and it is what Apple uses for apps that are still being tested. After that, open the link above on your phone and the app installs from there.
 
-📱 iPhone — {{TESTFLIGHT_LINK}}
-You'll first need to install *TestFlight* from the App Store (it's Apple's free app for testing). Open my invite link from your phone and it installs from there.
+For Android:
+{{PLAY_TEST_LINK}}
 
-🤖 Android — {{PLAY_TEST_LINK}}
-Open this on your Android phone, tap *Become a tester*, then install from the Play Store as normal.
+Open that on your Android phone, tap Become a tester, then install from the Play Store the normal way.
 
-*3. The admin dashboard*
+For the admin dashboard, this is where everything in the app is managed. Devotionals, sermons, announcements, giving, community groups, all of it.
 
-This is where the app's content is managed — devotionals, sermons, announcements, giving and so on.
-
-🔗 {{ADMIN_URL}}
+{{ADMIN_URL}}
 Email: {{PASTOR_ADMIN_EMAIL}}
 Password: {{PASTOR_ADMIN_TEMP_PASSWORD}}
 
-Please change the password once you're in — Settings, then your account.
+Please change that password once you are in. It is under Settings.
 
-*4. How to use it*
+I have attached a guide that goes through every screen step by step, so you can follow along while you click around.
 
-📄 I've attached a step-by-step guide (PDF) covering every screen.
+If anything looks wrong or does not make sense, send me a message or a screenshot. That is what this stage is for, so do not worry about breaking anything.
 
-🎥 And a video walkthrough here: {{YOUTUBE_LINK}}
-
-Anything at all that looks off or confusing, please send me a message or a screenshot — that's exactly what this stage is for.
-
-God bless 🙏
+God bless,
 Daniel
 
 ---
 
-## What I still need from you
+## What to fill in
 
-| Placeholder | What it is | Where to get it |
-|---|---|---|
-| `{{TESTFLIGHT_LINK}}` | TestFlight public/tester link | App Store Connect → TestFlight → your build → Testers |
-| `{{PLAY_TEST_LINK}}` | Play Console internal/closed testing opt-in URL | Play Console → Testing → Internal testing → Copy link |
-| `{{ADMIN_URL}}` | Admin dashboard URL | `https://beacon-admin-sigma.vercel.app` unless you use a custom domain |
-| `{{PASTOR_ADMIN_EMAIL}}` | The account you create for him | Admin Management → New Admin |
-| `{{PASTOR_ADMIN_TEMP_PASSWORD}}` | Temporary password you set | Same form (minimum 6 characters) |
-| `{{YOUTUBE_LINK}}` | Walkthrough video | You'll send this after uploading |
+| Placeholder | Where to get it |
+|---|---|
+| TESTFLIGHT_LINK | App Store Connect, TestFlight, your build, Testers |
+| PLAY_TEST_LINK | Play Console, Testing, Internal testing, Copy link |
+| ADMIN_URL | https://beacon-admin-sigma.vercel.app unless you have a custom domain |
+| PASTOR_ADMIN_EMAIL | The account you create for him |
+| PASTOR_ADMIN_TEMP_PASSWORD | The password you set on that account, 6 characters minimum |
 
-## Two things worth doing before you send
+## Before you send
 
-1. **Create a dedicated account for him rather than sharing yours.** Admin Management → New Admin, role **Admin** (full content, giving, prayer and contact — but not admin management). Sharing your Super Admin login means every action is logged as you, and you can't revoke it without changing your own password.
+Create him his own account rather than giving him yours. Admin Management, then New Admin, role Admin. That gives him content, giving, prayer and contact, but not the ability to add or remove other admins. If you share your own login instead, every action he takes is recorded as you, and the only way to take access back is to change your own password.
 
-2. **`admin@beaconcentre.org` / `admin123` was printed on the login page** for anyone who opened it, until the fix that just went out. If that is a real, working account, change its password now.
+Also worth checking: the login page used to print admin@beaconcentre.org and admin123 on screen for anyone who opened it. That is fixed now, but if that account is real, change its password.
+
+## Attachment
+
+Send Beacon-Centre-Admin-Guide.pdf with the message.
