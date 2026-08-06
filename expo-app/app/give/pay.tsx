@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { View, Pressable, TextInput, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Pressable, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, useResponsive } from '@/theme';
-import { Text, Row, Btn } from '@/components/ui';
+import { colors, radius, HIT, useResponsive } from '@/theme';
+import { Text, Row, Btn, Kicker } from '@/components/ui';
 import { useAuth } from '@/services/auth';
 import {
   initializeGiving,
@@ -19,9 +21,17 @@ import { useAsync } from '@/hooks/useAsync';
 
 type MethodKey = 'card' | 'transfer' | 'ussd' | 'wallet';
 
+/**
+ * Card giving (Paystack) is built end-to-end - initializeGiving/verifyGiving,
+ * the checkout WebView and the receipt screen all still work. It is held back
+ * until the Paystack account is live; flip `enabled` back to true here and the
+ * whole flow returns, no other change needed.
+ */
+const CARD_ENABLED = false;
+
 const METHODS: { key: MethodKey; icon: keyof typeof Ionicons.glyphMap; label: string; sub: string; enabled: boolean }[] = [
-  { key: 'card', icon: 'card-outline', label: 'Pay with card', sub: 'Secured by Paystack', enabled: true },
   { key: 'transfer', icon: 'business-outline', label: 'Bank transfer', sub: "Give directly to the church's account", enabled: true },
+  { key: 'card', icon: 'card-outline', label: 'Pay with card', sub: CARD_ENABLED ? 'Secured by Paystack' : 'Coming soon', enabled: CARD_ENABLED },
   { key: 'ussd', icon: 'phone-portrait-outline', label: 'USSD', sub: 'Coming soon', enabled: false },
   { key: 'wallet', icon: 'wallet-outline', label: 'Apple Pay / Google Pay', sub: 'Coming soon', enabled: false },
 ];
@@ -33,6 +43,82 @@ const PURPOSE_LABEL: Record<GivingPurpose, string> = {
   PROJECT: 'Project',
 };
 
+/**
+ * One bank detail with tap-to-copy. The whole row is the target rather than
+ * just the icon - people are copying this while holding a phone in one hand
+ * and their banking app is one switch away - and the button flips to a tick
+ * in place instead of raising a toast, which would cover the very number
+ * they are about to paste.
+ */
+function CopyField({ label, value, emphasis }: { label: string; value: string; emphasis?: boolean }) {
+  const r = useResponsive();
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // The 1.8s reset fires after the user may well have left for their bank app;
+  // clear it on unmount so it can't setState on a torn-down screen.
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
+
+  async function copy() {
+    try {
+      await Clipboard.setStringAsync(value);
+    } catch {
+      return;
+    }
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    }
+    setCopied(true);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopied(false), 1800);
+  }
+
+  return (
+    <Pressable
+      onPress={copy}
+      accessibilityRole="button"
+      accessibilityLabel={`Copy ${label.toLowerCase()}: ${value}`}
+      accessibilityHint="Copies to your clipboard"
+      hitSlop={8}
+    >
+      {({ pressed }) => (
+        <Row gap={10} style={{ minHeight: HIT, opacity: pressed ? 0.6 : 1 }}>
+          <View style={{ flex: 1 }}>
+            <Kicker color={colors.faint}>{label}</Kicker>
+            <Text
+              size={emphasis ? 19 : 14}
+              weight={emphasis ? 'extra' : 'bold'}
+              track={emphasis ? -0.02 : undefined}
+              style={{ marginTop: r.s(3) }}
+            >
+              {value}
+            </Text>
+          </View>
+          <Row
+            gap={5}
+            style={{
+              paddingHorizontal: r.s(11), paddingVertical: r.s(7),
+              borderRadius: radius.pill,
+              backgroundColor: copied ? colors.tealPale : colors.surfaceAlt,
+            }}
+          >
+            <Ionicons
+              name={copied ? 'checkmark' : 'copy-outline'}
+              size={r.s(13)}
+              color={copied ? colors.tealDeep : colors.inkSoft}
+            />
+            <Text size={11} weight="bold" color={copied ? colors.tealDeep : colors.inkSoft}>
+              {copied ? 'Copied' : 'Copy'}
+            </Text>
+          </Row>
+        </Row>
+      )}
+    </Pressable>
+  );
+}
+
 export default function Pay() {
   const r = useResponsive();
   const insets = useSafeAreaInsets();
@@ -43,7 +129,7 @@ export default function Pay() {
   const purpose = (params.purpose as GivingPurpose) || 'TITHE';
   const projectId = params.projectId ? Number(params.projectId) : undefined;
 
-  const [method, setMethod] = useState<MethodKey>('card');
+  const [method, setMethod] = useState<MethodKey>(CARD_ENABLED ? 'card' : 'transfer');
   const [email, setEmail] = useState(user?.email ?? '');
   const [stage, setStage] = useState<'select' | 'checkout' | 'verifying'>('select');
   const [checkout, setCheckout] = useState<{ authorizationUrl: string; reference: string } | null>(null);
@@ -207,13 +293,19 @@ export default function Pay() {
             {bankLoading ? (
               <ActivityIndicator color={colors.teal} />
             ) : bankAccounts.length === 0 ? (
-              <Text size={12.5} color={colors.muted}>No bank account is set up yet, please try card giving instead.</Text>
+              <Text size={12.5} color={colors.muted}>
+                No bank account is set up yet. Please check back shortly, or reach the church through Contact.
+              </Text>
             ) : (
               bankAccounts.map((acc, i) => (
-                <View key={acc.id} style={{ marginTop: i ? r.s(14) : 0 }}>
-                  <Text size={13.5} weight="extra">{acc.bankName}</Text>
-                  <Text size={16} weight="bold" style={{ marginTop: r.s(4) }}>{acc.accountNumber}</Text>
-                  <Text size={12} color={colors.muted} style={{ marginTop: r.s(2) }}>{acc.accountName}</Text>
+                <View
+                  key={acc.id}
+                  style={i ? { marginTop: r.s(14), paddingTop: r.s(14), borderTopWidth: 1, borderTopColor: colors.hairline } : null}
+                >
+                  <CopyField label="Bank" value={acc.bankName} />
+                  <View style={{ height: r.s(8) }} />
+                  <CopyField label="Account number" value={acc.accountNumber} emphasis />
+                  <Text size={12} color={colors.muted} style={{ marginTop: r.s(8) }}>{acc.accountName}</Text>
                   {acc.instructions ? (
                     <Text size={11.5} color={colors.muted} style={{ marginTop: r.s(6) }}>{acc.instructions}</Text>
                   ) : null}
@@ -242,7 +334,11 @@ export default function Pay() {
 
         <Row gap={7} style={{ justifyContent: 'center', marginTop: r.s(12) }}>
           <Ionicons name="lock-closed-outline" size={r.s(13)} color={colors.faint} />
-          <Text size={11} color={colors.faint}>Secured by Paystack · card never stored</Text>
+          <Text size={11} color={colors.faint}>
+            {method === 'card'
+              ? 'Secured by Paystack · card never stored'
+              : 'Your transfer goes straight to the church account'}
+          </Text>
         </Row>
       </View>
     </View>
