@@ -10,7 +10,9 @@ Good morning Pastor,
 
 The Beacon Centre app is ready for you to try before we put it out to everyone, and the admin dashboard is ready for you to look through as well.
 
-One thing I need from you first: please send me the email address you want to use. Apple requires me to add your email to the tester list before you can install the iPhone app. Once you send it, I will add you straight away.
+One thing I need from you first: please send me the email address you want to use. Both Apple and Google need your email added to the tester list before the app will show up for you, so nothing below will work until you send it. Once you do, I will add you straight away and let you know.
+
+If you have an iPhone, send the email tied to your Apple ID. If you have an Android, send the Gmail address you use on the phone. If you use both, send both.
 
 FOR IPHONE
 
@@ -27,10 +29,12 @@ If tapping the link opens a web page instead of TestFlight, it means TestFlight 
 
 FOR ANDROID
 
-Open this link on your Android phone:
-https://play.google.com/apps/testing/org.thebeaconcentre.app
+Once I have added your Gmail address, open this link on your Android phone:
+https://play.google.com/store/apps/details?id=org.thebeaconcentre.app
 
-Tap Become a tester. It will then give you a link to download the app from the Play Store. It can take a few minutes before the Play Store lets you in, so if it says the app is not available, wait a little and try again.
+Make sure the Play Store is signed in with the same Gmail address you sent me, otherwise the page will say the app was not found. Then install it the normal way.
+
+It can take a little while after I add you before the Play Store catches up, so if it says not found at first, give it some time and open the link again.
 
 THE ADMIN DASHBOARD
 
@@ -56,9 +60,9 @@ Daniel
 
 Type the email and password directly into WhatsApp. I have not written them into this file because it lives in the code repository.
 
-The Android link is the tester opt in page, not the one you sent me. The link you sent, play.google.com/store/apps/details?id=org.thebeaconcentre.app, returns a 404 because the app is not publicly listed yet, so it would not work for him. Open the opt in link yourself first to check it loads, since I cannot see which testing track you have running.
+Add his email to both tester lists before you send the message, or add it as soon as he replies with it. Nothing in the message works until then. Apple: App Store Connect, TestFlight, Testers. Google: Play Console, Testing, Closed testing, your tester list.
 
-The TestFlight link works. I checked it and it returns 200.
+Both links in the message are the ones for a closed track. The Play listing will read as not found for anyone who is not on the tester list and signed in with that account, which is expected.
 
 Consider making him his own account instead of sharing yours. Admin Management, then New Admin, role Admin. That gives him content, giving, prayer and contact, but not the ability to add or remove other admins. If you share your own login, everything he does is recorded as you, and the only way to take access back is to change your own password.
 
