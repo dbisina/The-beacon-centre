@@ -1,0 +1,22 @@
+{
+  "name": "beacon-admin-walkthrough",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion walkthrough video for The Beacon Centre admin dashboard",
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render AdminWalkthrough out/admin-walkthrough.mp4 --codec h264",
+    "still": "remotion still AdminWalkthrough out/thumbnail.png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.373",
+    "@remotion/transitions": "4.0.373",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.373"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.0",
+    "typescript": "5.9.2"
+  }
+}
