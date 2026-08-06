@@ -168,10 +168,15 @@ function CsgDetailPageContent({ params }: CsgDetailPageProps) {
     },
   });
 
-  const canEdit =
-    admin?.role === 'SUPER_ADMIN' ||
-    admin?.role === 'ADMIN' ||
-    (admin?.role === 'CSG_ADMIN' && admin?.csgId === csgId);
+  const isCsgAdmin = admin?.role === 'CSG_ADMIN';
+
+  /**
+   * Editing the group entity itself (name, address, meeting time) is
+   * requireFullAccess on the backend - see csg.routes.ts. A CSG admin posting
+   * announcements and events is a different permission, so this must not
+   * include them or the Edit Group button 403s on submit.
+   */
+  const canEditGroup = admin?.role === 'SUPER_ADMIN' || admin?.role === 'ADMIN';
 
   if (isCsgLoading) {
     return (
@@ -204,18 +209,25 @@ function CsgDetailPageContent({ params }: CsgDetailPageProps) {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/csgs">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
+          {/*
+            The group list is restricted to full-access roles, so sending a CSG
+            admin there just bounces them through a redirect back to /dashboard.
+            They only ever have one group, so there is nowhere to go back to.
+          */}
+          {!isCsgAdmin && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/dashboard/csgs">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Link>
+            </Button>
+          )}
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{csg.name}</h1>
             <p className="text-gray-600">Community Service Group details</p>
           </div>
         </div>
-        {canEdit && (
+        {canEditGroup && (
           <Button asChild>
             <Link href={`/dashboard/csgs/${csg.id}/edit`}>
               <Edit className="mr-2 h-4 w-4" />

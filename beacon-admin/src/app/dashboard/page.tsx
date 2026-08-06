@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { format, isToday, isTomorrow, isYesterday } from "date-fns";
 import {
@@ -518,31 +519,49 @@ function SystemStatus() {
 
 export default function DashboardPage() {
   const { admin } = useAuth();
+  const router = useRouter();
+
+  /**
+   * This dashboard is about church-wide content - devotionals, sermons,
+   * announcements - none of which a CSG admin can touch. Send them straight to
+   * the one group they manage instead of a page full of things they cannot do.
+   */
+  const isCsgAdmin = admin?.role === "CSG_ADMIN";
+  useEffect(() => {
+    if (isCsgAdmin && admin?.csgId) {
+      router.replace(`/dashboard/csgs/${admin.csgId}`);
+    }
+  }, [isCsgAdmin, admin?.csgId, router]);
 
   const { data: analytics, isLoading: analyticsLoading, error: analyticsError } = useQuery({
     queryKey: ["analytics-dashboard"],
     queryFn: () => analyticsApi.getDashboard(),
     retry: 1, // Only retry once to avoid infinite loops
+    enabled: !isCsgAdmin,
   });
 
   const { data: recentDevotionals } = useQuery({
     queryKey: ["recent-devotionals-count"],
     queryFn: () => devotionalsApi.getAll(),
+    enabled: !isCsgAdmin,
   });
 
   const { data: recentVideos } = useQuery({
     queryKey: ["recent-videos-count"],
     queryFn: () => videoSermonsApi.getAll(),
+    enabled: !isCsgAdmin,
   });
 
   const { data: recentAudio } = useQuery({
     queryKey: ["recent-audio-count"],
     queryFn: () => audioSermonsApi.getAll(),
+    enabled: !isCsgAdmin,
   });
 
   const { data: recentAnnouncements } = useQuery({
     queryKey: ["recent-announcements-count"],
     queryFn: () => announcementsApi.getAll(),
+    enabled: !isCsgAdmin,
   });
 
   return (
