@@ -10,7 +10,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  * .env / eas secrets) to your machine's LAN IP (e.g. http://192.168.1.23:5000/api)
  * or your deployed backend URL instead.
  */
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000/api';
+const PRODUCTION_API_URL = 'https://the-beacon-centre-production.up.railway.app/api';
+
+/**
+ * EXPO_PUBLIC_* vars are inlined at bundle time, so a release build with the var
+ * unset bakes whatever this fallback is and there is no way to change it short of
+ * shipping a new binary. That is exactly how a store build ended up pointing at
+ * localhost. Only fall back to localhost in dev; a release build with no env set
+ * defaults to production rather than to a URL that can never resolve on a phone.
+ */
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ?? (__DEV__ ? 'http://localhost:5000/api' : PRODUCTION_API_URL);
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

@@ -7,15 +7,11 @@ const developmentOrigins = [
   'http://localhost:19006',       // Expo mobile app web
   'http://localhost:8081',        // React Native Metro bundler
   'exp://localhost:19000',        // Expo development
-  'exp://192.168.1.100:19000',   // Expo on local network (update IP as needed)
-  'http://192.168.1.100:19006',  // Expo web on local network
 ];
 
 // Production URLs (update these with your actual domains)
 const productionOrigins = [
   'https://beacon-admin-sigma.vercel.app',   // Admin dashboard production
-  'https://beacon-admin-sigma.vercel.app/',  // Admin dashboard production (with trailing slash)
-  'https://your-production-domain.com',      // Your main website
   // Add your production mobile app domains if using web build
 ];
 
@@ -71,7 +67,10 @@ export const corsOptions: CorsOptions = {
     // Log rejected origins for debugging
     console.log(`🚫 CORS: Rejected origin: ${origin}`);
 
-    callback(new Error(`CORS: Origin ${origin} not allowed`), false);
+    // Deny by omitting the Access-Control-Allow-Origin header rather than
+    // throwing: passing an Error here bubbles into errorHandler and the client
+    // gets a 500, which reads like a server bug instead of a blocked origin.
+    callback(null, false);
   },
 
   credentials: true, // Allow cookies and authorization headers
