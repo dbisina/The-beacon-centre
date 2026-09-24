@@ -3,8 +3,25 @@ import { View, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, useResponsive } from '@/theme';
-import { Screen, Text, Row, Btn, Card } from '@/components/ui';
+import { Screen, Text, Row, Btn, Card, Kicker } from '@/components/ui';
 import { useAuth } from '@/services/auth';
+
+/**
+ * Each field carries a visible label as well as a placeholder. Apple's
+ * reviewer screenshot of this screen on an iPad showed the name filled in and
+ * the two fields below it apparently blank - placeholder-only fields tell you
+ * nothing once the placeholder is gone or fails to draw, and a form that
+ * cannot be read cannot be completed. The label also gives VoiceOver
+ * something to announce per field.
+ */
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View>
+      <Kicker>{label}</Kicker>
+      {children}
+    </View>
+  );
+}
 
 /**
  * One screen, two modes (sign in / create account) toggled inline rather
@@ -67,38 +84,55 @@ export default function Auth() {
       <Card style={{ marginTop: r.s(22), gap: r.s(12) }}>
         {isSignup ? (
           <>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="Your name"
-              placeholderTextColor={colors.faint}
-              autoCapitalize="words"
-              style={{ minHeight: r.s(40), fontSize: r.fs(14), color: colors.ink }}
-            />
+            <Field label="Your name">
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="Jane Adeyemi"
+                placeholderTextColor={colors.faint}
+                autoCapitalize="words"
+                autoComplete="name"
+                textContentType="name"
+                returnKeyType="next"
+                accessibilityLabel="Your name"
+                style={{ minHeight: r.s(40), fontSize: r.fs(14), color: colors.ink }}
+              />
+            </Field>
             <View style={{ height: 1, backgroundColor: colors.hairline }} />
           </>
         ) : null}
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Email"
-          placeholderTextColor={colors.faint}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-          style={{ minHeight: r.s(40), fontSize: r.fs(14), color: colors.ink }}
-        />
+        <Field label="Email">
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            placeholderTextColor={colors.faint}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            returnKeyType="next"
+            accessibilityLabel="Email"
+            style={{ minHeight: r.s(40), fontSize: r.fs(14), color: colors.ink }}
+          />
+        </Field>
         <View style={{ height: 1, backgroundColor: colors.hairline }} />
-        <TextInput
-          value={passcode}
-          onChangeText={(v) => setPasscode(v.replace(/[^0-9]/g, '').slice(0, 6))}
-          placeholder="4-6 digit passcode"
-          placeholderTextColor={colors.faint}
-          keyboardType="number-pad"
-          secureTextEntry
-          maxLength={6}
-          style={{ minHeight: r.s(40), fontSize: r.fs(14), color: colors.ink, letterSpacing: 3 }}
-        />
+        <Field label="Passcode (4-6 digits)">
+          <TextInput
+            value={passcode}
+            onChangeText={(v) => setPasscode(v.replace(/[^0-9]/g, '').slice(0, 6))}
+            placeholder="••••"
+            placeholderTextColor={colors.faint}
+            keyboardType="number-pad"
+            secureTextEntry
+            maxLength={6}
+            returnKeyType="done"
+            onSubmitEditing={submit}
+            accessibilityLabel="Passcode, 4 to 6 digits"
+            style={{ minHeight: r.s(40), fontSize: r.fs(14), color: colors.ink, letterSpacing: 3 }}
+          />
+        </Field>
       </Card>
 
       {error ? <Text size={11.5} color="#C4453C" style={{ marginTop: r.s(10) }}>{error}</Text> : null}
