@@ -43,6 +43,7 @@ import userRoutes from './routes/user.routes';
 import appUserAuthRoutes from './routes/appUserAuth.routes';
 import liveScheduleRoutes from './routes/liveSchedule.routes';
 import collageRoutes from './routes/collage.routes';
+import givingWebRoutes, { blockApiOnGivingHost } from './routes/givingWeb.routes';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -58,6 +59,34 @@ app.set('trust proxy', 1);
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+// Logging first, so the public giving page below is still in the access log
+// even though it deliberately sits outside the rest of the stack.
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+/**
+ * The public giving page (GET /give), mounted here and nowhere else.
+ *
+ * It is deliberately in front of cors(), cookieParser() and the body parsers:
+ * it is a public HTML page for church members, not part of the admin surface,
+ * and it must not share machinery with it. Because cookieParser never runs for
+ * this request, the page cannot read the admin refresh-token cookie even by
+ * accident, and it exposes no route that could be used to reach the dashboard
+ * - the dashboard is a separate Next.js app on its own origin (see
+ * config/cors.ts), and this page contains no links at all.
+ *
+ * The matching half of that guarantee is in admin.controller.ts, where the
+ * refresh cookie is scoped to the admin auth path so the browser never sends
+ * it here in the first place.
+ *
+ * Set GIVING_PUBLIC_ORIGIN to move the page onto its own hostname, at which
+ * point the two stop sharing an origin at all — see givingWeb.routes.ts.
+ */
+app.use('/', givingWebRoutes);
+
+// On the dedicated giving hostname (when one is configured), the giving page
+// is the entire application. Nothing below this line is reachable there.
+app.use(blockApiOnGivingHost);
 
 // CORS configuration - Using simple config for debugging
 app.use(cors(corsOptions));
@@ -75,9 +104,6 @@ app.use(express.json({
   },
 }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// Logging
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Enhanced rate limiting with smart detection
 if (process.env.NODE_ENV === 'development') {

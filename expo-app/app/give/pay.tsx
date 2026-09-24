@@ -18,6 +18,7 @@ import {
   GIVING_CALLBACK_URL,
 } from '@/services/giving';
 import { useAsync } from '@/hooks/useAsync';
+import { IN_APP_GIVING_ALLOWED, openWebGiving } from '@/config/giving';
 
 type MethodKey = 'card' | 'transfer' | 'ussd' | 'wallet';
 
@@ -145,6 +146,20 @@ export default function Pay() {
   const emailValid = /\S+@\S+\.\S+/.test(email);
   const needsEmail = !isMember;
 
+  /**
+   * This screen is the in-app giving sheet, which iOS may not show at all
+   * (App Store guideline 3.2.2(iv) - see config/giving.ts). The Give tab
+   * already routes around it there; this is the backstop for anything else
+   * that could reach the route - a `beacon://give/pay` deep link, a stale
+   * navigation state restored on launch - so there is no path at all to an
+   * in-app donation on iOS.
+   */
+  useEffect(() => {
+    if (IN_APP_GIVING_ALLOWED) return;
+    router.replace('/(tabs)/give');
+    openWebGiving();
+  }, []);
+
   async function startCardCheckout() {
     if (needsEmail && !emailValid) {
       setError('Enter a valid email so we can send your receipt.');
@@ -196,6 +211,8 @@ export default function Pay() {
       setStage('select');
     }
   }
+
+  if (!IN_APP_GIVING_ALLOWED) return null;
 
   if (stage === 'checkout' && checkout) {
     return (

@@ -6,7 +6,7 @@ import { colors, radius, useResponsive } from '@/theme';
 import { Screen, Text, Card, Btn, Progress, Row, Kicker, MediaTile, SectionHead } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
 import { useAuth } from '@/services/auth';
-import { fetchAnnouncements } from '@/services/api';
+import { IN_APP_GIVING_ALLOWED, openWebGiving } from '@/config/giving';
 import { fetchProjects, fetchGivingHistory, ProjectWithProgress, GivingTransaction, GivingPurpose } from '@/services/giving';
 import { COVER, naira, short as money } from '@/data/content';
 
@@ -65,7 +65,29 @@ export default function Give() {
         ) : null}
       </Row>
 
-      {/* amount composer */}
+      {!IN_APP_GIVING_ALLOWED ? (
+        <View style={{ marginTop: r.s(18), borderRadius: radius.xxl, padding: r.s(20), backgroundColor: colors.tealDark }}>
+          <Kicker color={colors.tealLight}>Giving</Kicker>
+          <Text size={24} weight="extra" lh={1.22} track={-0.03} color="#fff" style={{ marginTop: r.s(10) }}>
+            Tithes, offerings and seed
+          </Text>
+          <Text size={13} lh={1.65} color={colors.tealLight} style={{ marginTop: r.s(9) }}>
+            Giving to The Beacon Centre happens on our giving page. Tap below and it opens in your
+            browser, with the church's bank details and every way to give.
+          </Text>
+          <Btn
+            full
+            label="Give on the web"
+            right={<Ionicons name="open-outline" size={r.s(15)} color={colors.tealInk} />}
+            style={{ marginTop: r.s(18), paddingVertical: r.s(16) }}
+            onPress={openWebGiving}
+          />
+        </View>
+      ) : null}
+
+      {/* amount composer — Android only, see config/giving.ts */}
+      {IN_APP_GIVING_ALLOWED ? (
+        <>
       <View style={{ marginTop: r.s(18), borderRadius: radius.xxl, padding: r.s(20), backgroundColor: colors.tealDark }}>
         <Kicker color={colors.tealLight}>Giving to</Kicker>
         <Row gap={7} style={{ marginTop: r.s(13), flexWrap: 'wrap' }}>
@@ -159,6 +181,8 @@ export default function Give() {
           You can give as a guest. Add your email at checkout for a receipt.
         </Text>
       ) : null}
+        </>
+      ) : null}
 
       <SectionHead title="Church projects" action={projects.length ? 'See all' : undefined} />
       {!projectsLoading && projects.length === 0 ? (
@@ -196,7 +220,11 @@ export default function Give() {
                   <Btn
                     label="Contribute"
                     tone="ink"
-                    onPress={() => router.push({ pathname: '/give/pay', params: { amount: String(amount), purpose: 'PROJECT', projectId: String(p.id), projectTitle: p.title } })}
+                    onPress={() =>
+                      IN_APP_GIVING_ALLOWED
+                        ? router.push({ pathname: '/give/pay', params: { amount: String(amount), purpose: 'PROJECT', projectId: String(p.id), projectTitle: p.title } })
+                        : openWebGiving()
+                    }
                     style={{ paddingVertical: r.s(11) }}
                   />
                 </Row>
