@@ -4,6 +4,25 @@ import { AuthService } from '../services/auth.service';
 import { sendSuccess, sendError } from '../utils/responses';
 import { AdminLoginRequest, AuthenticatedRequest, AdminRole } from '../types';
 
+/**
+ * The admin refresh cookie, defined once so setting it and clearing it can
+ * never disagree — a clearCookie whose attributes don't match the cookie it is
+ * clearing is a no-op, and the session silently survives "log out".
+ *
+ * `path` is the part that matters beyond tidiness. This host also serves the
+ * public giving page at /give (routes/givingWeb.routes.ts). A cookie left at
+ * the default path of `/` would be attached to every request for that page,
+ * putting an admin's session credential on a URL any church member is invited
+ * to open. Scoped here, the browser only ever sends it to the three admin auth
+ * endpoints that have any use for it.
+ */
+const REFRESH_COOKIE = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  path: '/api/admin/auth',
+} as const;
+
 export class AdminController {
   static async login(req: Request, res: Response): Promise<void> {
     try {
@@ -17,10 +36,12 @@ export class AdminController {
       const result = await AuthService.login(loginData);
 
       if (result.success) {
+        // Anyone who signed in before the cookie was scoped still has a copy
+        // at path `/`, which the browser would keep attaching to /give for up
+        // to seven days. Clear it on the way in; harmless once none are left.
+        res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'strict', path: '/' });
         res.cookie('refreshToken', result.data.refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
+          ...REFRESH_COOKIE,
           maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
@@ -50,7 +71,7 @@ export class AdminController {
       if (result.success) {
         sendSuccess(res, 'Token refreshed successfully', result.data);
       } else {
-        res.clearCookie('refreshToken');
+        res.clearCookie('refreshToken', REFRESH_COOKIE);
         sendError(res, result.error, 401);
       }
     } catch (error) {
@@ -60,7 +81,7 @@ export class AdminController {
 
   static async logout(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      res.clearCookie('refreshToken');
+      res.clearCookie('refreshToken', REFRESH_COOKIE);
       sendSuccess(res, 'Logout successful');
     } catch (error) {
       sendError(res, 'Logout failed', 500, error);
