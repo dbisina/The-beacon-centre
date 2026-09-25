@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { AuthenticatedRequest, JWTPayload, AdminRole } from '../types';
 import { sendError } from '../utils/responses';
+import { JWT_SECRET, JWT_REFRESH_SECRET } from '../config/jwtSecrets';
 
 // Initialize Prisma client with error handling
 let prisma: PrismaClient | null = null;
@@ -15,14 +16,6 @@ try {
   prisma = null;
 }
 
-// JWT secrets - fall back to a dev-only literal locally, but refuse to boot in
-// production with an unset secret rather than silently signing tokens with a
-// value that's sitting in this file in source control.
-if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET)) {
-  throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be set in production');
-}
-const JWT_SECRET = process.env.JWT_SECRET || 'beacon-centre-dev-secret-key';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'beacon-centre-dev-refresh-secret';
 
 // FIXED: Main authentication middleware
 export const authenticate = async (

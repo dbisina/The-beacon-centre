@@ -7,8 +7,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
 import { ServiceResponse } from '../types';
+import { JWT_SECRET } from '../config/jwtSecrets';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'beacon-centre-dev-secret-key';
 const PASSCODE_RE = /^\d{4,6}$/;
 
 /**
