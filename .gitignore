@@ -15,3 +15,8 @@ build/
 .relay/
 graphify-out/
 .graphify_detect.err
+
+# Local build artefacts (AAB/IPA) - fetch them from EAS instead
+build-output/
+*.aab
+*.ipa
