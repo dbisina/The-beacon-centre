@@ -23,9 +23,15 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=thebeaconcentre-40f9a
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=thebeaconcentre-40f9a.appspot.com
 EXPO_PUBLIC_FIREBASE_SENDER_ID=…
 EXPO_PUBLIC_FIREBASE_APP_ID=…
-EXPO_PUBLIC_YOUTUBE_API_KEY=…
-EXPO_PUBLIC_YOUTUBE_CHANNEL_ID=UCkQOKzc2rrzMqfLhC6M93gA
 ```
+
+Live status (Live tab + home tile) is **not** configured client-side. It comes
+from the backend at `GET /api/live/status` (see
+`backend/src/services/liveStatus.service.ts`), which does a free scrape of
+the channel's `/live` page and only spends YouTube Data API quota when a
+`YOUTUBE_API_KEY` is set there and it's actually needed. There is nothing to
+set in this app for it - `fetchLiveStatus()` in `services/youtube.ts` just
+calls that endpoint.
 
 ## Fitting every phone
 
@@ -86,10 +92,14 @@ and the SHORT badge. Don't add a fourth colour.
 
 ## Two upstream bugs fixed here
 
-- **Live was never live.** `app/(tabs)/live.tsx` builds a `search?eventType=live`
-  URL, never calls it, then shows the first item of the *uploads playlist* and
-  labels it live. `services/youtube.ts → checkLive()` does the real check; when
-  the church isn't streaming, the Live screen shows the schedule.
+- **Live was never live.** The original client-side check needed
+  `EXPO_PUBLIC_YOUTUBE_API_KEY` / `_CHANNEL_ID`, which were never set anywhere,
+  so it always threw and the Live tab always showed "not live". Live status
+  now comes from the backend (`GET /api/live/status`), which has real
+  credentials and does a free HTML scrape first - see `services/youtube.ts →
+  fetchLiveStatus()` and `hooks/useLiveStatus.ts`. When the church isn't
+  streaming (most of the time - this channel streams rarely), the Live screen
+  correctly shows the next scheduled service instead.
 - **First play did nothing.** `app/context/audio.tsx` read the stale
   `currentSong` state inside `playSong` instead of the incoming `song`, and its
   cleanup effect unloaded the sound on every change, racing the new one.

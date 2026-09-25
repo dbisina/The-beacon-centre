@@ -42,6 +42,7 @@ import contactRoutes from './routes/contact.routes';
 import userRoutes from './routes/user.routes';
 import appUserAuthRoutes from './routes/appUserAuth.routes';
 import liveScheduleRoutes from './routes/liveSchedule.routes';
+import liveRoutes from './routes/live.routes';
 import collageRoutes from './routes/collage.routes';
 import givingWebRoutes, { blockApiOnGivingHost } from './routes/givingWeb.routes';
 
@@ -145,6 +146,7 @@ app.get('/', (req, res) => {
       contact: '/api/contact',
       users: '/api/users',
       liveSchedule: '/api/live-schedule',
+      live: '/api/live/status',
     },
   });
 });
@@ -192,6 +194,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', appUserAuthRoutes);
 app.use('/api/live-schedule', liveScheduleRoutes);
+app.use('/api/live', liveRoutes);
 app.use('/api/collages', collageRoutes);
 
 // Error handling middleware

@@ -346,25 +346,6 @@ export async function fetchInspirationals(max = 20): Promise<VideoItem[]> {
   return fetchVideos('INSPIRATIONAL', max);
 }
 
-/* -------------------------------------------------------------- schedule --- */
-
-type LiveScheduleItem = { name: string; dayOfWeek: number; time: string; timezone?: string; notes?: string };
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-/**
- * Soonest service from today onward (ties keep list order) - e.g. once
- * Sunday's service has passed, this correctly picks Wednesday's Refuel
- * instead of showing a stale "Sunday" label until next week.
- */
-export async function fetchNextService(): Promise<{ name: string; day: string; time: string } | null> {
-  const list = await apiGet<LiveScheduleItem[]>('/live-schedule').catch(() => []);
-  if (!list?.length) return null;
-  const todayIdx = new Date().getDay();
-  const sorted = [...list].sort((a, b) => ((a.dayOfWeek - todayIdx + 7) % 7) - ((b.dayOfWeek - todayIdx + 7) % 7));
-  const s = sorted[0];
-  return { name: s.name, day: DAY_NAMES[s.dayOfWeek] ?? '', time: s.time };
-}
-
 /* --------------------------------------------------------------- articles --- */
 
 export type Article = { id: string; title: string; body: string; image: string | null; createdAt: string };

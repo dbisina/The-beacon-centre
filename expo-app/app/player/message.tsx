@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, Image, Pressable, ScrollView, TextInput, Share, ActivityIndicator, Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, useResponsive } from '@/theme';
 import { Text, Row, Card, Kicker, MediaTile } from '@/components/ui';
-import { embedHtml, EMBED_ORIGIN } from '@/services/youtube';
+import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useSaved } from '@/hooks/useSaved';
 import { useAuth } from '@/services/auth';
 import { fetchNotes, upsertNote } from '@/services/userData';
@@ -76,13 +75,7 @@ export default function MessagePlayer() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top, paddingBottom: insets.bottom + r.s(30) }}>
         <View style={{ height: r.vs(240), backgroundColor: '#000' }}>
           {youtubeId ? (
-            <WebView
-              source={{ html: embedHtml(String(youtubeId), false), baseUrl: EMBED_ORIGIN }}
-              style={{ flex: 1, backgroundColor: '#000' }}
-              allowsInlineMediaPlayback
-              allowsFullscreenVideo
-              javaScriptEnabled
-            />
+            <YouTubePlayer youtubeId={String(youtubeId)} title={title} autoplay={false} height={240} rad="xs" style={{ borderRadius: 0, height: '100%' }} />
           ) : (
             <MediaTile source={COVER} height={240} rad="xs" style={{ borderRadius: 0, height: '100%' }}>
               <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
