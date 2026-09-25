@@ -11,6 +11,13 @@ import { ServiceResponse } from '../types';
 const JWT_SECRET = process.env.JWT_SECRET || 'beacon-centre-dev-secret-key';
 const PASSCODE_RE = /^\d{4,6}$/;
 
+/**
+ * The one failure that counts as a guess. loginThrottle keys its lockout on
+ * this exact value, so it lives here rather than as two string literals that
+ * could drift apart and silently switch the lockout off.
+ */
+export const INVALID_CREDENTIALS = 'Invalid email or passcode';
+
 export interface AppUserAuthResponse {
   user: { id: number; email: string | null; name: string | null };
   token: string;
@@ -76,12 +83,12 @@ export class AppUserAuthService {
     try {
       const user = await prisma.appUser.findUnique({ where: { email: normalizedEmail } });
       if (!user || !user.passcodeHash) {
-        return { success: false, error: 'Invalid email or passcode' };
+        return { success: false, error: INVALID_CREDENTIALS };
       }
 
       const valid = await bcrypt.compare(passcode, user.passcodeHash);
       if (!valid) {
-        return { success: false, error: 'Invalid email or passcode' };
+        return { success: false, error: INVALID_CREDENTIALS };
       }
 
       await prisma.appUser.update({ where: { id: user.id }, data: { lastSeenAt: new Date() } });

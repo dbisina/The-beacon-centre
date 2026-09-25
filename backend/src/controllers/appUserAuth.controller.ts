@@ -1,8 +1,9 @@
 // backend/src/controllers/appUserAuth.controller.ts
 import { Response } from 'express';
-import { AppUserAuthService } from '../services/appUserAuth.service';
+import { AppUserAuthService, INVALID_CREDENTIALS } from '../services/appUserAuth.service';
 import { sendSuccess, sendError } from '../utils/responses';
 import { AuthenticatedUserRequest } from '../types';
+import { passcodeThrottle, throttleKey } from '../middleware/loginThrottle';
 
 export class AppUserAuthController {
   static async signup(req: AuthenticatedUserRequest, res: Response): Promise<void> {
@@ -23,11 +24,33 @@ export class AppUserAuthController {
   static async login(req: AuthenticatedUserRequest, res: Response): Promise<void> {
     try {
       const { email, passcode } = req.body as { email?: string; passcode?: string };
+      const key = throttleKey(email ?? '');
+
+      // Refuse before checking the passcode, so a locked account gives an
+      // attacker no signal about whether a guess was right.
+      const retryAfter = key ? passcodeThrottle.retryAfterSeconds(key) : 0;
+      if (retryAfter > 0) {
+        res.set('Retry-After', String(retryAfter));
+        const minutes = Math.ceil(retryAfter / 60);
+        sendError(
+          res,
+          `Too many wrong passcodes. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`,
+          429,
+        );
+        return;
+      }
+
       const result = await AppUserAuthService.login(email ?? '', passcode ?? '');
 
       if (result.success) {
+        passcodeThrottle.reset(key);
         sendSuccess(res, 'Signed in', result.data);
       } else {
+        // Only a wrong email/passcode pair counts. Missing fields or a
+        // database hiccup aren't guesses and shouldn't lock anyone out.
+        if (key && result.error === INVALID_CREDENTIALS) {
+          passcodeThrottle.recordFailure(key);
+        }
         sendError(res, result.error, 401, result.details);
       }
     } catch (error) {
