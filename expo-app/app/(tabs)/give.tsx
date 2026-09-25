@@ -34,7 +34,6 @@ export default function Give() {
   const [amount, setAmount] = useState<number>(20000);
   const [customAmount, setCustomAmount] = useState('');
   const [showCustom, setShowCustom] = useState(false);
-  const [recurring, setRecurring] = useState(true);
 
   const { data: projects, loading: projectsLoading } = useAsync<ProjectWithProgress[]>(
     () => fetchProjects(),
@@ -149,20 +148,6 @@ export default function Give() {
           />
         ) : null}
       </View>
-
-      <Pressable onPress={() => setRecurring((v) => !v)}>
-        <Row gap={12} style={{ marginTop: r.s(11), padding: r.s(15), borderRadius: radius.lg, backgroundColor: colors.surface }}>
-          <View style={{ width: r.s(22), height: r.s(22), borderRadius: r.s(7), backgroundColor: recurring ? colors.teal : 'transparent', borderWidth: recurring ? 0 : 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }}>
-            {recurring ? <Ionicons name="checkmark" size={r.s(13)} color={colors.tealInk} /> : null}
-          </View>
-          <Text size={12.5} weight="bold" lh={1.5} style={{ flex: 1 }}>Repeat this every month on the 1st</Text>
-        </Row>
-      </Pressable>
-      {recurring ? (
-        <Text size={10.5} color={colors.faint} style={{ marginTop: r.s(6) }}>
-          Recurring giving isn't automated yet: you'll need to give again manually next month.
-        </Text>
-      ) : null}
 
       <Btn
         full

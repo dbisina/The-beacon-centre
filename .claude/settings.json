@@ -1,5 +1,25 @@
 {
   "env": {
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(npx tsc --noEmit:*)",
+      "Bash(npx expo export:*)"
+    ],
+    "deny": [
+      "Read(./backend/.env)",
+      "Read(./expo-app/.env)",
+      "Read(./beacon-admin/.env.local)",
+      "Bash(npm run db:seed:*)",
+      "Bash(npm run db:reset:*)",
+      "Bash(npx prisma migrate reset:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)"
+    ]
   }
 }

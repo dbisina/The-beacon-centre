@@ -255,7 +255,7 @@ export default function Home() {
               <Kicker color={colors.tealInk}>Audio sermons</Kicker>
               <View>
                 <Text size={46} weight="extra" lh={1} track={-0.045} color={colors.tealInk}>{audioCount}</Text>
-                <Text size={12} weight="semibold" color="rgba(4,33,27,0.7)" style={{ marginTop: r.s(3) }}>play offline</Text>
+                <Text size={12} weight="semibold" color="rgba(4,33,27,0.7)" style={{ marginTop: r.s(3) }}>to stream</Text>
               </View>
             </View>
           </Pressable>

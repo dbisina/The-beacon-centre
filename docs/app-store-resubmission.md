@@ -69,13 +69,30 @@ cd backend && REVIEW_PASSCODE=<passcode> npx tsx scripts/seed-review-account.ts
 
 ```
 The app has one account type: a church member. The credentials above open every
-signed-in feature — saved sermons, notes, giving history and account deletion
-(Settings → Delete account).
+signed-in feature — saved sermons, notes and account deletion (Settings →
+Delete account). The account has no two-factor authentication and will stay
+active for the whole review.
 
 Everything else in the app — devotionals, sermons, live stream, news, prayer
 requests, contact and community groups — is available without an account, via
 "Continue as guest" on the welcome screen.
+
+Donations: the app does not collect donations. The Give tab opens our giving
+page in the device's browser (guideline 3.2.2(iv), option 1).
+
+External services: our own server and database (Railway) serve all app
+content; sermon videos and the live stream play through YouTube's embedded
+player; the daily devotional quote is served from Firebase. No third-party
+analytics or advertising SDKs are included.
+
+Regional differences: none. The app behaves the same in every storefront.
 ```
+
+Also answer the App Store Connect **social-media capability** question
+**No**: there is no feed of followed accounts, no messaging between members, no
+user-initiated livestreaming, and YouTube comments are not shown in the app
+(members are linked out to YouTube to read them). Upload is blocked until this
+question is answered. Re-answer it if member-to-member messaging ever ships.
 
 ---
 
@@ -244,10 +261,11 @@ Guideline 2.1(a) — Account creation error
 The error text in your screenshot, "Application not found", came from our
 hosting provider's edge rather than from our app: the reviewed build reached
 the edge and our backend was not answering behind it, and the app displayed the
-provider's message verbatim. We have fixed both halves. The app now retries and
-can fail over to a second host, and it no longer displays any message that did
-not come from our own API. We have re-tested account creation and sign-in
-against the production backend, including on iPad, and both succeed.
+provider's message verbatim. We have fixed both halves. The backend has been
+redeployed and is monitored, the app now retries transient network failures,
+and it no longer displays any message that did not come from our own API. We
+have re-tested account creation and sign-in against the production backend on
+an iPad, and both succeed.
 
 Guideline 2.1(a) — Information Needed
 A demo account is now in the App Review Information section:
@@ -269,6 +287,21 @@ Thank you again for your time.
 
 ## Before you resubmit
 
+- [ ] **Change the password of the admin dashboard account** (the seeded
+      `admin@beaconcentre.org` still has the password that was published in this
+      repository). Do this before `/give` goes live — the dashboard can edit the
+      bank details that page shows.
+- [ ] **Play Console, by 30 September 2026:** complete Android Developer
+      Verification for `org.thebeaconcentre.app`. Missing it risks removal of the
+      live Android app, which is unrelated to this review but has the shortest
+      deadline.
+- [ ] App Store Connect: answer the social-media capability question **No**
+      (see section 2) — uploads are blocked until it is answered.
+- [ ] Record a short screen capture on the iPad build showing sign-up, sign-in
+      and Settings → Delete account, host it at an unlisted link (not in this
+      public repo) and add the link to the Notes field.
+- [ ] Re-check the age rating answers: with comments linked out rather than
+      shown in-app, the app has no unmoderated user content.
 - [ ] Deploy the backend — the `/give` page is new and the link must resolve.
 - [ ] Confirm `https://the-beacon-centre-production.up.railway.app/give` loads
       in Safari and shows the bank details.
@@ -279,5 +312,7 @@ Thank you again for your time.
       Keywords for platform references.
 - [ ] Fill in App Review Information with the demo account and notes above.
 - [ ] Build with `eas build -p ios --profile production`, install it on an
-      **iPad**, and create an account end to end before submitting.
+      **iPad**, and create an account end to end before submitting. The reply
+      to App Review says this was done on an iPad — only send it once it has
+      been.
 - [ ] Confirm the Give tab on that iPad build offers only the web link.

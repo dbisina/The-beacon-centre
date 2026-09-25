@@ -106,13 +106,6 @@ export default function AudioPlayer() {
             <Ionicons name="play-forward-outline" size={r.s(21)} color="#7FA9A3" />
           </Pressable>
         </Row>
-
-        <Row gap={10} style={{ marginTop: r.s(26) }}>
-          <Row gap={8} style={{ flex: 1, minHeight: r.s(48), borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', opacity: 0.5 }}>
-            <Ionicons name="download-outline" size={r.s(15)} color="#fff" />
-            <Text size={12.5} weight="bold" color="#fff">Download · coming soon</Text>
-          </Row>
-        </Row>
       </View>
     </Screen>
   );

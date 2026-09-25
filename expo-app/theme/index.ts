@@ -27,8 +27,10 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), h
 
 function factors(width: number, height: number) {
   // On very wide viewports (tablet, unfolded fold) we lay content out in a
-  // centred column rather than stretching phone UI across 900dp.
-  const contentWidth = Math.min(width, 520);
+  // centred column rather than stretching phone UI across 900dp. Tablets get a
+  // wider column than phones: capping every device at 520 left an iPad mostly
+  // empty margin, which reads as an unscaled phone app rather than a choice.
+  const contentWidth = width >= 700 ? Math.min(width * 0.82, 900) : Math.min(width, 520);
   const h = clamp(width / BASE_W, 0.86, 1.3);
   const v = clamp(height / BASE_H, 0.86, 1.3);
   return {

@@ -49,9 +49,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
       setHasOnboarded(onboarded === '1');
       if (token && storedUser) {
-        const parsed = JSON.parse(storedUser);
-        setUser({ email: parsed.email, displayName: parsed.name });
-        setMode('member');
+        try {
+          const parsed = JSON.parse(storedUser);
+          setUser({ email: parsed.email, displayName: parsed.name });
+          setMode('member');
+        } catch {
+          // Corrupt stored user would otherwise leave mode stuck on 'loading'
+          // forever (blank app) - treat it the same as never having signed in.
+          await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_KEY]);
+          setMode('guest');
+        }
       } else {
         setMode('guest');
       }

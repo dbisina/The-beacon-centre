@@ -84,7 +84,10 @@ export default function Live() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.ink, paddingTop: insets.top }}>
-      <View style={{ height: r.vs(230), backgroundColor: '#000', maxWidth: r.contentWidth, width: '100%', alignSelf: 'center' }}>
+      {/* 16:9 of its own width, because that is the shape of the video. A fixed
+          height letterboxed the player once the content column widened on a
+          tablet. */}
+      <View style={{ height: (Math.min(r.width, r.contentWidth) * 9) / 16, backgroundColor: '#000', maxWidth: r.contentWidth, width: '100%', alignSelf: 'center' }}>
         {status.live && status.video ? (
           <YouTubePlayer youtubeId={status.video.youtubeId} title={status.video.title} thumbnailUrl={status.video.thumbnailUrl} height={230} rad="xs" style={{ borderRadius: 0, height: '100%' }} />
         ) : status.video?.thumbnailUrl ? (

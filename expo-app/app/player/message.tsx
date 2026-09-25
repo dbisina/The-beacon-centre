@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Image, Pressable, ScrollView, TextInput, Share, ActivityIndicator, Alert } from 'react-native';
+import { View, Image, Pressable, ScrollView, TextInput, Share, ActivityIndicator, Alert, Linking } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, useResponsive } from '@/theme';
+import { colors, radius, HIT, useResponsive } from '@/theme';
 import { Text, Row, Card, Kicker, MediaTile } from '@/components/ui';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useSaved } from '@/hooks/useSaved';
 import { useAuth } from '@/services/auth';
 import { fetchNotes, upsertNote } from '@/services/userData';
-import { fetchVideoComments, VideoComment } from '@/services/api';
-import { useAsync } from '@/hooks/useAsync';
+import { watchUrl } from '@/services/youtube';
 import { COVER, LOGO_WHITE } from '@/data/content';
 
 export default function MessagePlayer() {
@@ -20,12 +19,6 @@ export default function MessagePlayer() {
   const { isMember } = useAuth();
   const contentId = id ? Number(id) : null;
   const { saved, toggle: toggleSaved } = useSaved('VIDEO_SERMON', contentId);
-
-  const { data: comments, loading: commentsLoading } = useAsync<VideoComment[]>(
-    () => (contentId != null ? fetchVideoComments(contentId) : Promise.resolve([])),
-    [],
-    [contentId]
-  );
 
   const [showNotes, setShowNotes] = useState(false);
   const [note, setNote] = useState('');
@@ -53,7 +46,7 @@ export default function MessagePlayer() {
     }
   }
 
-  function onAction(key: 'save' | 'download' | 'share' | 'notes') {
+  function onAction(key: 'save' | 'share' | 'notes') {
     if (key === 'save') return toggleSaved();
     if (key === 'share') {
       Share.share({ message: title ? `${title} — The Beacon Centre` : 'The Beacon Centre' }).catch(() => {});
@@ -70,7 +63,6 @@ export default function MessagePlayer() {
       setShowNotes((v) => !v);
       return;
     }
-    // 'download' - not built yet, see unmade.md §6.
   }
 
   return (
@@ -115,7 +107,6 @@ export default function MessagePlayer() {
             {(
               [
                 { key: 'save' as const, icon: saved ? 'bookmark' : 'bookmark-outline', label: saved ? 'Saved' : 'Save', disabled: contentId == null },
-                { key: 'download' as const, icon: 'download-outline', label: 'Download', disabled: true },
                 { key: 'share' as const, icon: 'share-outline', label: 'Share', disabled: false },
                 { key: 'notes' as const, icon: 'create-outline', label: 'Notes', disabled: contentId == null },
               ]
@@ -159,40 +150,29 @@ export default function MessagePlayer() {
             </Card>
           ) : null}
 
-          <Text size={16} weight="extra" track={-0.015} style={{ marginTop: r.s(24), marginBottom: r.s(12) }}>
-            Comments{comments.length ? ` (${comments.length})` : ''}
-          </Text>
-          {commentsLoading ? (
-            <ActivityIndicator color={colors.teal} />
-          ) : comments.length === 0 ? (
-            <Text size={12.5} color={colors.muted}>
-              No comments yet - or comments are turned off for this video on YouTube.
-            </Text>
-          ) : (
-            comments.map((c, i) => (
-              <View key={c.id} style={{ marginTop: i ? r.s(16) : 0 }}>
-                <Row gap={10} style={{ alignItems: 'flex-start' }}>
-                  {c.authorImage ? (
-                    <Image source={{ uri: c.authorImage }} style={{ width: r.s(30), height: r.s(30), borderRadius: 99 }} />
-                  ) : (
-                    <View style={{ width: r.s(30), height: r.s(30), borderRadius: 99, backgroundColor: colors.teal }} />
-                  )}
-                  <View style={{ flex: 1 }}>
-                    <Row gap={7} style={{ alignItems: 'baseline' }}>
-                      <Text size={12.5} weight="bold">{c.author}</Text>
-                      {c.likeCount > 0 ? (
-                        <Row gap={3}>
-                          <Ionicons name="thumbs-up-outline" size={r.s(10)} color={colors.faint} />
-                          <Text size={10.5} color={colors.faint}>{c.likeCount}</Text>
-                        </Row>
-                      ) : null}
-                    </Row>
-                    <Text size={12.5} lh={1.55} color={colors.inkSoft} style={{ marginTop: r.s(3) }}>{c.text}</Text>
-                  </View>
-                </Row>
-              </View>
-            ))
-          )}
+          {/* Comments live on YouTube, not here. Showing them in the app would
+              make this user-generated content, which App Store guideline 1.2
+              requires us to filter, report, block and staff - all four, not
+              just one. Linking out keeps the conversation where it is already
+              moderated. */}
+          <Pressable
+            onPress={() => youtubeId && Linking.openURL(watchUrl(youtubeId))}
+            disabled={!youtubeId}
+            accessibilityRole="button"
+            accessibilityLabel="View comments on YouTube"
+            accessibilityHint="Opens this message on YouTube"
+            style={{ marginTop: r.s(24), minHeight: HIT, justifyContent: 'center', opacity: youtubeId ? 1 : 0 }}
+          >
+            {({ pressed }) => (
+              <Row gap={10} style={{ opacity: pressed ? 0.6 : 1 }}>
+                <Ionicons name="chatbubble-ellipses-outline" size={r.s(16)} color={colors.inkSoft} />
+                <Text size={13} weight="bold" color={colors.inkSoft} style={{ flex: 1 }}>
+                  View comments on YouTube
+                </Text>
+                <Ionicons name="open-outline" size={r.s(15)} color={colors.faint} />
+              </Row>
+            )}
+          </Pressable>
         </View>
       </ScrollView>
     </View>

@@ -155,7 +155,12 @@ const VIEWED_ANNOUNCEMENTS_KEY = 'tbc_viewed_announcements';
  */
 export async function getViewedAnnouncementIds(): Promise<string[]> {
   const raw = await AsyncStorage.getItem(VIEWED_ANNOUNCEMENTS_KEY);
-  return raw ? JSON.parse(raw) : [];
+  try {
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    // A corrupt stored value shouldn't crash the banner - treat it as unseen.
+    return [];
+  }
 }
 
 export async function markAnnouncementsViewed(ids: string[]): Promise<void> {
@@ -304,35 +309,6 @@ async function fetchVideos(kind: BackendVideoKind, max: number): Promise<VideoIt
       kind: kind.toLowerCase() as VideoItem['kind'],
       categoryName: x.category?.name || null,
     }));
-}
-
-export type VideoComment = {
-  id: string;
-  author: string;
-  authorImage: string | null;
-  text: string;
-  likeCount: number;
-  publishedAt: string;
-};
-
-/**
- * GET /api/video-sermons/{id}/comments - real YouTube comments (not a mock
- * feed). Empty array both when the video genuinely has none and when the
- * owner disabled comments - callers show the same "no comments yet" state
- * either way rather than needing to distinguish.
- */
-export async function fetchVideoComments(id: string | number): Promise<VideoComment[]> {
-  const items = await apiGet<{ id: string; author: string; authorProfileImageUrl: string | null; text: string; likeCount: number; publishedAt: string }[]>(
-    `/video-sermons/${id}/comments`
-  );
-  return (items ?? []).map((c) => ({
-    id: c.id,
-    author: c.author,
-    authorImage: c.authorProfileImageUrl,
-    text: c.text,
-    likeCount: c.likeCount,
-    publishedAt: c.publishedAt,
-  }));
 }
 
 /** Full messages. */
