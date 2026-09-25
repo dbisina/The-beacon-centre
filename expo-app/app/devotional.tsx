@@ -31,7 +31,10 @@ export default function DevotionalScreen() {
 
   async function markAsRead() {
     if (!isMember || devotionalId == null) {
-      Alert.alert('Sign-in coming soon', 'Marking devotionals as read will need an account.');
+      Alert.alert('Sign in to track progress', 'Marking devotionals as read will need an account.', [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Sign in', onPress: () => router.push('/auth') },
+      ]);
       return;
     }
     setMarkedRead(true);

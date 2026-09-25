@@ -61,7 +61,10 @@ export default function MessagePlayer() {
     }
     if (key === 'notes') {
       if (!isMember) {
-        Alert.alert('Sign-in coming soon', 'Sermon notes will need an account.');
+        Alert.alert('Sign in to take notes', 'Sermon notes will need an account.', [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Sign in', onPress: () => router.push('/auth') },
+        ]);
         return;
       }
       setShowNotes((v) => !v);
