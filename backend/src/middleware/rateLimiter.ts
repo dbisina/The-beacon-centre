@@ -39,6 +39,23 @@ export const adminAuthLimiter = rateLimit({
   skipSuccessfulRequests: true, // Don't count successful logins
 });
 
+// Member sign-in (POST /api/auth/login) - per IP. Complements the per-email
+// lockout in loginThrottle.ts: that one stops guessing one member's passcode
+// from many IPs, this one stops trying one common passcode across many emails
+// from one IP. Successful sign-ins don't count, so a household sharing a
+// connection isn't locked out by using the app normally.
+export const appAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: {
+    success: false,
+    message: 'Too many sign-in attempts, please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
+
 // Admin API operations - very generous for authenticated users
 export const adminApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

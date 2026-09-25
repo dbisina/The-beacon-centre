@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, useResponsive } from '@/theme';
 import { Text, Row } from '@/components/ui';
-import { embedHtml, EMBED_ORIGIN } from '@/services/youtube';
+import { embedHtml, isValidYoutubeId, EMBED_ORIGIN } from '@/services/youtube';
 import { fetchExcerpts, fetchInspirationals, fetchSermons } from '@/services/api';
 import { useAsync } from '@/hooks/useAsync';
 
@@ -134,7 +134,7 @@ function ShortSlide({
 
   return (
     <View style={{ height: SCREEN_HEIGHT, backgroundColor: '#000' }}>
-      {active ? (
+      {active && isValidYoutubeId(item.youtubeId) ? (
         <WebView
           source={{ html: embedHtml(item.youtubeId), baseUrl: EMBED_ORIGIN }}
           style={{ flex: 1, backgroundColor: '#000' }}

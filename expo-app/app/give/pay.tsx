@@ -18,8 +18,9 @@ import {
   GIVING_CALLBACK_URL,
 } from '@/services/giving';
 import { useAsync } from '@/hooks/useAsync';
+import { IN_APP_GIVING_ALLOWED, openWebGiving } from '@/config/giving';
 
-type MethodKey = 'card' | 'transfer' | 'ussd' | 'wallet';
+type MethodKey = 'card' | 'transfer';
 
 /**
  * Card giving (Paystack) is built end-to-end - initializeGiving/verifyGiving,
@@ -31,10 +32,11 @@ const CARD_ENABLED = false;
 
 const METHODS: { key: MethodKey; icon: keyof typeof Ionicons.glyphMap; label: string; sub: string; enabled: boolean }[] = [
   { key: 'transfer', icon: 'business-outline', label: 'Bank transfer', sub: "Give directly to the church's account", enabled: true },
-  { key: 'card', icon: 'card-outline', label: 'Pay with card', sub: CARD_ENABLED ? 'Secured by Paystack' : 'Coming soon', enabled: CARD_ENABLED },
-  { key: 'ussd', icon: 'phone-portrait-outline', label: 'USSD', sub: 'Coming soon', enabled: false },
-  { key: 'wallet', icon: 'wallet-outline', label: 'Apple Pay / Google Pay', sub: 'Coming soon', enabled: false },
+  { key: 'card', icon: 'card-outline', label: 'Pay with card', sub: 'Secured by Paystack', enabled: CARD_ENABLED },
 ];
+
+/** Only ever show methods that actually work - a disabled "coming soon" row is future-functionality copy App Review rejects. */
+const ENABLED_METHODS = METHODS.filter((m) => m.enabled);
 
 const PURPOSE_LABEL: Record<GivingPurpose, string> = {
   TITHE: 'Tithe',
@@ -145,6 +147,20 @@ export default function Pay() {
   const emailValid = /\S+@\S+\.\S+/.test(email);
   const needsEmail = !isMember;
 
+  /**
+   * This screen is the in-app giving sheet, which iOS may not show at all
+   * (App Store guideline 3.2.2(iv) - see config/giving.ts). The Give tab
+   * already routes around it there; this is the backstop for anything else
+   * that could reach the route - a `beacon://give/pay` deep link, a stale
+   * navigation state restored on launch - so there is no path at all to an
+   * in-app donation on iOS.
+   */
+  useEffect(() => {
+    if (IN_APP_GIVING_ALLOWED) return;
+    router.replace('/(tabs)/give');
+    openWebGiving();
+  }, []);
+
   async function startCardCheckout() {
     if (needsEmail && !emailValid) {
       setError('Enter a valid email so we can send your receipt.');
@@ -196,6 +212,8 @@ export default function Pay() {
       setStage('select');
     }
   }
+
+  if (!IN_APP_GIVING_ALLOWED) return null;
 
   if (stage === 'checkout' && checkout) {
     return (
@@ -251,29 +269,43 @@ export default function Pay() {
         </Text>
 
         <View style={{ marginTop: r.s(18), gap: r.s(9) }}>
-          {METHODS.map((m) => {
-            const on = method === m.key;
-            return (
-              <Pressable key={m.key} onPress={() => m.enabled && setMethod(m.key)} disabled={!m.enabled}>
-                <Row gap={13} style={{ padding: r.s(15), borderRadius: radius.lg, backgroundColor: on ? colors.teal : colors.surface, opacity: m.enabled ? 1 : 0.5 }}>
-                  <View style={{ width: r.s(40), height: r.s(40), borderRadius: radius.sm, backgroundColor: on ? 'rgba(4,33,27,0.14)' : colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name={m.icon} size={r.s(18)} color={on ? colors.tealInk : colors.ink} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text size={13.5} weight={on ? 'extra' : 'bold'} color={on ? colors.tealInk : colors.ink}>{m.label}</Text>
-                    <Text size={11} color={on ? 'rgba(4,33,27,0.72)' : colors.muted} style={{ marginTop: r.s(2) }}>{m.sub}</Text>
-                  </View>
-                  {on ? (
-                    <View style={{ width: r.s(22), height: r.s(22), borderRadius: 99, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name="checkmark" size={r.s(12)} color={colors.teal} />
+          {ENABLED_METHODS.length > 1 ? (
+            ENABLED_METHODS.map((m) => {
+              const on = method === m.key;
+              return (
+                <Pressable key={m.key} onPress={() => setMethod(m.key)}>
+                  <Row gap={13} style={{ padding: r.s(15), borderRadius: radius.lg, backgroundColor: on ? colors.teal : colors.surface }}>
+                    <View style={{ width: r.s(40), height: r.s(40), borderRadius: radius.sm, backgroundColor: on ? 'rgba(4,33,27,0.14)' : colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name={m.icon} size={r.s(18)} color={on ? colors.tealInk : colors.ink} />
                     </View>
-                  ) : (
-                    <Ionicons name="chevron-forward" size={r.s(16)} color={colors.faint} />
-                  )}
-                </Row>
-              </Pressable>
-            );
-          })}
+                    <View style={{ flex: 1 }}>
+                      <Text size={13.5} weight={on ? 'extra' : 'bold'} color={on ? colors.tealInk : colors.ink}>{m.label}</Text>
+                      <Text size={11} color={on ? 'rgba(4,33,27,0.72)' : colors.muted} style={{ marginTop: r.s(2) }}>{m.sub}</Text>
+                    </View>
+                    {on ? (
+                      <View style={{ width: r.s(22), height: r.s(22), borderRadius: 99, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="checkmark" size={r.s(12)} color={colors.teal} />
+                      </View>
+                    ) : (
+                      <Ionicons name="chevron-forward" size={r.s(16)} color={colors.faint} />
+                    )}
+                  </Row>
+                </Pressable>
+              );
+            })
+          ) : (
+            // Only one way to give right now - a chooser with a single option
+            // just makes the person tap something that can't change anything.
+            <Row gap={13} style={{ padding: r.s(15), borderRadius: radius.lg, backgroundColor: colors.surface }}>
+              <View style={{ width: r.s(40), height: r.s(40), borderRadius: radius.sm, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name={ENABLED_METHODS[0].icon} size={r.s(18)} color={colors.ink} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text size={13.5} weight="bold" color={colors.ink}>{ENABLED_METHODS[0].label}</Text>
+                <Text size={11} color={colors.muted} style={{ marginTop: r.s(2) }}>{ENABLED_METHODS[0].sub}</Text>
+              </View>
+            </Row>
+          )}
         </View>
 
         {method === 'card' && needsEmail ? (

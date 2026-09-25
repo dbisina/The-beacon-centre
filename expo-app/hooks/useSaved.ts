@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
+import { router } from 'expo-router';
 import { useAuth } from '@/services/auth';
 import { ContentType, createSave, deleteSave, fetchSaves } from '@/services/userData';
 
@@ -33,7 +34,10 @@ export function useSaved(contentType: ContentType, contentId: number | null) {
 
   async function toggle() {
     if (!isMember) {
-      Alert.alert('Sign-in coming soon', 'Saving will need an account.');
+      Alert.alert('Sign in to save', 'Saving will need an account.', [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Sign in', onPress: () => router.push('/auth') },
+      ]);
       return;
     }
     if (contentId == null || busy) return;

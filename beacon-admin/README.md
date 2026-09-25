@@ -79,14 +79,11 @@ The admin dashboard requires the backend API to be running. Make sure you have:
 2. **Database**: PostgreSQL with proper schema
 3. **Default Admin**: Created with credentials for login
 
-### Default Login Credentials
+### First Login
 
-```
-Email: admin@beaconcentre.org
-Password: admin123
-```
-
-**⚠️ Important**: Change these credentials immediately in production!
+Sign in with the admin account created by the backend seed. Its password is
+whatever `ADMIN_SEED_PASSWORD` was set to when seeding — there is no default
+password, because this repository is public. See `backend/readme.md`.
 
 ## 📁 Project Structure
 

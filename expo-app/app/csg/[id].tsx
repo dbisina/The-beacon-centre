@@ -35,7 +35,7 @@ export default function CsgDetail() {
 
   async function handleJoin() {
     if (mode !== 'member') {
-      setActionError('Joining a group needs an account - sign-in is coming soon.');
+      setActionError('Joining a group needs an account.');
       return;
     }
     setBusy(true);
@@ -138,7 +138,9 @@ export default function CsgDetail() {
                 disabled={busy}
                 style={{ flex: 1 }}
                 full
-                onPress={handleJoin}
+                // Guests tap straight through to sign-in - handleJoin's own
+                // mode check below is a fallback, not the primary path.
+                onPress={mode === 'member' ? handleJoin : () => router.push('/auth')}
               />
             )}
           </Row>

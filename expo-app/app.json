@@ -19,7 +19,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "org.thebeaconcentre.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {

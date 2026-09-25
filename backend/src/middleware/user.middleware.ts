@@ -10,8 +10,8 @@ import { prisma } from '../config/database';
 import { verifyFirebaseIdToken } from '../config/firebaseAdmin';
 import { sendError } from '../utils/responses';
 import { AuthenticatedUserRequest, AppUser } from '../types';
+import { JWT_SECRET } from '../config/jwtSecrets';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'beacon-centre-dev-secret-key';
 
 const extractToken = (req: AuthenticatedUserRequest): string | null => {
   const authHeader = req.headers.authorization;

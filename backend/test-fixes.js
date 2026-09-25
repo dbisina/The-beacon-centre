@@ -30,8 +30,8 @@ async function testAPIFixes() {
     let authToken = null;
     try {
       const loginResponse = await axios.post(`${API_BASE}/admin/auth/login`, {
-        email: 'admin@beaconcentre.org',
-        password: 'admin123'
+        email: process.env.ADMIN_EMAIL,
+        password: process.env.ADMIN_PASSWORD
       });
       
       if (loginResponse.data.success) {
@@ -170,9 +170,7 @@ async function testAPIFixes() {
     console.log('   ✅ Admin endpoints require authentication');
     console.log('   ✅ Fallback data is provided when database is unavailable');
 
-    console.log('\n🔑 Default Admin Credentials:');
-    console.log('   Email: admin@beaconcentre.org');
-    console.log('   Password: admin123');
+    console.log('\nAdmin login check reads ADMIN_EMAIL / ADMIN_PASSWORD from the environment; there is no default.');
 
     console.log('\n🚀 Next Steps:');
     console.log('   1. Set up your PostgreSQL database');

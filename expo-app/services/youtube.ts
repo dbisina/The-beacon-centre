@@ -1,165 +1,165 @@
 /**
- * YouTube Data API v3 — powers the Live tab and the Shorts/full-video rails
- * when content is hosted on the church's channel rather than Firebase Storage.
+ * YouTube embedding + live-status helpers for the Live tab, the home tile,
+ * and the message/shorts players.
  *
- * The existing live.tsx has a bug worth knowing about: it builds a
- * `search?eventType=live` URL, never calls it, and instead reads the FIRST
- * ITEM OF THE UPLOADS PLAYLIST — i.e. it shows the newest upload and calls it
- * "live", so the Live tab is wrong whenever the church is not streaming.
- * checkLive() below does the real thing: search?eventType=live, and only
- * reports live when YouTube says so.
+ * Live detection used to be a client-side call to the YouTube Data API
+ * (search.list with eventType=live), which needed EXPO_PUBLIC_YOUTUBE_API_KEY
+ * / _CHANNEL_ID. Neither was ever set anywhere (not .env, not eas.json, not
+ * an EAS secret), so checkLive() always threw, was swallowed, and the app
+ * never showed live even when the church was streaming. Worse, a working key
+ * would have shipped inside the app bundle and been shared by every install
+ * against one 10,000-unit/day quota - a single eventType=live search costs
+ * 100 of those.
+ *
+ * Live status now comes from the backend (GET /api/live/status - see
+ * backend/src/services/liveStatus.service.ts), which does the same
+ * detection server-side: a free HTML scrape of the channel's `/live` page
+ * first, an optional 1-unit API confirm, and only falls back to the 100-unit
+ * search inside an actual service window. See fetchLiveStatus() below.
  */
+import { apiGet, getApiOrigin } from '@/config/api';
+
+/* ------------------------------------------------------ live status --- */
+
+export interface LiveVideo {
+  youtubeId: string;
+  title: string;
+  thumbnailUrl: string;
+  /** Present once YouTube confirms the stream has actually started. */
+  startedAt?: string;
+  /** ISO timestamp - present for an upcoming (scheduled) broadcast. */
+  scheduledStartTime?: string;
+  viewers?: number;
+}
+
+export interface NextService {
+  id: number;
+  name: string;
+  /** UTC ISO instant - format this into the device's local time to display it. */
+  startsAt: string;
+  timezone: string;
+  /** Human label in the service's own timezone, e.g. "Sunday 09:00". */
+  localLabel: string;
+}
+
+export interface ReplaySermon {
+  youtubeId: string;
+  title: string;
+  thumbnailUrl: string;
+  sermonDate: string | null;
+}
+
+export interface LiveStatus {
+  live: boolean;
+  upcoming: boolean;
+  video?: LiveVideo;
+  nextService?: NextService;
+  replay?: ReplaySermon;
+  source: 'scrape' | 'api' | 'none';
+  checkedAt: string;
+}
+
+/** GET /api/live/status - see live.tsx and the home tile for polling. */
+export const fetchLiveStatus = (): Promise<LiveStatus> => apiGet<LiveStatus>('/live/status');
+
+/** Link out to the real YouTube page - "Open in YouTube" / "Watch on YouTube". */
+export const watchUrl = (videoId: string) => `https://www.youtube.com/watch?v=${videoId}`;
 
 /**
- * No hardcoded fallback here on purpose - a previous placeholder key baked
- * into source was silently dead (Google returns API_KEY_INVALID for it),
- * which made checkLive() and fetchUploads() fail every call without ever
- * surfacing why. Set EXPO_PUBLIC_YOUTUBE_API_KEY / _CHANNEL_ID in .env for
- * live detection to work - sermon/shorts content itself comes from the
- * backend sync now (see services/api.ts fetchSermons/fetchExcerpts) and
- * doesn't need this file at all.
+ * YouTube video ids are always 11 chars from this exact alphabet, but a
+ * couple of chars of slack either side costs nothing and avoids being overly
+ * strict about an ID format YouTube doesn't publicly document as fixed.
+ * `embedHtml` below relies on this before it will build any HTML at all -
+ * `videoId` is not always backend-controlled (deep-link route params reach
+ * it directly in app/player/message.tsx and app/player/shorts.tsx), so it
+ * must be validated before it's anywhere near a script literal.
  */
-const KEY = process.env.EXPO_PUBLIC_YOUTUBE_API_KEY;
-const CHANNEL_ID = process.env.EXPO_PUBLIC_YOUTUBE_CHANNEL_ID;
-const BASE = 'https://www.googleapis.com/youtube/v3';
+export const isValidYoutubeId = (videoId: string): boolean => /^[\w-]{6,15}$/.test(videoId);
 
-export type LiveState =
-  | { live: true; videoId: string; title: string; thumb: string; startedAt?: string }
-  | { live: false; nextService?: string };
-
-export type YTVideo = {
-  id: string;
-  title: string;
-  thumb: string;
-  publishedAt: string;
-  duration?: string;
-  isShort?: boolean;
-};
-
-async function get(path: string, params: Record<string, string>) {
-  if (!KEY || !CHANNEL_ID) throw new Error('YouTube API not configured');
-  const qs = new URLSearchParams({ key: KEY, ...params }).toString();
-  const res = await fetch(`${BASE}/${path}?${qs}`);
-  if (!res.ok) throw new Error(`YouTube ${path} ${res.status}`);
-  return res.json();
-}
-
-/** True live check — search.list with eventType=live on the channel. */
-export async function checkLive(): Promise<LiveState> {
-  try {
-    const data = await get('search', {
-      part: 'id,snippet',
-      channelId: CHANNEL_ID as string,
-      eventType: 'live',
-      type: 'video',
-      maxResults: '1',
-    });
-    const item = data.items?.[0];
-    if (!item) return { live: false };
-    return {
-      live: true,
-      videoId: item.id.videoId,
-      title: item.snippet.title,
-      thumb: item.snippet.thumbnails?.high?.url ?? item.snippet.thumbnails?.default?.url,
-      startedAt: item.snippet.publishedAt,
-    };
-  } catch {
-    return { live: false };
-  }
-}
-
-/** Concurrent viewer count for a live broadcast. */
-export async function liveViewers(videoId: string): Promise<number | null> {
-  try {
-    const data = await get('videos', { part: 'liveStreamingDetails', id: videoId });
-    const n = data.items?.[0]?.liveStreamingDetails?.concurrentViewers;
-    return n ? Number(n) : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Latest uploads from the channel (what the old Live tab was actually showing). */
-export async function fetchUploads(max = 12): Promise<YTVideo[]> {
-  const ch = await get('channels', { part: 'contentDetails', id: CHANNEL_ID as string });
-  const playlistId = ch.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-  if (!playlistId) return [];
-  const pl = await get('playlistItems', { part: 'snippet', playlistId, maxResults: String(max) });
-  const ids: string[] = (pl.items ?? []).map((i: any) => i.snippet.resourceId.videoId);
-  if (!ids.length) return [];
-
-  // A second call gets durations, which is the only reliable way to tell a
-  // Short (<= 3 min, portrait) from a full message.
-  const details = await get('videos', { part: 'contentDetails,snippet', id: ids.join(',') });
-  return (details.items ?? []).map((v: any) => {
-    const iso: string = v.contentDetails?.duration ?? 'PT0S';
-    const secs = isoToSeconds(iso);
-    return {
-      id: v.id,
-      title: v.snippet.title,
-      thumb: v.snippet.thumbnails?.high?.url,
-      publishedAt: v.snippet.publishedAt,
-      duration: fmt(secs),
-      isShort: secs > 0 && secs <= 180,
-    };
-  });
-}
-
-export const fetchShorts = async (max = 12) => (await fetchUploads(max)).filter((v) => v.isShort);
-export const fetchFullMessages = async (max = 12) => (await fetchUploads(max)).filter((v) => !v.isShort);
+/* --------------------------------------------------------- embedding --- */
 
 /**
  * A WebView's Origin header when it doesn't have a real page URL determines
- * whether YouTube's embed player accepts it. This is a plausible-looking
- * https origin used ONLY for that header - it doesn't need to resolve to
- * anything. Pass it as both the embed URL's `origin` param and the WebView's
- * `baseUrl` (see embedHtml) - YouTube checks that they match.
+ * whether YouTube's embed player accepts it. It must be a real https origin
+ * this church controls - it previously pointed at
+ * https://app.thebeaconcentre.org, which does not resolve (thebeaconcentre.org
+ * is an unrelated UK church's domain). The backend's own origin is the one
+ * https origin this project actually owns and can prove control of, so it
+ * doubles as the embed origin here.
  */
-export const EMBED_ORIGIN = 'https://app.thebeaconcentre.org';
+export const EMBED_ORIGIN = getApiOrigin();
 
 /** Embeddable player URL — feed this to react-native-webview. */
 export const embedUrl = (videoId: string, autoplay = true) =>
   `https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0&modestbranding=1&autoplay=${autoplay ? 1 : 0}&origin=${encodeURIComponent(EMBED_ORIGIN)}`;
 
 /**
- * Full HTML document wrapping embedUrl() in a real <iframe>.
+ * Full HTML document driving the video via the IFrame Player API rather than
+ * a bare `<iframe src=embedUrl>`. The API gives us onReady/onStateChange/
+ * onError callbacks, which are posted out to
+ * `window.ReactNativeWebView.postMessage` - see components/YouTubePlayer.tsx,
+ * which is what actually listens for them (loading state, the 10s
+ * no-ready fallback, and the thumbnail-on-error fallback all depend on this).
  *
- * WebView's `source={{ uri: embedUrl(...) }}` loads the embed URL as the
- * WebView's own top-level page, not as a genuinely embedded iframe - YouTube's
- * player detects that (no real parent document/origin) and throws "Error 153 /
- * Video player configuration error" even on videos that embed fine everywhere
- * else. Use `source={{ html: embedHtml(...) }}` instead so it's an actual
- * iframe with a real parent document, which is what YouTube's embed checks
- * expect.
+ * `source={{ html, baseUrl: EMBED_ORIGIN }}` on the WebView makes this a real
+ * document served from a real parent origin - YouTube's player rejects
+ * `source={{ uri: embedUrl(...) }}` (loaded as the WebView's own top-level
+ * page) with "Error 153 / configuration error" even on videos that embed
+ * fine everywhere else, because there is no genuine parent document behind it.
+ *
+ * `videoId` is validated (throws if it isn't a real YouTube id) and every
+ * value handed to the inline script goes through `JSON.stringify` rather
+ * than hand-quoting - a crafted id containing a quote/brace could otherwise
+ * break out of the string literal and run arbitrary JS inside this WebView,
+ * which is loaded against `baseUrl: EMBED_ORIGIN` (the real backend origin)
+ * with `domStorageEnabled`. Callers must treat a thrown error the same as a
+ * failed load (see components/YouTubePlayer.tsx) rather than let it crash
+ * the screen.
  */
-export const embedHtml = (videoId: string, autoplay = true) => `
+export const embedHtml = (videoId: string, autoplay = true) => {
+  if (!isValidYoutubeId(videoId)) {
+    throw new Error(`embedHtml: invalid YouTube video id "${videoId}"`);
+  }
+  const videoIdJson = JSON.stringify(videoId);
+  const originJson = JSON.stringify(EMBED_ORIGIN);
+  return `
 <!DOCTYPE html>
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <style>html,body,iframe{margin:0;padding:0;width:100%;height:100%;border:0;background:#000;}</style>
+    <style>html,body,#player{margin:0;padding:0;width:100%;height:100%;border:0;background:#000;}</style>
   </head>
   <body>
-    <iframe
-      src="${embedUrl(videoId, autoplay)}"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen
-    ></iframe>
+    <div id="player"></div>
+    <script>
+      var post = function (payload) {
+        if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+      };
+
+      var tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.body.appendChild(tag);
+
+      window.onYouTubeIframeAPIReady = function () {
+        new YT.Player('player', {
+          videoId: ${videoIdJson},
+          playerVars: {
+            playsinline: 1,
+            rel: 0,
+            modestbranding: 1,
+            autoplay: ${autoplay ? 1 : 0},
+            origin: ${originJson},
+          },
+          events: {
+            onReady: function () { post({ type: 'ready' }); },
+            onStateChange: function (e) { post({ type: 'state', data: e.data }); },
+            // Common codes: 2 invalid id, 5 HTML5 error, 100 removed/private,
+            // 101/150 embedding disallowed by the owner.
+            onError: function (e) { post({ type: 'error', data: e.data }); },
+          },
+        });
+      };
+    </script>
   </body>
 </html>`;
-
-function isoToSeconds(iso: string) {
-  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!m) return 0;
-  return Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0);
-}
-
-function fmt(s: number) {
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  return h
-    ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-    : `${m}:${String(sec).padStart(2, '0')}`;
-}
+};

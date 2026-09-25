@@ -19,26 +19,6 @@ export class VideoSermonController {
     }
   }
 
-  static async getComments(req: Request, res: Response): Promise<void> {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        sendError(res, 'Invalid video sermon ID', 400);
-        return;
-      }
-
-      const result = await VideoSermonService.getComments(id);
-      if (result.success) {
-        sendSuccess(res, 'Comments retrieved successfully', result.data);
-      } else {
-        const statusCode = result.error === 'Video sermon not found' ? 404 : result.error.includes('not configured') ? 503 : 500;
-        sendError(res, result.error, statusCode, result.details);
-      }
-    } catch (error) {
-      sendError(res, 'Failed to retrieve comments', 500, error);
-    }
-  }
-
   static async syncFromYoutube(_req: Request, res: Response): Promise<void> {
     try {
       const result = await YoutubeSyncService.syncFromChannel();

@@ -9,7 +9,6 @@ const router = Router();
 router.get('/', VideoSermonController.getAllVideoSermons);
 router.get('/featured', VideoSermonController.getFeaturedVideoSermons);
 router.get('/category/:categoryId', VideoSermonController.getVideoSermonsByCategory);
-router.get('/:id/comments', VideoSermonController.getComments);
 router.get('/:id', VideoSermonController.getVideoSermonById);
 
 // Protected admin routes

@@ -4,13 +4,26 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, useResponsive } from '@/theme';
 import { Screen, Text, Row, Kicker } from '@/components/ui';
+import * as Application from 'expo-application';
 import { useAuth, readGuest, writeGuest, guestKeys } from '@/services/auth';
+
+/**
+ * The version actually installed, read from the native bundle rather than
+ * app.json. eas.json sets appVersionSource "remote", so EAS - not app.json -
+ * assigns the version and build number; this line used to be hardcoded and had
+ * already drifted. Null in Expo Go and on web, where there is no native build,
+ * so the label falls back to the name alone.
+ */
+const appVersion = Application.nativeApplicationVersion
+  ? `version ${Application.nativeApplicationVersion}${
+      Application.nativeBuildVersion ? ` (${Application.nativeBuildVersion})` : ''
+    }`
+  : null;
 
 // verse/live/sermons share guestKeys.notifications with onboarding/setup.tsx's
 // initial choice, so toggling here actually changes what was set there.
 type NotifPrefs = { verse: boolean; live: boolean; sermons: boolean };
 const DEFAULT_NOTIF_PREFS: NotifPrefs = { verse: true, live: true, sermons: false };
-const WIFI_KEY = 'guest:wifi-only-downloads';
 
 type RowDef = {
   label: string;
@@ -27,11 +40,9 @@ export default function Settings() {
   const { isMember, user, logOut, deleteAccount } = useAuth();
   const [deleting, setDeleting] = useState(false);
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_NOTIF_PREFS);
-  const [wifiOnly, setWifiOnly] = useState(true);
 
   useEffect(() => {
     readGuest(guestKeys.notifications, DEFAULT_NOTIF_PREFS).then(setPrefs);
-    readGuest(WIFI_KEY, true).then(setWifiOnly);
   }, []);
 
   const flip = (k: keyof NotifPrefs) =>
@@ -39,12 +50,6 @@ export default function Settings() {
       const next = { ...p, [k]: !p[k] };
       writeGuest(guestKeys.notifications, next).catch(() => {});
       return next;
-    });
-
-  const flipWifi = () =>
-    setWifiOnly((v) => {
-      writeGuest(WIFI_KEY, !v).catch(() => {});
-      return !v;
     });
 
   return (
@@ -86,10 +91,6 @@ export default function Settings() {
         <Toggle label="Verse of the day" on={prefs.verse} onPress={() => flip('verse')} />
         <Toggle label="Live service starting" on={prefs.live} onPress={() => flip('live')} />
         <Toggle label="New sermons & shorts" on={prefs.sermons} onPress={() => flip('sermons')} last />
-      </Group>
-
-      <Group title="Playback & storage">
-        <Toggle label="Download over Wi-Fi only" on={wifiOnly} onPress={flipWifi} last />
       </Group>
 
       <Group title="Church">
@@ -139,7 +140,7 @@ export default function Settings() {
       {isMember ? (
         <Pressable
           onPress={() =>
-            Alert.alert('Sign out?', 'Your downloads stay on this phone.', [
+            Alert.alert('Sign out?', 'You can sign back in anytime.', [
               { text: 'Cancel', style: 'cancel' },
               { text: 'Sign out', style: 'destructive', onPress: () => logOut() },
             ])
@@ -192,7 +193,7 @@ export default function Settings() {
       ) : null}
 
       <Text size={11} color={colors.faint} style={{ marginTop: r.s(16), textAlign: 'center' }}>
-        The Beacon Centre · version 2.0.1
+        The Beacon Centre{appVersion ? ` · ${appVersion}` : ''}
       </Text>
     </Screen>
   );

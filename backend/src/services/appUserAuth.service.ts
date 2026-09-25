@@ -7,9 +7,16 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
 import { ServiceResponse } from '../types';
+import { JWT_SECRET } from '../config/jwtSecrets';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'beacon-centre-dev-secret-key';
 const PASSCODE_RE = /^\d{4,6}$/;
+
+/**
+ * The one failure that counts as a guess. loginThrottle keys its lockout on
+ * this exact value, so it lives here rather than as two string literals that
+ * could drift apart and silently switch the lockout off.
+ */
+export const INVALID_CREDENTIALS = 'Invalid email or passcode';
 
 export interface AppUserAuthResponse {
   user: { id: number; email: string | null; name: string | null };
@@ -76,12 +83,12 @@ export class AppUserAuthService {
     try {
       const user = await prisma.appUser.findUnique({ where: { email: normalizedEmail } });
       if (!user || !user.passcodeHash) {
-        return { success: false, error: 'Invalid email or passcode' };
+        return { success: false, error: INVALID_CREDENTIALS };
       }
 
       const valid = await bcrypt.compare(passcode, user.passcodeHash);
       if (!valid) {
-        return { success: false, error: 'Invalid email or passcode' };
+        return { success: false, error: INVALID_CREDENTIALS };
       }
 
       await prisma.appUser.update({ where: { id: user.id }, data: { lastSeenAt: new Date() } });
@@ -98,16 +105,41 @@ export class AppUserAuthService {
 
   /**
    * Apple App Review guideline 5.1.1(v): any app offering account creation
-   * must also offer in-app account deletion. Hard-deletes the row - Prisma's
-   * onDelete: Cascade on every AppUser relation (memberships, saves, notes,
-   * progress, push tokens, payment methods) takes care of the rest. Giving
-   * transactions keep appUserId nullable-on-delete by design (financial
-   * records shouldn't vanish with the account) - check schema if that
-   * changes.
+   * must also offer in-app account deletion, and deleting an account has to
+   * delete the member's data - not just the login.
+   *
+   * Cascade covers memberships, saves, notes, progress, RSVPs, push tokens and
+   * payment methods. It does NOT cover prayer requests, contact messages or
+   * event registrations: those relations are SetNull, so deleting only the
+   * AppUser row used to leave every one of them behind, still carrying the
+   * member's name, email, phone and what they wrote - while Settings told them
+   * "everything" was gone. They're deleted explicitly here, before the user row,
+   * because once SetNull has run there's no appUserId left to find them by.
+   *
+   * Giving transactions are the one deliberate exception: they stay (SetNull)
+   * as financial records, and the privacy policy says so.
    */
   static async deleteAccount(appUserId: number): Promise<ServiceResponse<{ id: number }>> {
     try {
-      await prisma.appUser.delete({ where: { id: appUserId } });
+      await prisma.$transaction(async (tx) => {
+        // memberCount is a denormalised counter; the membership rows are about
+        // to cascade away, so give their groups the count back first.
+        const memberships = await tx.csgMembership.findMany({
+          where: { appUserId, isActive: true },
+          select: { csgId: true },
+        });
+        for (const { csgId } of memberships) {
+          await tx.csg.updateMany({
+            where: { id: csgId, memberCount: { gt: 0 } },
+            data: { memberCount: { decrement: 1 } },
+          });
+        }
+
+        await tx.prayerRequest.deleteMany({ where: { appUserId } });
+        await tx.contactMessage.deleteMany({ where: { appUserId } });
+        await tx.eventRegistration.deleteMany({ where: { appUserId } });
+        await tx.appUser.delete({ where: { id: appUserId } });
+      });
       return { success: true, data: { id: appUserId } };
     } catch (error) {
       return {

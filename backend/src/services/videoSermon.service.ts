@@ -1,18 +1,8 @@
 // backend/src/services/videoSermon.service.ts
-import axios from 'axios';
 import { prisma } from '../config/database';
 import { ServiceResponse, CreateVideoSermonRequest, UpdateVideoSermonRequest, VideoSermonFilters } from '../types';
 import { VideoSermon } from '@prisma/client';
 import { UploadService } from './upload.service';
-
-export interface VideoComment {
-  id: string;
-  author: string;
-  authorProfileImageUrl: string | null;
-  text: string;
-  likeCount: number;
-  publishedAt: string;
-}
 
 export class VideoSermonService {
   static async getAllVideoSermons(filters: VideoSermonFilters): Promise<ServiceResponse<{
@@ -553,56 +543,4 @@ export class VideoSermonService {
     }
   }
 
-  // ─── Real YouTube comments (not a fake/mocked feed) ───
-
-  static async getComments(id: number): Promise<ServiceResponse<VideoComment[]>> {
-    try {
-      const sermon = await prisma.videoSermon.findUnique({ where: { id }, select: { youtubeId: true } });
-      if (!sermon) {
-        return { success: false, error: 'Video sermon not found' };
-      }
-
-      const apiKey = process.env.YOUTUBE_API_KEY;
-      if (!apiKey) {
-        return { success: false, error: 'Comments are not configured (YOUTUBE_API_KEY unset)' };
-      }
-
-      const response = await axios.get('https://www.googleapis.com/youtube/v3/commentThreads', {
-        params: {
-          part: 'snippet',
-          videoId: sermon.youtubeId,
-          maxResults: 30,
-          order: 'relevance',
-          key: apiKey,
-        },
-      });
-
-      const comments: VideoComment[] = (response.data.items ?? []).map((item: any) => {
-        const top = item.snippet.topLevelComment.snippet;
-        return {
-          id: item.id,
-          author: top.authorDisplayName ?? 'Anonymous',
-          authorProfileImageUrl: top.authorProfileImageUrl ?? null,
-          // textOriginal is plain text - textDisplay is HTML (<a> tags,
-          // entities) and would render literally in a RN <Text>.
-          text: top.textOriginal ?? '',
-          likeCount: top.likeCount ?? 0,
-          publishedAt: top.publishedAt,
-        };
-      });
-
-      return { success: true, data: comments };
-    } catch (error) {
-      // YouTube 403s this with commentsDisabled when the video owner turned
-      // comments off - that's a normal, expected outcome, not a real error.
-      if (axios.isAxiosError(error) && error.response?.data?.error?.errors?.[0]?.reason === 'commentsDisabled') {
-        return { success: true, data: [] };
-      }
-      return {
-        success: false,
-        error: 'Failed to fetch comments',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  }
 }

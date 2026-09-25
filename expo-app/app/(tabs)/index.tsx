@@ -10,8 +10,8 @@ import { Screen, Text, Card, Btn, Progress, SectionHead, MediaTile, Row, Kicker 
 import { useAsync } from '@/hooks/useAsync';
 import { useAuth } from '@/services/auth';
 import { usePlayer } from '@/services/player';
-import { fetchHome, fetchNextService, getViewedAnnouncementIds, markAnnouncementsViewed } from '@/services/api';
-import { checkLive } from '@/services/youtube';
+import { fetchHome, getViewedAnnouncementIds, markAnnouncementsViewed } from '@/services/api';
+import { useLiveStatus } from '@/hooks/useLiveStatus';
 import { fetchProjects, ProjectWithProgress } from '@/services/giving';
 import { COVER, LOGO_DARK, verse as fallbackVerse, short as money, naira } from '@/data/content';
 
@@ -55,22 +55,17 @@ export default function Home() {
     markAnnouncementsViewed([id]).catch(() => {});
   };
 
-  // Backend sync is the source of truth for content now - checkLive() and
-  // fetchNextService() are separate best-effort calls (live detection has no
-  // backend equivalent, and the schedule call degrades to null rather than
-  // breaking the screen).
+  // Backend sync is the source of truth for content now. Live status polls
+  // separately and much more often (60s, see useLiveStatus) than the rest of
+  // this home payload, which only needs to load once per visit - folding it
+  // into fetchHome's useAsync would mean re-fetching devotionals, sermons and
+  // announcements every 60s just to catch a live status change.
   const { data, loading, refresh } = useAsync(
-    async () => {
-      const [fs, live, upcoming] = await Promise.all([
-        fetchHome(),
-        checkLive().catch(() => ({ live: false as const })),
-        fetchNextService().catch(() => null),
-      ]);
-      return { ...fs, live, upcoming };
-    },
-    { quote: null, devotional: null, excerpts: [], inspirationals: [], sermons: [], audio: [], announcements: [], live: { live: false as const }, upcoming: null, collage: null },
+    fetchHome,
+    { quote: null, devotional: null, excerpts: [], inspirationals: [], sermons: [], audio: [], announcements: [], collage: null },
     []
   );
+  const { status: live } = useLiveStatus(60_000);
 
   const quoteText = data.quote?.content ?? fallbackVerse.text;
   const quoteRef = data.quote?.author ?? fallbackVerse.ref;
@@ -260,21 +255,33 @@ export default function Home() {
               <Kicker color={colors.tealInk}>Audio sermons</Kicker>
               <View>
                 <Text size={46} weight="extra" lh={1} track={-0.045} color={colors.tealInk}>{audioCount}</Text>
-                <Text size={12} weight="semibold" color="rgba(4,33,27,0.7)" style={{ marginTop: r.s(3) }}>play offline</Text>
+                <Text size={12} weight="semibold" color="rgba(4,33,27,0.7)" style={{ marginTop: r.s(3) }}>to stream</Text>
               </View>
             </View>
           </Pressable>
           <Pressable style={{ flex: 1 }} onPress={() => router.push('/live')}>
-            <MediaTile source={data.live.live ? { uri: data.live.thumb } : COVER} height={150} rad="xl" style={{ flex: 1 }}>
+            <MediaTile source={live.video?.thumbnailUrl ? { uri: live.video.thumbnailUrl } : COVER} height={150} rad="xl" style={{ flex: 1 }}>
               <View style={{ padding: r.s(16) }}>
-                <Row gap={6} style={{ alignSelf: 'flex-start', paddingVertical: r.s(5), paddingHorizontal: r.s(9), borderRadius: r.s(8), backgroundColor: data.live.live ? colors.live : 'rgba(255,255,255,0.2)' }}>
-                  {data.live.live ? <View style={{ width: r.s(6), height: r.s(6), borderRadius: 99, backgroundColor: '#fff' }} /> : null}
+                <Row gap={6} style={{ alignSelf: 'flex-start', paddingVertical: r.s(5), paddingHorizontal: r.s(9), borderRadius: r.s(8), backgroundColor: live.live ? colors.live : 'rgba(255,255,255,0.2)' }}>
+                  {live.live ? <View style={{ width: r.s(6), height: r.s(6), borderRadius: 99, backgroundColor: '#fff' }} /> : null}
                   <Text size={9} weight="extra" color="#fff" track={0.08}>
-                    {data.live.live ? 'LIVE NOW' : data.upcoming ? `${data.upcoming.day.slice(0, 3).toUpperCase()} ${data.upcoming.time}` : 'UPCOMING'}
+                    {live.live
+                      ? 'LIVE NOW'
+                      : live.upcoming
+                      ? (live.video?.scheduledStartTime
+                          ? `${new Date(live.video.scheduledStartTime).toLocaleDateString(undefined, { weekday: 'short' }).toUpperCase()} ${new Date(live.video.scheduledStartTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`
+                          : 'STARTING SOON')
+                      : live.nextService
+                      ? `${new Date(live.nextService.startsAt).toLocaleDateString(undefined, { weekday: 'short' }).toUpperCase()} ${new Date(live.nextService.startsAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`
+                      : 'NOT LIVE YET'}
                   </Text>
                 </Row>
                 <Text size={15} weight="bold" lh={1.2} color="#fff" numberOfLines={2} style={{ marginTop: r.s(9) }}>
-                  {data.live.live ? data.live.title : data.upcoming?.name ?? 'Sunday\nService'}
+                  {live.live
+                    ? live.video?.title ?? 'Live now'
+                    : live.upcoming
+                    ? live.video?.title ?? 'Starting soon'
+                    : live.nextService?.name ?? 'Sunday\nService'}
                 </Text>
               </View>
             </MediaTile>

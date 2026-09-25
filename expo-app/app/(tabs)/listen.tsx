@@ -11,7 +11,7 @@ import { COVER } from '@/data/content';
 
 export default function Listen() {
   const r = useResponsive();
-  const [tab, setTab] = useState<'sermons' | 'goaks' | 'downloads'>('sermons');
+  const [tab, setTab] = useState<'sermons' | 'goaks'>('sermons');
   const { play, current, isPlaying } = usePlayer();
 
   const { data, loading, refresh } = useAsync(
@@ -35,27 +35,16 @@ export default function Listen() {
       <Text size={32} weight="extra" track={-0.035}>Listen</Text>
       <Text size={13} lh={1.6} color={colors.muted} style={{ marginTop: r.s(8) }}>
         {items.length
-          ? `${items.length} message${items.length === 1 ? '' : 's'} you can play offline.`
-          : 'Messages you can play offline.'}
+          ? `${items.length} message${items.length === 1 ? '' : 's'} to stream.`
+          : 'Messages to stream.'}
       </Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: r.s(7), marginTop: r.s(18) }}>
         <Chip label="Audio sermons" active={tab === 'sermons'} onPress={() => setTab('sermons')} />
         <Chip label="GOAKS" active={tab === 'goaks'} onPress={() => setTab('goaks')} />
-        <Chip label="Downloads" active={tab === 'downloads'} onPress={() => setTab('downloads')} />
       </ScrollView>
 
-      {tab === 'downloads' ? (
-        <View style={{ marginTop: r.s(40), alignItems: 'center', paddingHorizontal: r.s(30) }}>
-          <View style={{ width: r.s(64), height: r.s(64), borderRadius: r.s(20), backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="download-outline" size={r.s(28)} color={colors.muted} />
-          </View>
-          <Text size={17} weight="extra" style={{ marginTop: r.s(18) }}>Nothing downloaded yet</Text>
-          <Text size={12.5} lh={1.65} color={colors.muted} style={{ marginTop: r.s(8), textAlign: 'center' }}>
-            Download any message and it plays without data, useful for the drive to church.
-          </Text>
-        </View>
-      ) : !loading && items.length === 0 ? (
+      {!loading && items.length === 0 ? (
         <View style={{ marginTop: r.s(40), alignItems: 'center', paddingHorizontal: r.s(30) }}>
           <View style={{ width: r.s(64), height: r.s(64), borderRadius: r.s(20), backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="musical-notes-outline" size={r.s(28)} color={colors.muted} />

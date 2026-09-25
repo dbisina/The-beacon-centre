@@ -6,7 +6,7 @@ import { colors, radius, useResponsive } from '@/theme';
 import { Screen, Text, Card, Btn, Progress, Row, Kicker, MediaTile, SectionHead } from '@/components/ui';
 import { useAsync } from '@/hooks/useAsync';
 import { useAuth } from '@/services/auth';
-import { fetchAnnouncements } from '@/services/api';
+import { IN_APP_GIVING_ALLOWED, openWebGiving } from '@/config/giving';
 import { fetchProjects, fetchGivingHistory, ProjectWithProgress, GivingTransaction, GivingPurpose } from '@/services/giving';
 import { COVER, naira, short as money } from '@/data/content';
 
@@ -34,7 +34,6 @@ export default function Give() {
   const [amount, setAmount] = useState<number>(20000);
   const [customAmount, setCustomAmount] = useState('');
   const [showCustom, setShowCustom] = useState(false);
-  const [recurring, setRecurring] = useState(true);
 
   const { data: projects, loading: projectsLoading } = useAsync<ProjectWithProgress[]>(
     () => fetchProjects(),
@@ -65,7 +64,29 @@ export default function Give() {
         ) : null}
       </Row>
 
-      {/* amount composer */}
+      {!IN_APP_GIVING_ALLOWED ? (
+        <View style={{ marginTop: r.s(18), borderRadius: radius.xxl, padding: r.s(20), backgroundColor: colors.tealDark }}>
+          <Kicker color={colors.tealLight}>Giving</Kicker>
+          <Text size={24} weight="extra" lh={1.22} track={-0.03} color="#fff" style={{ marginTop: r.s(10) }}>
+            Tithes, offerings and seed
+          </Text>
+          <Text size={13} lh={1.65} color={colors.tealLight} style={{ marginTop: r.s(9) }}>
+            Giving to The Beacon Centre happens on our giving page. Tap below and it opens in your
+            browser, with the church's bank details and every way to give.
+          </Text>
+          <Btn
+            full
+            label="Give on the web"
+            right={<Ionicons name="open-outline" size={r.s(15)} color={colors.tealInk} />}
+            style={{ marginTop: r.s(18), paddingVertical: r.s(16) }}
+            onPress={openWebGiving}
+          />
+        </View>
+      ) : null}
+
+      {/* amount composer — Android only, see config/giving.ts */}
+      {IN_APP_GIVING_ALLOWED ? (
+        <>
       <View style={{ marginTop: r.s(18), borderRadius: radius.xxl, padding: r.s(20), backgroundColor: colors.tealDark }}>
         <Kicker color={colors.tealLight}>Giving to</Kicker>
         <Row gap={7} style={{ marginTop: r.s(13), flexWrap: 'wrap' }}>
@@ -128,20 +149,6 @@ export default function Give() {
         ) : null}
       </View>
 
-      <Pressable onPress={() => setRecurring((v) => !v)}>
-        <Row gap={12} style={{ marginTop: r.s(11), padding: r.s(15), borderRadius: radius.lg, backgroundColor: colors.surface }}>
-          <View style={{ width: r.s(22), height: r.s(22), borderRadius: r.s(7), backgroundColor: recurring ? colors.teal : 'transparent', borderWidth: recurring ? 0 : 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }}>
-            {recurring ? <Ionicons name="checkmark" size={r.s(13)} color={colors.tealInk} /> : null}
-          </View>
-          <Text size={12.5} weight="bold" lh={1.5} style={{ flex: 1 }}>Repeat this every month on the 1st</Text>
-        </Row>
-      </Pressable>
-      {recurring ? (
-        <Text size={10.5} color={colors.faint} style={{ marginTop: r.s(6) }}>
-          Recurring giving isn't automated yet: you'll need to give again manually next month.
-        </Text>
-      ) : null}
-
       <Btn
         full
         label={purpose === 'PROJECT' ? 'Pick a project below to contribute' : `Give ₦${amount.toLocaleString('en-NG')}`}
@@ -158,6 +165,8 @@ export default function Give() {
         <Text size={11} lh={1.6} color={colors.faint} style={{ marginTop: r.s(12), textAlign: 'center' }}>
           You can give as a guest. Add your email at checkout for a receipt.
         </Text>
+      ) : null}
+        </>
       ) : null}
 
       <SectionHead title="Church projects" action={projects.length ? 'See all' : undefined} />
@@ -196,7 +205,11 @@ export default function Give() {
                   <Btn
                     label="Contribute"
                     tone="ink"
-                    onPress={() => router.push({ pathname: '/give/pay', params: { amount: String(amount), purpose: 'PROJECT', projectId: String(p.id), projectTitle: p.title } })}
+                    onPress={() =>
+                      IN_APP_GIVING_ALLOWED
+                        ? router.push({ pathname: '/give/pay', params: { amount: String(amount), purpose: 'PROJECT', projectId: String(p.id), projectTitle: p.title } })
+                        : openWebGiving()
+                    }
                     style={{ paddingVertical: r.s(11) }}
                   />
                 </Row>

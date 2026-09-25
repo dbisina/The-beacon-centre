@@ -176,13 +176,16 @@ npm run test            # Run tests
 npm run test:coverage   # Run tests with coverage
 ```
 
-## 🔐 Default Admin Credentials
+## 🔐 First Admin Account
 
-After seeding, you can login with:
-- **Email**: admin@beaconcentre.org
-- **Password**: admin123
+The seed creates `admin@beaconcentre.org` with the password you supply — there
+is no default, because this repository is public:
 
-⚠️ **Important**: Change these credentials in production!
+```bash
+ADMIN_SEED_PASSWORD='<12+ characters>' npm run db:seed
+```
+
+Keep that password in a password manager, not in this repo or in chat.
 
 ## 🚀 Deployment
 
