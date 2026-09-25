@@ -16,12 +16,12 @@ let prisma: PrismaClient | null = null;
 try {
   prisma = new PrismaClient();
 } catch (error) {
-  console.warn('Auth service: Prisma client initialization failed, using fallback mode');
+  console.error('Auth service: Prisma client initialization failed; admin sign-in is unavailable');
   prisma = null;
 }
 
 export class AuthService {
-  // FIXED: Login with proper password verification and fallbacks
+  // Admin sign-in: database-verified password only, no fallback accounts
   static async login(credentials: AdminLoginRequest): Promise<ServiceResponse<AdminLoginResponse>> {
     try {
       const { email, password } = credentials;
@@ -34,92 +34,105 @@ export class AuthService {
         };
       }
 
-      // Try database authentication first
-      if (prisma) {
-        try {
-          const admin = await prisma.admin.findUnique({
-            where: { email: email.toLowerCase() },
-            select: {
-              id: true,
-              email: true,
-              passwordHash: true,
-              name: true,
-              role: true,
-              permissions: true,
-              csgId: true,
-              isActive: true,
-              createdAt: true,
-              lastLogin: true,
-              loginCount: true,
-              updatedAt: true,
-            },
-          });
-
-          if (!admin) {
-            // Try fallback authentication for development
-            const fallbackResult = await this.fallbackLogin(credentials);
-            if (fallbackResult.success) {
-              return fallbackResult;
-            }
-            
-            return {
-              success: false,
-              error: 'Invalid email or password'
-            };
-          }
-
-          if (!admin.isActive) {
-            return {
-              success: false,
-              error: 'Account is inactive'
-            };
-          }
-
-          // Verify password
-          const isPasswordValid = await bcrypt.compare(password, admin.passwordHash);
-          if (!isPasswordValid) {
-            return {
-              success: false,
-              error: 'Invalid email or password'
-            };
-          }
-
-          // Generate tokens
-          const { accessToken, refreshToken } = generateTokens(admin);
-
-          // Return success response
-          const adminResponse = {
-            id: admin.id,
-            email: admin.email,
-            name: admin.name,
-            role: admin.role,
-            permissions: admin.permissions,
-            csgId: admin.csgId,
-            isActive: admin.isActive,
-            createdAt: admin.createdAt,
-            lastLogin: admin.lastLogin,
-            loginCount: admin.loginCount,
-            updatedAt: admin.updatedAt,
-          };
-
-          console.log(`✅ Login successful for: ${admin.email}`);
-
-          return {
-            success: true,
-            data: {
-              admin: adminResponse,
-              accessToken,
-              refreshToken,
-            },
-          };
-        } catch (dbError) {
-          console.warn('Database login failed, trying fallback:', dbError);
-          return await this.fallbackLogin(credentials);
-        }
-      } else {
-        // Database not available, use fallback
-        return await this.fallbackLogin(credentials);
+      // There is deliberately no fallback login. An earlier version let a
+      // hardcoded dev account in whenever the email was unknown or the
+      // database was unreachable, gated only by NODE_ENV - and the compiled
+      // copy committed to this public repo had lost even that gate. A login
+      // that can succeed without the database is a login anyone can use.
+      if (!prisma) {
+        return {
+          success: false,
+          error: 'Sign-in is temporarily unavailable'
+        };
       }
+
+      let admin;
+      try {
+        admin = await prisma.admin.findUnique({
+          where: { email: email.toLowerCase() },
+          select: {
+            id: true,
+            email: true,
+            passwordHash: true,
+            name: true,
+            role: true,
+            permissions: true,
+            csgId: true,
+            isActive: true,
+            createdAt: true,
+            lastLogin: true,
+            loginCount: true,
+            updatedAt: true,
+          },
+        });
+      } catch (dbError) {
+        console.error('Admin login: database lookup failed', dbError);
+        return {
+          success: false,
+          error: 'Sign-in is temporarily unavailable'
+        };
+      }
+
+      if (!admin) {
+        return {
+          success: false,
+          error: 'Invalid email or password'
+        };
+      }
+
+      if (!admin.isActive) {
+        return {
+          success: false,
+          error: 'Account is inactive'
+        };
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, admin.passwordHash);
+      if (!isPasswordValid) {
+        return {
+          success: false,
+          error: 'Invalid email or password'
+        };
+      }
+
+      // Record the sign-in. lastLogin and loginCount were never written
+      // before, so there was no way to tell whether an admin account was in
+      // use or had been used by someone else. Best-effort: a failed audit
+      // write must not block a valid sign-in.
+      const now = new Date();
+      await prisma.admin
+        .update({
+          where: { id: admin.id },
+          data: { lastLogin: now, loginCount: { increment: 1 } },
+        })
+        .catch((auditError) => console.warn('Admin login: could not record sign-in', auditError));
+
+      const { accessToken, refreshToken } = generateTokens(admin);
+
+      const adminResponse = {
+        id: admin.id,
+        email: admin.email,
+        name: admin.name,
+        role: admin.role,
+        permissions: admin.permissions,
+        csgId: admin.csgId,
+        isActive: admin.isActive,
+        createdAt: admin.createdAt,
+        lastLogin: now,
+        loginCount: admin.loginCount + 1,
+        updatedAt: admin.updatedAt,
+      };
+
+      console.log(`✅ Login successful for: ${admin.email}`);
+
+      return {
+        success: true,
+        data: {
+          admin: adminResponse,
+          accessToken,
+          refreshToken,
+        },
+      };
     } catch (error) {
       console.error('Login service error:', error);
       return {
@@ -130,141 +143,45 @@ export class AuthService {
     }
   }
 
-  // Fallback login for development when the database is unreachable.
-  // Hard-gated to non-production: a DB error or missing admin record must
-  // never grant access via these hardcoded credentials in a live environment.
-  private static async fallbackLogin(credentials: AdminLoginRequest): Promise<ServiceResponse<AdminLoginResponse>> {
-    if (process.env.NODE_ENV === 'production') {
-      return {
-        success: false,
-        error: 'Invalid email or password'
-      };
-    }
-
-    const { email, password } = credentials;
-
-    // Development fallback credentials
-    const devAdmins = [
-      {
-        email: 'admin@beaconcentre.org',
-        password: 'admin123',
-        name: 'Default Admin',
-        role: AdminRole.SUPER_ADMIN,
-      },
-      {
-        email: 'test@beaconcentre.org', 
-        password: 'test123',
-        name: 'Test Admin',
-        role: AdminRole.ADMIN,
-      }
-    ];
-
-    const devAdmin = devAdmins.find(admin => 
-      admin.email.toLowerCase() === email.toLowerCase() && 
-      admin.password === password
-    );
-
-    if (!devAdmin) {
-      return {
-        success: false,
-        error: 'Invalid email or password'
-      };
-    }
-
-    // Create mock admin object
-    const mockAdmin = {
-      id: 1,
-      email: devAdmin.email,
-      name: devAdmin.name,
-      role: devAdmin.role,
-      permissions: ['*'], // All permissions for dev
-      csgId: null,
-      isActive: true,
-      createdAt: new Date(),
-      lastLogin: null,
-      loginCount: 0,
-      updatedAt: new Date(),
-    };
-
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(mockAdmin);
-
-    console.log(`✅ Fallback login successful for: ${devAdmin.email} (DEV MODE)`);
-
-    return {
-      success: true,
-      data: {
-        admin: mockAdmin,
-        accessToken,
-        refreshToken,
-      },
-    };
-  }
-
   // Refresh access token
   static async refreshToken(refreshToken: string): Promise<ServiceResponse<{ accessToken: string }>> {
     try {
       // Verify refresh token
       const { adminId } = verifyRefreshToken(refreshToken);
 
-      // Try to get admin from database
-      let admin = null;
-      
-      if (prisma) {
-        try {
-          admin = await prisma.admin.findUnique({
-            where: { id: adminId },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true,
-              permissions: true,
-              csgId: true,
-              isActive: true,
-              createdAt: true,
-            },
-          });
-
-          if (!admin || !admin.isActive) {
-            return {
-              success: false,
-              error: 'Admin not found or inactive'
-            };
-          }
-        } catch (dbError) {
-          if (process.env.NODE_ENV === 'production') {
-            return {
-              success: false,
-              error: 'Admin not found or inactive'
-            };
-          }
-          console.warn('Database query failed during token refresh, using fallback (non-production only)');
-          // Use fallback admin data
-          admin = {
-            id: adminId,
-            email: 'admin@beaconcentre.org',
-            name: 'Admin User',
-            role: AdminRole.ADMIN,
-            permissions: ['*'],
-            csgId: null,
-            isActive: true,
-            createdAt: new Date(),
-          };
-        }
-      } else if (process.env.NODE_ENV !== 'production') {
-        // Database not available, create fallback admin (dev only)
-        admin = {
-          id: adminId,
-          email: 'admin@beaconcentre.org',
-          name: 'Admin User',
-          role: AdminRole.ADMIN,
-          permissions: ['*'],
-          csgId: null,
-          isActive: true,
-          createdAt: new Date(),
+      // As with login, no fallback: a refresh the database can't vouch for
+      // is refused, never answered with an invented admin.
+      if (!prisma) {
+        return {
+          success: false,
+          error: 'Admin not found or inactive'
         };
-      } else {
+      }
+
+      let admin;
+      try {
+        admin = await prisma.admin.findUnique({
+          where: { id: adminId },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            permissions: true,
+            csgId: true,
+            isActive: true,
+            createdAt: true,
+          },
+        });
+      } catch (dbError) {
+        console.error('Admin token refresh: database lookup failed', dbError);
+        return {
+          success: false,
+          error: 'Admin not found or inactive'
+        };
+      }
+
+      if (!admin || !admin.isActive) {
         return {
           success: false,
           error: 'Admin not found or inactive'

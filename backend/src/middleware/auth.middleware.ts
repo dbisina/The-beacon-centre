@@ -350,42 +350,6 @@ export const optionalAuth = async (
   }
 };
 
-// Development helper - creates a default admin if none exists
-export const ensureDefaultAdmin = async (): Promise<void> => {
-  if (!prisma || process.env.NODE_ENV === 'production') {
-    return;
-  }
-
-  try {
-    const adminCount = await prisma.admin.count();
-    
-    if (adminCount === 0) {
-      const bcrypt = require('bcryptjs');
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      
-      await prisma.admin.create({
-        data: {
-          email: 'admin@beaconcentre.org',
-          passwordHash: hashedPassword,
-          name: 'Default Admin',
-          role: AdminRole.SUPER_ADMIN,
-          permissions: ['*'], // All permissions
-          isActive: true,
-        },
-      });
-      
-      console.log('✅ Default admin created: admin@beaconcentre.org / admin123');
-    }
-  } catch (error) {
-    console.warn('Failed to create default admin:', error);
-  }
-};
-
-// Call this on server startup
-if (process.env.NODE_ENV !== 'production') {
-  ensureDefaultAdmin();
-}
-
 export default {
   authenticate,
   requireRole,

@@ -71,9 +71,18 @@ async function main() {
 
     console.log(`✅ Created ${categories.length} categories`);
 
-    // Create default admin user
+    // Create the first admin. The password comes from ADMIN_SEED_PASSWORD and
+    // has no default: this repository is public, and the literal that used to
+    // sit here ended up as the live password of the production super admin.
     console.log('👤 Creating admin user...');
-    const hashedPassword = await bcrypt.hash('admin123', 12);
+    const seedPassword = process.env.ADMIN_SEED_PASSWORD ?? '';
+    if (seedPassword.length < 12) {
+      throw new Error(
+        'Set ADMIN_SEED_PASSWORD (12+ characters) to seed the first admin. ' +
+          'There is no default, on purpose.'
+      );
+    }
+    const hashedPassword = await bcrypt.hash(seedPassword, 12);
     
     const admin = await prisma.admin.upsert({
       where: { email: 'admin@beaconcentre.org' },
@@ -456,10 +465,8 @@ async function main() {
     console.log(`  - Live schedule entries: ${liveSchedule.length}`);
     console.log(`  - Announcements: ${announcements.length}`);
     
-    console.log('\n🔐 Admin Login Credentials:');
-    console.log('  Email: admin@beaconcentre.org');
-    console.log('  Password: admin123');
-    console.log('  ⚠️  Please change this password in production!');
+    console.log('
+🔐 Admin account: admin@beaconcentre.org (password from ADMIN_SEED_PASSWORD)');
 
   } catch (error) {
     console.error('❌ Error during seeding:', error);
