@@ -25,10 +25,13 @@ function EditCsgPageContent({ params }: EditCsgPageProps) {
   const router = useRouter();
   const { admin } = useAuth();
 
-  // A CSG_ADMIN scoped to a different group shouldn't land on this form at all -
-  // the server would 403 the update anyway, but redirecting client-side avoids a confusing error.
+  // Editing a group's details is full-access only on the server (PUT /csgs/:id
+  // is requireFullAccess), so a CSG_ADMIN can't save this form for any group -
+  // including their own, which the old check let through to a 403 on submit.
+  // Send them to their group's page instead, where they can post updates and
+  // answer join requests.
   useEffect(() => {
-    if (admin?.role === 'CSG_ADMIN' && admin.csgId !== csgId) {
+    if (admin?.role === 'CSG_ADMIN') {
       router.replace(admin.csgId ? `/dashboard/csgs/${admin.csgId}` : '/dashboard');
     }
   }, [admin, csgId, router]);

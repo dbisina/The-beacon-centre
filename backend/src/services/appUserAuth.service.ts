@@ -124,8 +124,9 @@ export class AppUserAuthService {
       await prisma.$transaction(async (tx) => {
         // memberCount is a denormalised counter; the membership rows are about
         // to cascade away, so give their groups the count back first.
+        // Only approved members were ever counted; a pending request wasn't.
         const memberships = await tx.csgMembership.findMany({
-          where: { appUserId, isActive: true },
+          where: { appUserId, isActive: true, status: 'APPROVED' },
           select: { csgId: true },
         });
         for (const { csgId } of memberships) {

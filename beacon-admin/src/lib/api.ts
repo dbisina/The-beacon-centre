@@ -513,6 +513,19 @@ export const csgsApi = {
     return apiRequest(() => api.get(`/csgs/${id}/admin/members`));
   },
 
+  /** Pending join requests, with the registration details members submitted. */
+  async getJoinRequests(id: number) {
+    return apiRequest(() => api.get(`/csgs/${id}/admin/requests`));
+  },
+
+  async approveRequest(id: number, membershipId: number) {
+    return apiRequest(() => api.post(`/csgs/${id}/members/${membershipId}/approve`));
+  },
+
+  async declineRequest(id: number, membershipId: number) {
+    return apiRequest(() => api.post(`/csgs/${id}/members/${membershipId}/decline`));
+  },
+
   async create(data: any) {
     return apiRequest(() => api.post('/csgs', data));
   },

@@ -1,15 +1,16 @@
 import { apiGet, apiPost } from '@/config/api';
 
 /**
- * CSGs (Community Small Groups) — backed by the real backend
+ * CSGs (Community Service Groups) — backed by the real backend
  * (backend/src/routes/csg.routes.ts, csg.controller.ts, csg.service.ts).
  *
- * The list/detail routes are public. The member-facing routes (updates, join,
- * leave, rsvp) require a signed-in Firebase user — config/api.ts already
- * attaches the ID token automatically when `auth.currentUser` exists, so
- * guests will simply get a 401 from the backend. That error is left to
- * propagate here; the calling screen decides how to react (e.g. prompt
- * sign-in) rather than this module swallowing it.
+ * The list/detail routes are public. Everything about the caller's own
+ * membership needs a signed-in member (config/api.ts attaches the token), and
+ * guests get a 401 that is left to propagate - the screen decides how to react.
+ *
+ * Joining is a request: it carries the member's registration details and
+ * waits for a group leader to approve it. Only an approved member sees the
+ * group's updates and member list.
  */
 
 /** Mirrors the Prisma `Csg` model (backend/prisma/schema.prisma). Dates arrive
@@ -43,7 +44,7 @@ export type CsgUpdate = {
   updatedAt: string;
 };
 
-/** Mirrors the Prisma `CsgMembership` model — returned by join/rsvp. */
+/** Mirrors the Prisma `CsgMembership` model — returned by rsvp. */
 export type CsgMembership = {
   id: number;
   csgId: number;
@@ -73,17 +74,54 @@ export function fetchCsgUpdates(id: number | string): Promise<CsgUpdate[]> {
   return apiGet<CsgUpdate[]>(`/csgs/${id}/updates`);
 }
 
-/** POST /api/csgs/{id}/join — requires sign-in. */
-export function joinCsg(id: number | string): Promise<CsgMembership> {
-  return apiPost<CsgMembership>(`/csgs/${id}/join`);
+export type MembershipStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
+
+/** The caller's own standing in one group. */
+export type MyMembership = {
+  csgId: number;
+  status: MembershipStatus;
+  membershipId: number | null;
+  requestedAt: string | null;
+  reviewedAt: string | null;
+};
+
+/** A fellow member, as another member sees them: a name, nothing more. */
+export type CsgPeer = { id: number; name: string; joinedAt: string };
+
+/** What a member submits to ask to join. `dateOfBirth` is YYYY-MM-DD. */
+export type JoinRequest = {
+  fullName: string;
+  dateOfBirth: string;
+  addressStreet: string;
+  addressArea: string;
+};
+
+/** GET /api/csgs/{id}/membership — the caller's standing; requires sign-in. */
+export function fetchMyMembership(id: number | string): Promise<MyMembership> {
+  return apiGet<MyMembership>(`/csgs/${id}/membership`);
 }
 
-/** POST /api/csgs/{id}/leave — requires sign-in. */
+/** GET /api/csgs/mine — groups the caller belongs to or has asked to join. */
+export function fetchMyMemberships(): Promise<MyMembership[]> {
+  return apiGet<MyMembership[]>('/csgs/mine');
+}
+
+/** GET /api/csgs/{id}/members — fellow members' names; approved members only. */
+export function fetchCsgPeers(id: number | string): Promise<CsgPeer[]> {
+  return apiGet<CsgPeer[]>(`/csgs/${id}/members`);
+}
+
+/** POST /api/csgs/{id}/join — sends a request for a leader to approve. */
+export function requestToJoinCsg(id: number | string, request: JoinRequest): Promise<MyMembership> {
+  return apiPost<MyMembership>(`/csgs/${id}/join`, request);
+}
+
+/** POST /api/csgs/{id}/leave — leaves, or withdraws an unanswered request. */
 export function leaveCsg(id: number | string): Promise<{ id: number }> {
   return apiPost<{ id: number }>(`/csgs/${id}/leave`);
 }
 
-/** POST /api/csgs/{id}/rsvp — requires sign-in AND an active membership. */
+/** POST /api/csgs/{id}/rsvp — requires sign-in AND an approved membership. */
 export function rsvpCsg(id: number | string): Promise<CsgMembership> {
   return apiPost<CsgMembership>(`/csgs/${id}/rsvp`);
 }

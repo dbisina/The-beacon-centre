@@ -73,6 +73,7 @@ export default function RootLayout() {
             <Stack.Screen name="live" />
             <Stack.Screen name="csg" />
             <Stack.Screen name="csg/[id]" />
+            <Stack.Screen name="csg/join" options={{ presentation: 'modal' }} />
             <Stack.Screen name="devotional" />
             <Stack.Screen name="gallery" />
             <Stack.Screen name="gallery/[id]" />

@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Edit, Loader2, Send, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, Check, Edit, Inbox, Loader2, Send, Trash2, Users, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,10 +46,18 @@ interface CsgDetailPageProps {
   };
 }
 
-// Mirrors backend's CsgMemberSummary (see backend/src/services/csg.service.ts)
+// Mirrors backend's CsgMemberSummary (see backend/src/services/csg.service.ts).
+// The registration fields are null for members who joined before joining
+// required a request.
 interface CsgMemberSummary {
   id: number; // membership id
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
   joinedAt: string;
+  reviewedAt: string | null;
+  fullName: string | null;
+  dateOfBirth: string | null;
+  addressStreet: string | null;
+  addressArea: string | null;
   appUser: {
     id: number;
     email: string | null;
@@ -135,6 +143,20 @@ function UpdateComposer({ csgId }: { csgId: number }) {
   );
 }
 
+/** Age in whole years from a YYYY-MM-DD date (stored as a DATE, so read it as UTC). */
+function ageFrom(dateOfBirth: string): number {
+  const dob = new Date(dateOfBirth);
+  const now = new Date();
+  let age = now.getUTCFullYear() - dob.getUTCFullYear();
+  const beforeBirthday =
+    now.getUTCMonth() < dob.getUTCMonth() ||
+    (now.getUTCMonth() === dob.getUTCMonth() && now.getUTCDate() < dob.getUTCDate());
+  if (beforeBirthday) age -= 1;
+  return age;
+}
+
+const memberName = (m: CsgMemberSummary) => m.fullName || m.appUser.displayName || 'Unnamed';
+
 function CsgDetailPageContent({ params }: CsgDetailPageProps) {
   const csgId = parseInt(params.id);
   const { admin } = useAuth();
@@ -150,6 +172,36 @@ function CsgDetailPageContent({ params }: CsgDetailPageProps) {
   const { data: members = [], isLoading: isMembersLoading } = useQuery({
     queryKey: ['csg-members', csgId],
     queryFn: () => csgsApi.getAdminMembers(csgId) as Promise<CsgMemberSummary[]>,
+  });
+
+  const { data: requests = [], isLoading: isRequestsLoading } = useQuery({
+    queryKey: ['csg-requests', csgId],
+    queryFn: () => csgsApi.getJoinRequests(csgId) as Promise<CsgMemberSummary[]>,
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: ({ membershipId, approve }: { membershipId: number; approve: boolean }) =>
+      approve ? csgsApi.approveRequest(csgId, membershipId) : csgsApi.declineRequest(csgId, membershipId),
+    onSuccess: (_data, { approve }) => {
+      toast({
+        title: approve ? 'Request approved' : 'Request declined',
+        description: approve
+          ? 'They can now see the group and its members, and have been notified.'
+          : 'They have been notified and can apply again later.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['csg-requests', csgId] });
+      queryClient.invalidateQueries({ queryKey: ['csg-members', csgId] });
+      queryClient.invalidateQueries({ queryKey: ['csg', csgId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error?.response?.data?.message || error?.message || 'Failed to update request',
+        variant: 'destructive',
+      });
+      // Another leader may have answered it first - refresh either way.
+      queryClient.invalidateQueries({ queryKey: ['csg-requests', csgId] });
+    },
   });
 
   const removeMemberMutation = useMutation({
@@ -273,8 +325,98 @@ function CsgDetailPageContent({ params }: CsgDetailPageProps) {
 
       <Card>
         <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            Join Requests
+            {requests.length > 0 && <Badge>{requests.length}</Badge>}
+          </CardTitle>
+          <CardDescription>
+            People asking to join. Their date of birth and address are visible to this group&apos;s
+            leaders only &mdash; other members only ever see a name.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isRequestsLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : requests.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Inbox className="h-8 w-8 mx-auto text-gray-300 mb-2" />
+              No requests waiting.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Date of birth</TableHead>
+                  <TableHead>Address</TableHead>
+                  <TableHead>Requested</TableHead>
+                  <TableHead className="w-[190px] text-right">Decision</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {requests.map((r) => {
+                  const busy = reviewMutation.isPending && reviewMutation.variables?.membershipId === r.id;
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell>
+                        <div className="font-medium text-gray-900">{memberName(r)}</div>
+                        <div className="text-xs text-gray-500">{r.appUser.email || '—'}</div>
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        {r.dateOfBirth ? (
+                          <>
+                            {format(new Date(r.dateOfBirth), 'dd MMM yyyy')}
+                            <span className="text-gray-400"> &middot; {ageFrom(r.dateOfBirth)}</span>
+                          </>
+                        ) : (
+                          '—'
+                        )}
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        <div>{r.addressStreet || '—'}</div>
+                        <div className="text-xs text-gray-500">{r.addressArea || ''}</div>
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        {format(new Date(r.joinedAt), 'MMM dd, yyyy')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={busy}
+                            onClick={() => reviewMutation.mutate({ membershipId: r.id, approve: false })}
+                          >
+                            <X className="mr-1 h-4 w-4" />
+                            Decline
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={busy}
+                            onClick={() => reviewMutation.mutate({ membershipId: r.id, approve: true })}
+                          >
+                            {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
+                            Approve
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Members</CardTitle>
-          <CardDescription>People who have joined this group</CardDescription>
+          <CardDescription>Approved members of this group</CardDescription>
         </CardHeader>
         <CardContent>
           {isMembersLoading ? (
@@ -289,6 +431,7 @@ function CsgDetailPageContent({ params }: CsgDetailPageProps) {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Area</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead className="w-[70px]"></TableHead>
                 </TableRow>
@@ -296,7 +439,7 @@ function CsgDetailPageContent({ params }: CsgDetailPageProps) {
               <TableBody>
                 {members.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-10 text-gray-500">
+                    <TableCell colSpan={5} className="text-center py-10 text-gray-500">
                       <Users className="h-8 w-8 mx-auto text-gray-300 mb-2" />
                       No members yet.
                     </TableCell>
@@ -305,9 +448,10 @@ function CsgDetailPageContent({ params }: CsgDetailPageProps) {
                   members.map((member) => (
                     <TableRow key={member.id}>
                       <TableCell className="font-medium text-gray-900">
-                        {member.appUser.displayName || 'Unnamed'}
+                        {memberName(member)}
                       </TableCell>
                       <TableCell className="text-gray-600">{member.appUser.email || '—'}</TableCell>
+                      <TableCell className="text-gray-600">{member.addressArea || '—'}</TableCell>
                       <TableCell className="text-gray-600">
                         {member.joinedAt ? format(new Date(member.joinedAt), 'MMM dd, yyyy') : '—'}
                       </TableCell>
