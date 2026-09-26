@@ -285,6 +285,61 @@ Thank you again for your time.
 
 ---
 
+## 6. Next build — communities, events, library, push
+
+The build after this review adds: CSG join requests (full name, date of birth,
+street and area, approved by a church admin) with a members list for approved
+members; events with RSVP and admin-built registration forms; My Library; push
+notifications that reach signed-in members (group updates, join-request
+replies) and per-topic preferences; and a public account-deletion page at
+`/delete-account` on the backend host. The privacy policy
+(`docs/privacy-policy.html`) already describes all of it.
+
+**What's New:**
+
+```
+Community groups now work the way groups do: ask to join, and once you're
+approved, see who else is in your group. Events now let you RSVP or register
+right in the app, with what's coming up shown on Home. Everything you've saved
+lives in My Library. And notifications reach you — choose which ones you want
+in Settings.
+```
+
+**Description** — only once this build is the one under review, replace these
+two paragraphs of the section 4 text:
+
+```
+YOUR COMMUNITY GROUP
+Find the CSG nearest you and ask to join. Once you're in, see who else is in
+your group, when and where it meets, and what your group is doing.
+
+NEWS AND EVENTS
+Announcements and what's coming up at The Beacon Centre. RSVP to events, or
+register in a couple of taps.
+```
+
+**App Store privacy label** (App Store Connect → App Privacy). Add, each as
+*linked to the user*, *not used for tracking*, purpose *App Functionality*:
+
+- Contact Info → **Physical Address** (CSG join request)
+- Other Data → **Other Data Types** (date of birth on the CSG join request)
+- User Content → **Other User Content** (event registration answers)
+
+Name, Email and Device ID are already declared.
+
+**Google Play Data safety** (Play Console → App content → Data safety). Add,
+collected, not shared, not optional for the feature, purpose *App functionality*:
+
+- Personal info → **Address**
+- Personal info → **Other info** (date of birth; event registration answers)
+
+Set **Delete account URL** to
+`https://the-beacon-centre-production.up.railway.app/delete-account`. It takes
+the member's email and passcode, deletes the same data as the in-app
+Settings → Delete account, and shares the in-app sign-in lockout.
+
+---
+
 ## Before you resubmit
 
 - [ ] **Change the password of the admin dashboard account** (the seeded
@@ -316,3 +371,6 @@ Thank you again for your time.
       to App Review says this was done on an iPad — only send it once it has
       been.
 - [ ] Confirm the Give tab on that iPad build offers only the web link.
+- [ ] Next build: update the App Store privacy label and Play Data safety form
+      as listed in section 6, and set Play's Delete account URL. Confirm
+      `/delete-account` loads after the backend deploys.
