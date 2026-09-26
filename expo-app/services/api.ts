@@ -122,6 +122,8 @@ export type Announcement = {
   description: string;
   image: string | null;
   createdAt: string;
+  /** Events are announcements too; those open their event page. */
+  kind: 'ANNOUNCEMENT' | 'EVENT';
 };
 
 /** Shape of items returned by GET /api/announcements/active. */
@@ -131,6 +133,7 @@ interface BackendAnnouncement {
   content: string;
   imageUrl?: string | null;
   createdAt: string;
+  kind?: 'ANNOUNCEMENT' | 'EVENT';
 }
 
 /**
@@ -146,6 +149,7 @@ export async function fetchAnnouncements(): Promise<Announcement[]> {
     description: a.content ?? '',
     image: a.imageUrl ?? null,
     createdAt: a.createdAt ?? '',
+    kind: a.kind === 'EVENT' ? 'EVENT' : 'ANNOUNCEMENT',
   }));
 }
 

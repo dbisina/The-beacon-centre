@@ -12,6 +12,8 @@ import { useAuth } from '@/services/auth';
 import { usePlayer } from '@/services/player';
 import { fetchHome, getViewedAnnouncementIds, markAnnouncementsViewed } from '@/services/api';
 import { useLiveStatus } from '@/hooks/useLiveStatus';
+import { fetchEvents, eventWhen, ChurchEvent } from '@/services/events';
+import { DateLeaf } from '@/components/EventBits';
 import { fetchProjects, ProjectWithProgress } from '@/services/giving';
 import { COVER, LOGO_DARK, verse as fallbackVerse, short as money, naira } from '@/data/content';
 
@@ -66,6 +68,9 @@ export default function Home() {
     []
   );
   const { status: live } = useLiveStatus(60_000);
+  // Separate from fetchHome: an events failure must not blank the whole screen,
+  // and the section simply hides when nothing is scheduled.
+  const upcoming = useAsync<ChurchEvent[]>(() => fetchEvents().catch(() => []), [], []);
 
   const quoteText = data.quote?.content ?? fallbackVerse.text;
   const quoteRef = data.quote?.author ?? fallbackVerse.ref;
@@ -81,7 +86,7 @@ export default function Home() {
     <>
       <Screen
         padBottom={190}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.teal} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => { refresh(); upcoming.refresh(); }} tintColor={colors.teal} />}
       >
         <Row style={{ justifyContent: 'space-between', paddingHorizontal: r.s(4) }}>
           <Row gap={9}>
@@ -306,11 +311,39 @@ export default function Home() {
           </Card>
         ) : null}
 
+        {upcoming.data.length > 0 ? (
+          <>
+            <SectionHead title="Coming up" action="See all" onAction={() => router.push('/events')} />
+            <Card pad={6}>
+              {upcoming.data.slice(0, 3).map((ev: ChurchEvent, i: number) => (
+                <Pressable
+                  key={ev.id}
+                  onPress={() => router.push(`/events/${ev.id}`)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${ev.title}, ${eventWhen(ev)}`}
+                  style={{ borderTopWidth: i ? 1 : 0, borderTopColor: colors.hairline }}
+                >
+                  <Row gap={12} style={{ padding: r.s(10), alignItems: 'center', minHeight: HIT }}>
+                    <DateLeaf iso={ev.startsAt} size={44} />
+                    <View style={{ flex: 1 }}>
+                      <Text size={13.5} weight="bold">{ev.title}</Text>
+                      <Text size={11.5} color={colors.muted} style={{ marginTop: r.s(2) }}>
+                        {eventWhen(ev)}{ev.locationName ? ` · ${ev.locationName}` : ''}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={r.s(15)} color={colors.faint} />
+                  </Row>
+                </Pressable>
+              ))}
+            </Card>
+          </>
+        ) : null}
+
         <View style={{ marginTop: r.s(10), borderRadius: radius.xl, padding: r.s(20), backgroundColor: colors.tealDark }}>
           <Kicker color={colors.tealLight}>Community group</Kicker>
           <Text size={19} weight="extra" lh={1.2} color="#fff" style={{ marginTop: r.s(8) }}>Not in a CSG yet?</Text>
           <Text size={12} lh={1.55} color="rgba(255,255,255,0.6)" style={{ marginTop: r.s(6) }}>
-            Community Service Groups meet in person each week. Join one and its updates land right here.
+            Community Service Groups meet in homes each week. Ask to join one near you, and a group leader will welcome you in.
           </Text>
           <Btn label="Find a CSG near me" style={{ marginTop: r.s(14) }} onPress={() => router.push('/csg')} />
         </View>

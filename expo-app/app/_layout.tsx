@@ -90,6 +90,8 @@ export default function RootLayout() {
             <Stack.Screen name="gallery/[id]" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="library" />
+            <Stack.Screen name="events" />
+            <Stack.Screen name="events/[id]" />
             <Stack.Screen name="prayer" options={{ presentation: 'modal' }} />
             <Stack.Screen name="contact" options={{ presentation: 'modal' }} />
             <Stack.Screen name="give/pay" options={{ presentation: 'transparentModal', animation: 'slide_from_bottom' }} />
