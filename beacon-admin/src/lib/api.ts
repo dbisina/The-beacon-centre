@@ -551,6 +551,69 @@ export const csgsApi = {
   },
 };
 
+// Events: announcements with a time, a place, RSVP and optional registration
+// form. See backend/src/routes/events.routes.ts.
+export type EventFieldType =
+  | 'TEXT' | 'TEXTAREA' | 'EMAIL' | 'PHONE' | 'NUMBER' | 'DATE' | 'TIME'
+  | 'SELECT' | 'RADIO' | 'CHECKBOX' | 'YES_NO';
+
+export interface EventFormFieldInput {
+  id?: number;
+  label: string;
+  type: EventFieldType;
+  placeholder?: string | null;
+  helpText?: string | null;
+  required: boolean;
+  options: string[];
+}
+
+export const eventsApi = {
+  async list() {
+    return apiRequest(() => api.get('/events/admin/all'));
+  },
+
+  /** Full event incl. its form (the public detail endpoint - admins see inactive ones too). */
+  async get(id: number) {
+    return apiRequest(() => api.get(`/events/${id}`));
+  },
+
+  async create(data: Record<string, unknown>) {
+    return apiRequest(() => api.post('/events', data));
+  },
+
+  async update(id: number, data: Record<string, unknown>) {
+    return apiRequest(() => api.put(`/events/${id}`, data));
+  },
+
+  async saveForm(id: number, data: {
+    title: string;
+    description?: string | null;
+    isOpen: boolean;
+    closesAt?: string | null;
+    confirmationMessage?: string | null;
+    fields: EventFormFieldInput[];
+  }) {
+    return apiRequest(() => api.put(`/events/${id}/form`, data));
+  },
+
+  async responses(id: number) {
+    return apiRequest(() => api.get(`/events/${id}/responses`));
+  },
+
+  /** Downloads the responses CSV through the authenticated client, then saves it. */
+  async downloadCsv(id: number, fallbackName = 'event-responses.csv') {
+    const response = await api.get(`/events/${id}/responses.csv`, { responseType: 'blob' });
+    const disposition: string = response.headers['content-disposition'] ?? '';
+    const name = /filename="([^"]+)"/.exec(disposition)?.[1] ?? fallbackName;
+    const url = URL.createObjectURL(response.data as Blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+};
+
 // Sunday photo collages API
 export const collagesApi = {
   async getAll() {

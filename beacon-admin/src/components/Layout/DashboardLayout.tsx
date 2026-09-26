@@ -26,6 +26,7 @@ import {
   HeartHandshake,
   BellRing,
   Images,
+  CalendarDays,
 } from "lucide-react";
 import { useAuth } from "../../contexts/authContext";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,12 @@ const navigation = [
     name: "Announcements",
     href: "/dashboard/announcements",
     icon: Megaphone,
+    roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR],
+  },
+  {
+    name: "Events",
+    href: "/dashboard/events",
+    icon: CalendarDays,
     roles: [AdminRole.SUPER_ADMIN, AdminRole.ADMIN, AdminRole.EDITOR],
   },
   {
