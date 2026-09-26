@@ -2,7 +2,14 @@
 import { Request, Response } from 'express';
 import { AnnouncementService } from '../services/announcement.service';
 import { sendSuccess, sendError } from '../utils/responses';
-import { CreateAnnouncementRequest, UpdateAnnouncementRequest, AnnouncementFilters } from '../types';
+import { CreateAnnouncementRequest, UpdateAnnouncementRequest, AnnouncementFilters, AuthenticatedRequest, AuthenticatedUserRequest } from '../types';
+import { AnnouncementViewer } from '../services/announcement.service';
+
+/** Set by viewerAuth in announcement.routes.ts. */
+const viewerOf = (req: Request): AnnouncementViewer => ({
+  isAdmin: !!(req as AuthenticatedRequest).admin,
+  appUserId: (req as AuthenticatedUserRequest).appUser?.id,
+});
 
 export class AnnouncementController {
   static async getAllAnnouncements(req: Request, res: Response): Promise<void> {
@@ -18,7 +25,7 @@ export class AnnouncementController {
         sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'desc',
       };
 
-      const result = await AnnouncementService.getAllAnnouncements(filters);
+      const result = await AnnouncementService.getAllAnnouncements(filters, viewerOf(req));
 
       if (result.success) {
         sendSuccess(res, 'Announcements retrieved successfully', result.data);
@@ -32,7 +39,7 @@ export class AnnouncementController {
 
   static async getActiveAnnouncements(req: Request, res: Response): Promise<void> {
     try {
-      const result = await AnnouncementService.getActiveAnnouncements();
+      const result = await AnnouncementService.getActiveAnnouncements(viewerOf(req));
 
       if (result.success) {
         sendSuccess(res, 'Active announcements retrieved successfully', result.data);
@@ -53,7 +60,7 @@ export class AnnouncementController {
         return;
       }
 
-      const result = await AnnouncementService.getAnnouncementById(id);
+      const result = await AnnouncementService.getAnnouncementById(id, viewerOf(req));
 
       if (result.success) {
         sendSuccess(res, 'Announcement retrieved successfully', result.data);

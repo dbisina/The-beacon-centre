@@ -1,11 +1,38 @@
 // backend/src/services/announcement.service.ts
 import { prisma } from '../config/database';
 import { ServiceResponse, CreateAnnouncementRequest, UpdateAnnouncementRequest, AnnouncementFilters } from '../types';
-import { Announcement } from '@prisma/client';
+import { Announcement, Prisma } from '@prisma/client';
+
+/** Who is reading - decides whether group-only notices are included. */
+export interface AnnouncementViewer {
+  isAdmin: boolean;
+  appUserId?: number;
+}
+
+/**
+ * An announcement with a csgId belongs to one community group: only that
+ * group's approved members should ever see it. The public reads used to ignore
+ * csgId entirely, so a group's notices went out in everyone's News feed and to
+ * anyone calling the API. Admins see everything (they manage it); members see
+ * church-wide notices plus their own groups'; everyone else, church-wide only.
+ */
+export function audienceWhere(viewer: AnnouncementViewer): Prisma.AnnouncementWhereInput {
+  if (viewer.isAdmin) return {};
+  const visible: Prisma.AnnouncementWhereInput[] = [{ csgId: null }];
+  if (viewer.appUserId) {
+    visible.push({
+      csg: { memberships: { some: { appUserId: viewer.appUserId, status: 'APPROVED', isActive: true } } },
+    });
+  }
+  return { OR: visible };
+}
 import { UploadService } from './upload.service';
 
 export class AnnouncementService {
-  static async getAllAnnouncements(filters: AnnouncementFilters): Promise<ServiceResponse<{
+  static async getAllAnnouncements(
+    filters: AnnouncementFilters,
+    viewer: AnnouncementViewer = { isAdmin: false },
+  ): Promise<ServiceResponse<{
     announcements: Announcement[];
     total: number;
     page: number;
@@ -27,8 +54,9 @@ export class AnnouncementService {
       const skip = (page - 1) * limit;
       const currentDate = new Date();
 
-      // Build where clause
-      const where: any = {};
+      // Build where clause. The audience filter is ANDed in so it can't be
+      // undone by the search OR below.
+      const where: any = { AND: [audienceWhere(viewer)] };
 
       if (isActive !== undefined) {
         where.isActive = isActive;
@@ -89,17 +117,19 @@ export class AnnouncementService {
     }
   }
 
-  static async getActiveAnnouncements(): Promise<ServiceResponse<Announcement[]>> {
+  static async getActiveAnnouncements(
+    viewer: AnnouncementViewer = { isAdmin: false },
+  ): Promise<ServiceResponse<Announcement[]>> {
     try {
       const currentDate = new Date();
-      
+
       const announcements = await prisma.announcement.findMany({
         where: {
           isActive: true,
           startDate: { lte: currentDate },
-          OR: [
-            { expiryDate: null },
-            { expiryDate: { gte: currentDate } },
+          AND: [
+            { OR: [{ expiryDate: null }, { expiryDate: { gte: currentDate } }] },
+            audienceWhere(viewer),
           ],
         },
         orderBy: [
@@ -121,10 +151,15 @@ export class AnnouncementService {
     }
   }
 
-  static async getAnnouncementById(id: number): Promise<ServiceResponse<Announcement>> {
+  static async getAnnouncementById(
+    id: number,
+    viewer: AnnouncementViewer = { isAdmin: false },
+  ): Promise<ServiceResponse<Announcement>> {
     try {
-      const announcement = await prisma.announcement.findUnique({
-        where: { id },
+      // Not found - rather than forbidden - when it's another group's notice,
+      // so its existence isn't confirmed either.
+      const announcement = await prisma.announcement.findFirst({
+        where: { id, AND: [audienceWhere(viewer)] },
       });
 
       if (!announcement) {
