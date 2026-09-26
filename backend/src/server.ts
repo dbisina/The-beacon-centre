@@ -44,6 +44,7 @@ import appUserAuthRoutes from './routes/appUserAuth.routes';
 import liveScheduleRoutes from './routes/liveSchedule.routes';
 import liveRoutes from './routes/live.routes';
 import collageRoutes from './routes/collage.routes';
+import eventsRoutes from './routes/events.routes';
 import givingWebRoutes, { blockApiOnGivingHost } from './routes/givingWeb.routes';
 import { startLivePushPoller } from './services/livePush.service';
 
@@ -148,6 +149,7 @@ app.get('/', (req, res) => {
       users: '/api/users',
       liveSchedule: '/api/live-schedule',
       live: '/api/live/status',
+      events: '/api/events',
     },
   });
 });
@@ -197,6 +199,7 @@ app.use('/api/auth', appUserAuthRoutes);
 app.use('/api/live-schedule', liveScheduleRoutes);
 app.use('/api/live', liveRoutes);
 app.use('/api/collages', collageRoutes);
+app.use('/api/events', eventsRoutes);
 
 // Error handling middleware
 app.use(notFound);

@@ -2,14 +2,8 @@
 import { Request, Response } from 'express';
 import { AnnouncementService } from '../services/announcement.service';
 import { sendSuccess, sendError } from '../utils/responses';
-import { CreateAnnouncementRequest, UpdateAnnouncementRequest, AnnouncementFilters, AuthenticatedRequest, AuthenticatedUserRequest } from '../types';
-import { AnnouncementViewer } from '../services/announcement.service';
-
-/** Set by viewerAuth in announcement.routes.ts. */
-const viewerOf = (req: Request): AnnouncementViewer => ({
-  isAdmin: !!(req as AuthenticatedRequest).admin,
-  appUserId: (req as AuthenticatedUserRequest).appUser?.id,
-});
+import { CreateAnnouncementRequest, UpdateAnnouncementRequest, AnnouncementFilters } from '../types';
+import { viewerOf } from '../middleware/viewerAuth';
 
 export class AnnouncementController {
   static async getAllAnnouncements(req: Request, res: Response): Promise<void> {
