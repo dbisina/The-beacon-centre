@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Pressable, Alert, Share, ActivityIndicator } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, font, useResponsive } from '@/theme';
@@ -15,13 +15,15 @@ export default function DevotionalScreen() {
   const r = useResponsive();
   const insets = useSafeAreaInsets();
 
+  // Opened from the library with ?id= -> that devotional; otherwise today's.
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const { data, loading } = useAsync(
     async () => {
-      const [d, q] = await Promise.all([fetchDevotional().catch(() => null), fetchDailyQuote().catch(() => null)]);
+      const [d, q] = await Promise.all([fetchDevotional(id).catch(() => null), fetchDailyQuote().catch(() => null)]);
       return { d, q };
     },
     { d: null, q: null },
-    []
+    [id]
   );
 
   const devotionalId = data.d?.id ? Number(data.d.id) : null;

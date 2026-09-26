@@ -15,6 +15,20 @@ import { apiGet, apiPost, apiPut, apiDelete } from '@/config/api';
 /** Mirrors the backend's Prisma `ContentType` enum (backend/prisma/schema.prisma). */
 export type ContentType = 'DEVOTIONAL' | 'VIDEO_SERMON' | 'AUDIO_SERMON' | 'ANNOUNCEMENT';
 
+/**
+ * What a save or note points at, resolved by the server so a library row can
+ * show a title and open the item without a request per row. Null when the item
+ * has since been removed. See backend contentSummary.service.ts.
+ */
+export type ContentSummary = {
+  title: string;
+  subtitle: string | null;
+  thumbnailUrl: string | null;
+  youtubeId?: string;
+  audioUrl?: string;
+  date?: string | null;
+};
+
 /** Mirrors the Prisma `UserSave` model. Dates arrive as ISO strings over JSON. */
 export type UserSave = {
   id: number;
@@ -22,6 +36,8 @@ export type UserSave = {
   contentType: ContentType;
   contentId: number;
   createdAt: string;
+  /** Present on GET /users/me/saves. */
+  item?: ContentSummary | null;
 };
 
 /** Mirrors the Prisma `UserNote` model. */
@@ -33,6 +49,8 @@ export type UserNote = {
   body: string;
   createdAt: string;
   updatedAt: string;
+  /** Present on GET /users/me/notes. */
+  item?: ContentSummary | null;
 };
 
 /** Mirrors the Prisma `UserProgress` model. */

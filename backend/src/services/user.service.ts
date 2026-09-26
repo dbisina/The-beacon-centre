@@ -2,6 +2,7 @@
 import { prisma } from '../config/database';
 import { ServiceResponse, ContentType } from '../types';
 import { UserSave, UserNote, UserProgress } from '@prisma/client';
+import { summarise, ContentSummary } from './contentSummary.service';
 
 interface MergeSaveItem {
   contentType: ContentType;
@@ -25,7 +26,10 @@ interface MergeProgressItem {
 export class UserService {
   // ─── Saves ───
 
-  static async getSaves(appUserId: number, contentType?: ContentType): Promise<ServiceResponse<UserSave[]>> {
+  static async getSaves(
+    appUserId: number,
+    contentType?: ContentType,
+  ): Promise<ServiceResponse<Array<UserSave & { item: ContentSummary | null }>>> {
     try {
       const where: any = { appUserId };
 
@@ -38,9 +42,10 @@ export class UserService {
         orderBy: { createdAt: 'desc' },
       });
 
+      // Each save carries the title and whatever opens it - see contentSummary.
       return {
         success: true,
-        data: saves,
+        data: await summarise(saves),
       };
     } catch (error) {
       return {
@@ -106,7 +111,11 @@ export class UserService {
   // ─── Notes ───
   // No unique constraint on UserNote, so upsert is done manually (find-then-update/create).
 
-  static async getNotes(appUserId: number, contentType?: ContentType, contentId?: number): Promise<ServiceResponse<UserNote[]>> {
+  static async getNotes(
+    appUserId: number,
+    contentType?: ContentType,
+    contentId?: number,
+  ): Promise<ServiceResponse<Array<UserNote & { item: ContentSummary | null }>>> {
     try {
       const where: any = { appUserId };
 
@@ -125,7 +134,7 @@ export class UserService {
 
       return {
         success: true,
-        data: notes,
+        data: await summarise(notes),
       };
     } catch (error) {
       return {

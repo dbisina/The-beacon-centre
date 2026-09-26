@@ -94,6 +94,16 @@ export default function Settings() {
         <Toggle label="New sermons & shorts" on={prefs.sermons} onPress={() => flip('sermons')} last />
       </Group>
 
+      <Group title="You">
+        <Link
+          icon="bookmark-outline"
+          label="My library"
+          sub="Saved messages, devotionals and your notes"
+          onPress={() => router.push('/library')}
+          last
+        />
+      </Group>
+
       <Group title="Church">
         <Link
           icon="images-outline"
