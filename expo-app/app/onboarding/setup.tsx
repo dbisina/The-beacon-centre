@@ -5,17 +5,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, useResponsive } from '@/theme';
 import { Screen, Text, Row, Btn } from '@/components/ui';
 import { useAuth, writeGuest, guestKeys } from '@/services/auth';
+import { syncPushRegistration, DEFAULT_NOTIF_PREFS, NotifPrefs } from '@/services/notifications';
 
 export default function Setup() {
   const r = useResponsive();
   const insets = useSafeAreaInsets();
   const { continueAsGuest } = useAuth();
-  const [prefs, setPrefs] = useState({ verse: true, live: true, sermons: false });
+  const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_NOTIF_PREFS);
 
   const finish = async () => {
-    // Preferences are stored locally until the devices endpoint exists —
-    // see unmade.md §5.
+    // Stored locally so Settings can show them, and registered as this
+    // device's push topics so the server only sends what was chosen here.
     await writeGuest(guestKeys.notifications, prefs);
+    void syncPushRegistration({ askPermission: true, prefs });
     await continueAsGuest();
     router.replace('/(tabs)');
   };

@@ -109,6 +109,10 @@ workflow `agent()` call anyway.
   ahead of `cors()`/`cookieParser()`, has no links or forms, is GET-only, and
   the admin refresh cookie is path-scoped away from it. Keep it that way
   (`backend/src/routes/givingWeb.routes.ts`).
+- **`/delete-account` is Google Play's account-deletion URL.** It checks the
+  same email + passcode as app sign-in and shares its per-email lockout
+  (`passcodeThrottle`). Don't give it a separate credential check, and keep it
+  cookie-free (`backend/src/routes/accountDeletionWeb.routes.ts`).
 - **YouTube live is detected on the backend** (`GET /api/live/status`,
   `services/liveStatus.service.ts`), never from the app — client-side Data API
   calls would ship the key and burn the shared quota. Video ids are validated

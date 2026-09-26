@@ -84,26 +84,116 @@ export class CsgController {
     }
   }
 
+  /** POST /api/csgs/:id/join - a request with registration details, answered by a leader. */
   static async joinCsg(req: AuthenticatedUserRequest, res: Response): Promise<void> {
     try {
       const csgId = parseInt(req.params.id);
-
       if (isNaN(csgId)) {
         sendError(res, 'Invalid CSG ID', 400);
         return;
       }
 
-      const result = await CsgService.joinCsg(csgId, req.appUser!.id);
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const result = await CsgService.requestToJoin(csgId, req.appUser!.id, {
+        fullName: body.fullName,
+        dateOfBirth: body.dateOfBirth,
+        addressStreet: body.addressStreet,
+        addressArea: body.addressArea,
+      });
 
       if (result.success) {
-        sendSuccess(res, 'Joined CSG successfully', result.data);
+        const message = result.data.status === 'APPROVED' ? 'Already a member' : 'Request sent';
+        sendSuccess(res, message, result.data, result.data.status === 'PENDING' ? 201 : 200);
       } else {
-        const statusCode = result.error === 'CSG not found' ? 404 : 400;
+        const statusCode = result.error === 'CSG not found' ? 404 : result.error.startsWith('Failed') ? 500 : 400;
         sendError(res, result.error, statusCode, result.details);
       }
     } catch (error) {
-      sendError(res, 'Failed to join CSG', 500, error);
+      sendError(res, 'Failed to send join request', 500, error);
     }
+  }
+
+  /** GET /api/csgs/:id/membership - the caller's standing in this group. */
+  static async getMyMembership(req: AuthenticatedUserRequest, res: Response): Promise<void> {
+    try {
+      const csgId = parseInt(req.params.id);
+      if (isNaN(csgId)) {
+        sendError(res, 'Invalid CSG ID', 400);
+        return;
+      }
+      const result = await CsgService.getMyMembership(csgId, req.appUser!.id);
+      if (result.success) sendSuccess(res, 'Membership retrieved', result.data);
+      else sendError(res, result.error, 500, result.details);
+    } catch (error) {
+      sendError(res, 'Failed to retrieve membership', 500, error);
+    }
+  }
+
+  /** GET /api/csgs/mine - groups the caller belongs to or has asked to join. */
+  static async getMyMemberships(req: AuthenticatedUserRequest, res: Response): Promise<void> {
+    try {
+      const result = await CsgService.getMyMemberships(req.appUser!.id);
+      if (result.success) sendSuccess(res, 'Memberships retrieved', result.data);
+      else sendError(res, result.error, 500, result.details);
+    } catch (error) {
+      sendError(res, 'Failed to retrieve memberships', 500, error);
+    }
+  }
+
+  /** GET /api/csgs/:id/members - names of fellow members, approved members only. */
+  static async getPeers(req: AuthenticatedUserRequest, res: Response): Promise<void> {
+    try {
+      const csgId = parseInt(req.params.id);
+      if (isNaN(csgId)) {
+        sendError(res, 'Invalid CSG ID', 400);
+        return;
+      }
+      const result = await CsgService.getPeers(csgId, req.appUser!.id);
+      if (result.success) sendSuccess(res, 'Members retrieved', result.data);
+      else sendError(res, result.error, result.error === 'Not a member of this CSG' ? 403 : 500, result.details);
+    } catch (error) {
+      sendError(res, 'Failed to retrieve members', 500, error);
+    }
+  }
+
+  /** GET /api/csgs/:id/admin/requests - pending join requests, full registration. */
+  static async getAdminRequests(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const csgId = parseInt(req.params.id);
+      if (isNaN(csgId)) {
+        sendError(res, 'Invalid CSG ID', 400);
+        return;
+      }
+      const result = await CsgService.getAdminMembers(csgId, 'PENDING');
+      if (result.success) sendSuccess(res, 'Join requests retrieved', result.data);
+      else sendError(res, result.error, 500, result.details);
+    } catch (error) {
+      sendError(res, 'Failed to retrieve join requests', 500, error);
+    }
+  }
+
+  /** POST /api/csgs/:id/members/:membershipId/approve | /decline */
+  static reviewRequest(decision: 'APPROVED' | 'REJECTED') {
+    return async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+      try {
+        const csgId = parseInt(req.params.id);
+        const membershipId = parseInt(req.params.membershipId);
+        if (isNaN(csgId) || isNaN(membershipId)) {
+          sendError(res, 'Invalid ID', 400);
+          return;
+        }
+        const result = await CsgService.reviewRequest(csgId, membershipId, req.admin!.id, decision);
+        if (result.success) {
+          sendSuccess(res, decision === 'APPROVED' ? 'Request approved' : 'Request declined', result.data);
+        } else {
+          const statusCode =
+            result.error === 'Request not found' ? 404 : result.error.startsWith('This request') ? 409 : 500;
+          sendError(res, result.error, statusCode, result.details);
+        }
+      } catch (error) {
+        sendError(res, 'Failed to update request', 500, error);
+      }
+    };
   }
 
   static async leaveCsg(req: AuthenticatedUserRequest, res: Response): Promise<void> {

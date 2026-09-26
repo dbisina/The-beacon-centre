@@ -1,7 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,23 +10,22 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-        
 
 model Devotional {
-  id            Int      @id @default(autoincrement())
-  date          DateTime @unique @db.Date
-  title         String   @db.VarChar(255)
-  verseText     String   @map("verse_text") @db.Text
-  verseReference String   @map("verse_reference") @db.VarChar(100)
-  content       String   @db.Text
-  prayer        String?  @db.Text
-  cardImageUrl  String?  @map("card_image_url") @db.VarChar(500)
-  cardImageCloudinaryPublicId String? @map("card_image_cloudinary_public_id") @db.VarChar(255)
-  isActive      Boolean  @default(true) @map("is_active")
-  viewCount     Int      @default(0) @map("view_count")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  
+  id                          Int      @id @default(autoincrement())
+  date                        DateTime @unique @db.Date
+  title                       String   @db.VarChar(255)
+  verseText                   String   @map("verse_text") @db.Text
+  verseReference              String   @map("verse_reference") @db.VarChar(100)
+  content                     String   @db.Text
+  prayer                      String?  @db.Text
+  cardImageUrl                String?  @map("card_image_url") @db.VarChar(500)
+  cardImageCloudinaryPublicId String?  @map("card_image_cloudinary_public_id") @db.VarChar(255)
+  isActive                    Boolean  @default(true) @map("is_active")
+  viewCount                   Int      @default(0) @map("view_count")
+  createdAt                   DateTime @default(now()) @map("created_at")
+  updatedAt                   DateTime @updatedAt @map("updated_at")
+
   // Relations
   interactions ContentInteraction[]
 
@@ -35,60 +33,60 @@ model Devotional {
 }
 
 model VideoSermon {
-  id           Int      @id @default(autoincrement())
-  title        String   @db.VarChar(255)
-  speaker      String   @db.VarChar(255)
-  youtubeId    String   @unique @map("youtube_id") @db.VarChar(50)
-  description  String?  @db.Text
-  duration     String?  @db.VarChar(20)
+  id           Int       @id @default(autoincrement())
+  title        String    @db.VarChar(255)
+  speaker      String    @db.VarChar(255)
+  youtubeId    String    @unique @map("youtube_id") @db.VarChar(50)
+  description  String?   @db.Text
+  duration     String?   @db.VarChar(20)
   kind         VideoKind @default(SERMON)
   // Free-text grouping like "Love Series" - distinct from Category, which is
   // more like Sunday Service / Bible Study / etc. Nullable: most videos
   // (especially shorts/inspirationals) aren't part of a series.
-  series       String?  @db.VarChar(255)
-  categoryId   Int?     @map("category_id")
+  series       String?   @db.VarChar(255)
+  categoryId   Int?      @map("category_id")
   sermonDate   DateTime? @map("sermon_date") @db.Date
-  thumbnailUrl String?  @map("thumbnail_url") @db.VarChar(500)
-  isFeatured   Boolean  @default(false) @map("is_featured")
-  isActive     Boolean  @default(true) @map("is_active")
-  viewCount    Int      @default(0) @map("view_count")
-  tags         String[] @default([])
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  thumbnailUrl String?   @map("thumbnail_url") @db.VarChar(500)
+  isFeatured   Boolean   @default(false) @map("is_featured")
+  isActive     Boolean   @default(true) @map("is_active")
+  viewCount    Int       @default(0) @map("view_count")
+  tags         String[]  @default([])
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   interactions ContentInteraction[]
 
   @@map("video_sermons")
 }
 
 model AudioSermon {
-  id                  Int      @id @default(autoincrement())
-  title               String   @db.VarChar(255)
-  speaker             String   @db.VarChar(255)
-  audioUrl            String   @map("audio_url") @db.VarChar(500)
-  cloudinaryPublicId  String   @map("cloudinary_public_id") @db.VarChar(255)
-  duration            String?  @db.VarChar(20)
-  fileSize            BigInt?  @map("file_size")
-  categoryId          Int?     @map("category_id")
-  sermonDate          DateTime? @map("sermon_date") @db.Date
-  description         String?  @db.Text
-  isFeatured          Boolean  @default(false) @map("is_featured")
-  isActive            Boolean  @default(true) @map("is_active")
-  playCount           Int      @default(0) @map("play_count")
-  downloadCount       Int      @default(0) @map("download_count")
-  tags                String[] @default([])
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
-  
+  id                 Int       @id @default(autoincrement())
+  title              String    @db.VarChar(255)
+  speaker            String    @db.VarChar(255)
+  audioUrl           String    @map("audio_url") @db.VarChar(500)
+  cloudinaryPublicId String    @map("cloudinary_public_id") @db.VarChar(255)
+  duration           String?   @db.VarChar(20)
+  fileSize           BigInt?   @map("file_size")
+  categoryId         Int?      @map("category_id")
+  sermonDate         DateTime? @map("sermon_date") @db.Date
+  description        String?   @db.Text
+  isFeatured         Boolean   @default(false) @map("is_featured")
+  isActive           Boolean   @default(true) @map("is_active")
+  playCount          Int       @default(0) @map("play_count")
+  downloadCount      Int       @default(0) @map("download_count")
+  tags               String[]  @default([])
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
   // New fields for thumbnail support
-  thumbnailUrl        String?  @map("thumbnail_url") @db.VarChar(500)
+  thumbnailUrl                String? @map("thumbnail_url") @db.VarChar(500)
   thumbnailCloudinaryPublicId String? @map("thumbnail_cloudinary_public_id") @db.VarChar(255)
 
   // Relations
-  category            Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  interactions        ContentInteraction[]
+  category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  interactions ContentInteraction[]
 
   @@map("audio_sermons")
 }
@@ -103,42 +101,42 @@ model AudioSermon {
 /// set means it belongs to that community group and only its members see it -
 /// this is what a CSG_ADMIN is allowed to create.
 model Announcement {
-  id                 Int      @id @default(autoincrement())
-  title              String   @db.VarChar(255)
-  content            String   @db.Text
-  priority           Priority @default(MEDIUM)
-  startDate          DateTime @map("start_date") @db.Date
+  id                 Int       @id @default(autoincrement())
+  title              String    @db.VarChar(255)
+  content            String    @db.Text
+  priority           Priority  @default(MEDIUM)
+  startDate          DateTime  @map("start_date") @db.Date
   expiryDate         DateTime? @map("expiry_date") @db.Date
-  imageUrl           String?  @map("image_url") @db.VarChar(500)
-  cloudinaryPublicId String?  @map("cloudinary_public_id") @db.VarChar(255)
-  actionUrl          String?  @map("action_url") @db.VarChar(500)
-  actionText         String?  @map("action_text") @db.VarChar(100)
-  isActive           Boolean  @default(true) @map("is_active")
-  viewCount          Int      @default(0) @map("view_count")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  imageUrl           String?   @map("image_url") @db.VarChar(500)
+  cloudinaryPublicId String?   @map("cloudinary_public_id") @db.VarChar(255)
+  actionUrl          String?   @map("action_url") @db.VarChar(500)
+  actionText         String?   @map("action_text") @db.VarChar(100)
+  isActive           Boolean   @default(true) @map("is_active")
+  viewCount          Int       @default(0) @map("view_count")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  kind               AnnouncementKind @default(ANNOUNCEMENT)
-  csgId              Int?     @map("csg_id")
+  kind  AnnouncementKind @default(ANNOUNCEMENT)
+  csgId Int?             @map("csg_id")
 
   // ─── Event fields (null unless kind = EVENT) ───
   /// Start of the event, with time. `startDate` above stays date-only and drives feed ordering. 
-  startsAt           DateTime? @map("starts_at")
-  endsAt             DateTime? @map("ends_at")
-  locationName       String?   @map("location_name") @db.VarChar(255)
-  address            String?   @db.VarChar(500)
-  latitude           Float?
-  longitude          Float?
+  startsAt     DateTime? @map("starts_at")
+  endsAt       DateTime? @map("ends_at")
+  locationName String?   @map("location_name") @db.VarChar(255)
+  address      String?   @db.VarChar(500)
+  latitude     Float?
+  longitude    Float?
   /// Opens the "I'm going" control in the app. 
-  rsvpEnabled        Boolean   @default(false) @map("rsvp_enabled")
+  rsvpEnabled  Boolean   @default(false) @map("rsvp_enabled")
   /// Optional cap; null means unlimited. Counted against RSVPs or registrations. 
-  capacity           Int?
+  capacity     Int?
 
   // Relations
-  interactions       ContentInteraction[]
-  csg                Csg?     @relation(fields: [csgId], references: [id], onDelete: Cascade)
-  rsvps              EventRsvp[]
-  registrationForm   EventForm?
+  interactions     ContentInteraction[]
+  csg              Csg?                 @relation(fields: [csgId], references: [id], onDelete: Cascade)
+  rsvps            EventRsvp[]
+  registrationForm EventForm?
 
   @@index([kind, startsAt])
   @@index([csgId, startDate])
@@ -148,21 +146,21 @@ model Announcement {
 /// A registration form attached to one event. Admins compose the fields
 /// themselves, so nothing here is hardcoded to a particular kind of event.
 model EventForm {
-  id             Int      @id @default(autoincrement())
-  announcementId Int      @unique @map("announcement_id")
-  title          String   @db.VarChar(255)
-  description    String?  @db.Text
+  id                  Int       @id @default(autoincrement())
+  announcementId      Int       @unique @map("announcement_id")
+  title               String    @db.VarChar(255)
+  description         String?   @db.Text
   /// Closes the form without deleting it or its responses. 
-  isOpen         Boolean  @default(true) @map("is_open")
-  closesAt       DateTime? @map("closes_at")
+  isOpen              Boolean   @default(true) @map("is_open")
+  closesAt            DateTime? @map("closes_at")
   /// Shown to the person after they submit. 
-  confirmationMessage String? @map("confirmation_message") @db.Text
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  confirmationMessage String?   @map("confirmation_message") @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
-  announcement   Announcement       @relation(fields: [announcementId], references: [id], onDelete: Cascade)
-  fields         EventFormField[]
-  registrations  EventRegistration[]
+  announcement  Announcement        @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  fields        EventFormField[]
+  registrations EventRegistration[]
 
   @@map("event_forms")
 }
@@ -182,7 +180,7 @@ model EventFormField {
   createdAt   DateTime           @default(now()) @map("created_at")
   updatedAt   DateTime           @updatedAt @map("updated_at")
 
-  form        EventForm          @relation(fields: [formId], references: [id], onDelete: Cascade)
+  form EventForm @relation(fields: [formId], references: [id], onDelete: Cascade)
 
   @@index([formId, sortOrder])
   @@map("event_form_fields")
@@ -193,18 +191,18 @@ model EventFormField {
 /// `EventFormField` still defines the ordering and labels used to render and
 /// export them.
 model EventRegistration {
-  id           Int      @id @default(autoincrement())
-  formId       Int      @map("form_id")
-  appUserId    Int?     @map("app_user_id")
+  id        Int      @id @default(autoincrement())
+  formId    Int      @map("form_id")
+  appUserId Int?     @map("app_user_id")
   /// Denormalised so an export is readable even if the account is later removed. 
-  name         String?  @db.VarChar(255)
-  email        String?  @db.VarChar(255)
-  phone        String?  @db.VarChar(50)
-  answers      Json     @default("{}")
-  createdAt    DateTime @default(now()) @map("created_at")
+  name      String?  @db.VarChar(255)
+  email     String?  @db.VarChar(255)
+  phone     String?  @db.VarChar(50)
+  answers   Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  form         EventForm @relation(fields: [formId], references: [id], onDelete: Cascade)
-  appUser      AppUser?  @relation(fields: [appUserId], references: [id], onDelete: SetNull)
+  form    EventForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  appUser AppUser?  @relation(fields: [appUserId], references: [id], onDelete: SetNull)
 
   @@index([formId, createdAt])
   @@map("event_registrations")
@@ -212,15 +210,15 @@ model EventRegistration {
 
 /// "I'm going" on an event that has rsvpEnabled but no registration form. 
 model EventRsvp {
-  id             Int            @id @default(autoincrement())
-  announcementId Int            @map("announcement_id")
-  appUserId      Int            @map("app_user_id")
+  id             Int             @id @default(autoincrement())
+  announcementId Int             @map("announcement_id")
+  appUserId      Int             @map("app_user_id")
   status         EventRsvpStatus @default(GOING)
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
 
-  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
-  appUser        AppUser      @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  appUser      AppUser      @relation(fields: [appUserId], references: [id], onDelete: Cascade)
 
   @@unique([announcementId, appUserId])
   @@index([announcementId])
@@ -245,24 +243,25 @@ model Category {
 }
 
 model Admin {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  name         String   @db.VarChar(255)
+  id           Int       @id @default(autoincrement())
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  name         String    @db.VarChar(255)
   role         AdminRole @default(ADMIN)
-  permissions  String[] @default([])
-  csgId        Int?     @map("csg_id")
-  isActive     Boolean  @default(true) @map("is_active")
+  permissions  String[]  @default([])
+  csgId        Int?      @map("csg_id")
+  isActive     Boolean   @default(true) @map("is_active")
   lastLogin    DateTime? @map("last_login")
-  loginCount   Int      @default(0) @map("login_count")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  loginCount   Int       @default(0) @map("login_count")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   // Relations
   csg                    Csg?             @relation(fields: [csgId], references: [id], onDelete: SetNull)
   authoredCsgUpdates     CsgUpdate[]      @relation("CsgUpdateAuthor")
   handledPrayerRequests  PrayerRequest[]  @relation("PrayerHandledBy")
   handledContactMessages ContactMessage[] @relation("ContactHandledBy")
+  reviewedCsgMemberships CsgMembership[]  @relation("CsgMembershipReviewer")
 
   @@map("admins")
 }
@@ -283,20 +282,20 @@ model DeviceSession {
 }
 
 model ContentInteraction {
-  id              Int      @id @default(autoincrement())
-  deviceId        String   @map("device_id") @db.VarChar(255)
-  contentType     ContentType @map("content_type")
-  contentId       Int      @map("content_id")
+  id              Int             @id @default(autoincrement())
+  deviceId        String          @map("device_id") @db.VarChar(255)
+  contentType     ContentType     @map("content_type")
+  contentId       Int             @map("content_id")
   interactionType InteractionType @map("interaction_type")
-  durationSeconds Int?     @map("duration_seconds") // For audio/video tracking
-  metadata        Json?    // Additional data as JSON
-  createdAt       DateTime @default(now()) @map("created_at")
+  durationSeconds Int?            @map("duration_seconds") // For audio/video tracking
+  metadata        Json? // Additional data as JSON
+  createdAt       DateTime        @default(now()) @map("created_at")
 
   // Relations - polymorphic associations
-  devotional      Devotional?   @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "devotional_interaction")
-  videoSermon     VideoSermon?  @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "video_sermon_interaction")
-  audioSermon     AudioSermon?  @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "audio_sermon_interaction")
-  announcement    Announcement? @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "announcement_interaction")
+  devotional   Devotional?   @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "devotional_interaction")
+  videoSermon  VideoSermon?  @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "video_sermon_interaction")
+  audioSermon  AudioSermon?  @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "audio_sermon_interaction")
+  announcement Announcement? @relation(fields: [contentId], references: [id], onDelete: Cascade, map: "announcement_interaction")
 
   @@index([deviceId])
   @@index([contentType, contentId])
@@ -365,20 +364,39 @@ model Csg {
   @@map("csgs")
 }
 
+/// One member's place in one group. Joining is a request a group leader
+/// approves: the row starts PENDING with the registration details, and only an
+/// APPROVED + isActive row is a member (sees updates, the member list, counts
+/// toward memberCount). The column defaults to APPROVED at the database level
+/// so rows that predate approval - and any build still running the old join
+/// code during a deploy - stay members; new requests set PENDING explicitly.
 model CsgMembership {
-  id         Int       @id @default(autoincrement())
-  csgId      Int       @map("csg_id")
-  appUserId  Int       @map("app_user_id")
-  isActive   Boolean   @default(true) @map("is_active")
-  joinedAt   DateTime  @default(now()) @map("joined_at")
-  leftAt     DateTime? @map("left_at")
-  lastRsvpAt DateTime? @map("last_rsvp_at")
+  id         Int              @id @default(autoincrement())
+  csgId      Int              @map("csg_id")
+  appUserId  Int              @map("app_user_id")
+  status     MembershipStatus @default(APPROVED)
+  isActive   Boolean          @default(true) @map("is_active")
+  joinedAt   DateTime         @default(now()) @map("joined_at")
+  leftAt     DateTime?        @map("left_at")
+  lastRsvpAt DateTime?        @map("last_rsvp_at")
 
-  csg     Csg     @relation(fields: [csgId], references: [id], onDelete: Cascade)
-  appUser AppUser @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+  // Registration details, supplied with the request. Visible to the group's
+  // leaders and full admins only - other members see the name and nothing else.
+  fullName      String?   @map("full_name") @db.VarChar(255)
+  dateOfBirth   DateTime? @map("date_of_birth") @db.Date
+  addressStreet String?   @map("address_street") @db.VarChar(255)
+  addressArea   String?   @map("address_area") @db.VarChar(255)
+
+  reviewedAt        DateTime? @map("reviewed_at")
+  reviewedByAdminId Int?      @map("reviewed_by_admin_id")
+
+  csg        Csg     @relation(fields: [csgId], references: [id], onDelete: Cascade)
+  appUser    AppUser @relation(fields: [appUserId], references: [id], onDelete: Cascade)
+  reviewedBy Admin?  @relation("CsgMembershipReviewer", fields: [reviewedByAdminId], references: [id], onDelete: SetNull)
 
   @@unique([csgId, appUserId])
   @@index([appUserId])
+  @@index([csgId, status])
   @@map("csg_memberships")
 }
 
@@ -471,15 +489,15 @@ model ContactMessage {
 // Paystack (below) is the online-card alternative. Admin-managed, no
 // reconciliation/auto-verification - just display details + instructions.
 model ChurchBankAccount {
-  id           Int      @id @default(autoincrement())
-  bankName     String   @map("bank_name") @db.VarChar(255)
-  accountName  String   @map("account_name") @db.VarChar(255)
-  accountNumber String  @map("account_number") @db.VarChar(50)
-  instructions String?  @db.Text
-  isActive     Boolean  @default(true) @map("is_active")
-  sortOrder    Int      @default(0) @map("sort_order")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id            Int      @id @default(autoincrement())
+  bankName      String   @map("bank_name") @db.VarChar(255)
+  accountName   String   @map("account_name") @db.VarChar(255)
+  accountNumber String   @map("account_number") @db.VarChar(50)
+  instructions  String?  @db.Text
+  isActive      Boolean  @default(true) @map("is_active")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("church_bank_accounts")
 }
@@ -505,21 +523,21 @@ model Project {
 }
 
 model GivingTransaction {
-  id          Int                     @id @default(autoincrement())
-  reference   String                  @unique @db.VarChar(100)
-  appUserId   Int?                    @map("app_user_id")
-  email       String                  @db.VarChar(255)
-  amount      BigInt
-  currency    String                  @default("NGN") @db.VarChar(3)
-  purpose     GivingPurpose
-  projectId   Int?                    @map("project_id")
-  anonymous   Boolean                 @default(false)
-  status      GivingTransactionStatus @default(PENDING)
-  channel     String?                 @db.VarChar(50)
-  metadata    Json?
-  paidAt      DateTime?               @map("paid_at")
-  createdAt   DateTime                @default(now()) @map("created_at")
-  updatedAt   DateTime                @updatedAt @map("updated_at")
+  id        Int                     @id @default(autoincrement())
+  reference String                  @unique @db.VarChar(100)
+  appUserId Int?                    @map("app_user_id")
+  email     String                  @db.VarChar(255)
+  amount    BigInt
+  currency  String                  @default("NGN") @db.VarChar(3)
+  purpose   GivingPurpose
+  projectId Int?                    @map("project_id")
+  anonymous Boolean                 @default(false)
+  status    GivingTransactionStatus @default(PENDING)
+  channel   String?                 @db.VarChar(50)
+  metadata  Json?
+  paidAt    DateTime?               @map("paid_at")
+  createdAt DateTime                @default(now()) @map("created_at")
+  updatedAt DateTime                @updatedAt @map("updated_at")
 
   appUser AppUser? @relation(fields: [appUserId], references: [id], onDelete: SetNull)
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
@@ -712,6 +730,13 @@ enum GivingTransactionStatus {
   FAILED
   ABANDONED
 }
+
+enum MembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum AnnouncementKind {
   ANNOUNCEMENT
   EVENT

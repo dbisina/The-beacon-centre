@@ -2,13 +2,14 @@
 import { Router } from 'express';
 import { AnnouncementController } from '../controllers/announcement.controller';
 import { authenticate, requireContentAccess } from '../middleware/auth.middleware';
+import { viewerAuth } from '../middleware/viewerAuth';
 
 const router = Router();
 
-// Public routes - no authentication required (for mobile app)
-router.get('/', AnnouncementController.getAllAnnouncements);
-router.get('/active', AnnouncementController.getActiveAnnouncements);
-router.get('/:id', AnnouncementController.getAnnouncementById);
+// Public reads - scoped to what the reader may see (see audienceWhere)
+router.get('/', viewerAuth, AnnouncementController.getAllAnnouncements);
+router.get('/active', viewerAuth, AnnouncementController.getActiveAnnouncements);
+router.get('/:id', viewerAuth, AnnouncementController.getAnnouncementById);
 
 // Protected admin routes
 router.post('/', authenticate, requireContentAccess, AnnouncementController.createAnnouncement);

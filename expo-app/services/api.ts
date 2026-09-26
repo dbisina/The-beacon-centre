@@ -60,10 +60,14 @@ interface BackendDevotional {
   cardImageUrl?: string | null;
 }
 
-/** GET /api/devotionals/today - 404 when the admin hasn't set one for today. */
-export async function fetchDevotional(): Promise<Devotional | null> {
+/**
+ * GET /api/devotionals/today - 404 when the admin hasn't set one for today.
+ * With an id, GET /api/devotionals/:id instead: a devotional opened from the
+ * library must be that day's, not today's.
+ */
+export async function fetchDevotional(id?: string): Promise<Devotional | null> {
   try {
-    const d = await apiGet<BackendDevotional>('/devotionals/today');
+    const d = await apiGet<BackendDevotional>(id ? `/devotionals/${encodeURIComponent(id)}` : '/devotionals/today');
     if (!d) return null;
     return {
       id: String(d.id),
@@ -118,6 +122,8 @@ export type Announcement = {
   description: string;
   image: string | null;
   createdAt: string;
+  /** Events are announcements too; those open their event page. */
+  kind: 'ANNOUNCEMENT' | 'EVENT';
 };
 
 /** Shape of items returned by GET /api/announcements/active. */
@@ -127,6 +133,7 @@ interface BackendAnnouncement {
   content: string;
   imageUrl?: string | null;
   createdAt: string;
+  kind?: 'ANNOUNCEMENT' | 'EVENT';
 }
 
 /**
@@ -142,6 +149,7 @@ export async function fetchAnnouncements(): Promise<Announcement[]> {
     description: a.content ?? '',
     image: a.imageUrl ?? null,
     createdAt: a.createdAt ?? '',
+    kind: a.kind === 'EVENT' ? 'EVENT' : 'ANNOUNCEMENT',
   }));
 }
 

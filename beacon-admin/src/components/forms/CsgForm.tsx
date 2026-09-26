@@ -2,21 +2,20 @@
 
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, Loader2, Upload, Image as ImageIcon, X } from 'lucide-react';
-import { useDropzone } from 'react-dropzone';
+import { Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { csgsApi, uploadApi } from '@/lib/api';
+import { csgsApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 // Local type for a CSG record - mirrors backend's Csg Prisma model (see backend/prisma/schema.prisma)
@@ -59,15 +58,7 @@ interface CsgFormProps {
   csg?: Csg;
 }
 
-interface ImageFile {
-  file: File;
-  url: string;
-}
-
 export function CsgForm({ csg }: CsgFormProps) {
-  const [imageFile, setImageFile] = useState<ImageFile | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-
   const router = useRouter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -99,58 +90,9 @@ export function CsgForm({ csg }: CsgFormProps) {
         },
   });
 
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      const file = acceptedFiles[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: 'Error',
-          description: 'Please select a valid image file',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: 'Error',
-          description: 'Image size must be less than 10MB',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const url = URL.createObjectURL(file);
-      setImageFile({ file, url });
-    },
-    [toast]
-  );
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
-    },
-    multiple: false,
-  });
-
-  const removeImage = () => {
-    if (imageFile?.url) {
-      URL.revokeObjectURL(imageFile.url);
-    }
-    setImageFile(null);
-  };
-
+  // Groups have no cover image any more: the app shows each community as its
+  // own name, schedule and members, so a photo upload here would go nowhere.
   const buildPayload = async (data: CsgFormData) => {
-    let uploadResult: { url: string; publicId: string } | null = null;
-
-    if (imageFile) {
-      setIsUploading(true);
-      uploadResult = await uploadApi.image(imageFile.file);
-    }
-
     return {
       name: data.name,
       description: data.description || undefined,
@@ -159,10 +101,6 @@ export function CsgForm({ csg }: CsgFormProps) {
       address: data.address || undefined,
       latitude: data.latitude,
       longitude: data.longitude,
-      ...(uploadResult && {
-        coverImageUrl: uploadResult.url,
-        coverImageCloudinaryPublicId: uploadResult.publicId,
-      }),
     };
   };
 
@@ -182,7 +120,6 @@ export function CsgForm({ csg }: CsgFormProps) {
         description: error?.response?.data?.message || error?.message || 'Failed to create Community Group',
         variant: 'destructive',
       });
-      setIsUploading(false);
     },
   });
 
@@ -203,11 +140,10 @@ export function CsgForm({ csg }: CsgFormProps) {
         description: error?.response?.data?.message || error?.message || 'Failed to update Community Group',
         variant: 'destructive',
       });
-      setIsUploading(false);
     },
   });
 
-  const isLoading = createMutation.isPending || updateMutation.isPending || isUploading;
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   const onSubmit = (data: CsgFormData) => {
     if (csg) {
@@ -302,81 +238,6 @@ export function CsgForm({ csg }: CsgFormProps) {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Cover Image (Optional)</CardTitle>
-              <CardDescription>Add a cover image for this group</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {!imageFile && !csg?.coverImageUrl && (
-                <div
-                  {...getRootProps()}
-                  className={cn(
-                    'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
-                    isDragActive
-                      ? 'border-teal-500 bg-teal-50'
-                      : 'border-gray-300 hover:border-teal-400 hover:bg-gray-50'
-                  )}
-                >
-                  <input {...getInputProps()} />
-                  <ImageIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-lg font-medium text-gray-900 mb-2">
-                    {isDragActive ? 'Drop the image here' : 'Drag & drop image here'}
-                  </p>
-                  <p className="text-gray-600 mb-4">or click to browse files</p>
-                  <Button type="button" variant="outline">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Choose Image
-                  </Button>
-                  <p className="text-xs text-gray-500 mt-4">
-                    Maximum file size: 10MB. Supported formats: PNG, JPG, JPEG, GIF, WebP
-                  </p>
-                </div>
-              )}
-
-              {(imageFile || csg?.coverImageUrl) && (
-                <div className="border rounded-lg p-4 bg-gray-50">
-                  <div className="flex items-start space-x-4">
-                    <img
-                      src={imageFile?.url || csg?.coverImageUrl || ''}
-                      alt="Cover"
-                      className="w-24 h-24 object-cover rounded"
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium">{imageFile ? imageFile.file.name : 'Current Image'}</p>
-                      <p className="text-sm text-gray-600">
-                        {imageFile && `${(imageFile.file.size / 1024 / 1024).toFixed(2)} MB`}
-                      </p>
-                      {imageFile && (
-                        <div className="mt-2">
-                          <Button type="button" variant="outline" size="sm" onClick={removeImage}>
-                            <X className="h-4 w-4 mr-1" />
-                            Remove
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {csg && (
-                    <div className="mt-4 pt-4 border-t">
-                      <p className="text-sm text-gray-600 mb-2">
-                        Upload a new image to replace the current one:
-                      </p>
-                      <div
-                        {...getRootProps()}
-                        className="border border-dashed border-gray-300 rounded p-4 text-center cursor-pointer hover:border-teal-400 hover:bg-gray-50"
-                      >
-                        <input {...getInputProps()} />
-                        <Upload className="h-6 w-6 mx-auto text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-600">Click or drag to upload new image</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Sidebar */}

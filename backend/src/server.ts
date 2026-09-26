@@ -44,7 +44,10 @@ import appUserAuthRoutes from './routes/appUserAuth.routes';
 import liveScheduleRoutes from './routes/liveSchedule.routes';
 import liveRoutes from './routes/live.routes';
 import collageRoutes from './routes/collage.routes';
+import eventsRoutes from './routes/events.routes';
 import givingWebRoutes, { blockApiOnGivingHost } from './routes/givingWeb.routes';
+import accountDeletionWebRoutes from './routes/accountDeletionWeb.routes';
+import { startLivePushPoller } from './services/livePush.service';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -88,6 +91,11 @@ app.use('/', givingWebRoutes);
 // On the dedicated giving hostname (when one is configured), the giving page
 // is the entire application. Nothing below this line is reachable there.
 app.use(blockApiOnGivingHost);
+
+// Public account-deletion page (Google Play requires a web path that doesn't
+// need the app). Also ahead of cookieParser and cors for the same reasons as
+// /give; it parses its own small form body. See accountDeletionWeb.routes.ts.
+app.use('/', accountDeletionWebRoutes);
 
 // CORS configuration - Using simple config for debugging
 app.use(cors(corsOptions));
@@ -147,6 +155,7 @@ app.get('/', (req, res) => {
       users: '/api/users',
       liveSchedule: '/api/live-schedule',
       live: '/api/live/status',
+      events: '/api/events',
     },
   });
 });
@@ -196,6 +205,7 @@ app.use('/api/auth', appUserAuthRoutes);
 app.use('/api/live-schedule', liveScheduleRoutes);
 app.use('/api/live', liveRoutes);
 app.use('/api/collages', collageRoutes);
+app.use('/api/events', eventsRoutes);
 
 // Error handling middleware
 app.use(notFound);
@@ -214,6 +224,8 @@ process.on('SIGINT', () => {
 
 // Start server
 const server = app.listen(PORT, () => {
+  // Opt-in (LIVE_PUSH_ENABLED=true): tells members who asked when a stream starts.
+  startLivePushPoller();
   console.log(`
 🚀 The Beacon Centre API Server Started Successfully!
 

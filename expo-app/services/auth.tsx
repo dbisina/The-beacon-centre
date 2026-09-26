@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiPost, apiDelete, AUTH_TOKEN_KEY } from '@/config/api';
+import { syncPushRegistration, unlinkPushFromAccount, NOTIF_PREFS_KEY } from '@/services/notifications';
 
 /**
  * The app's own lightweight auth: name + email + a 4-6 digit passcode (not a
@@ -74,6 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({ email: res.user.email, displayName: res.user.name });
     setHasOnboarded(true);
     setMode('member');
+    // Re-register now that requests carry the member's token, so this device
+    // is linked to their account - that link is how group updates and
+    // "you're approved" reach them. Fire and forget; never blocks sign-in.
+    void syncPushRegistration();
   };
 
   const value = useMemo<Ctx>(
@@ -91,15 +96,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await persistSession(res);
       },
       async logOut() {
+        await unlinkPushFromAccount();
         await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_KEY]);
         setUser(null);
         setMode('guest');
+        void syncPushRegistration();
       },
       async deleteAccount() {
+        // The server deletes this device's token with the account (cascade),
+        // so only a fresh guest registration is needed afterwards.
         await apiDelete('/auth/me');
         await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_KEY]);
         setUser(null);
         setMode('guest');
+        void syncPushRegistration();
       },
       async continueAsGuest() {
         await AsyncStorage.setItem(ONBOARDED, '1');
@@ -125,7 +135,7 @@ export const guestKeys = {
   notes: 'guest:notes',
   progress: 'guest:progress',
   csg: 'guest:csg',
-  notifications: 'guest:notifications',
+  notifications: NOTIF_PREFS_KEY,
 } as const;
 
 export async function readGuest<T>(key: string, fallback: T): Promise<T> {

@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router, Href } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/services/auth';
 import { PlayerProvider } from '@/services/player';
-import { registerForPushNotifications } from '@/services/notifications';
+import { registerForPushNotifications, deepLinkFrom } from '@/services/notifications';
 import { useFonts } from 'expo-font';
 import {
   PlusJakartaSans_400Regular,
@@ -42,6 +43,16 @@ export default function RootLayout() {
     registerForPushNotifications();
   }, []);
 
+  // Tapping a notification opens what it's about - the group that approved
+  // you, the live stream. Covers both a tap while the app is running and the
+  // tap that launched it. Waits for fonts so the navigator exists first.
+  const lastResponse = Notifications.useLastNotificationResponse();
+  useEffect(() => {
+    if (!loaded) return;
+    const url = deepLinkFrom(lastResponse ?? null);
+    if (url) router.push(url as Href);
+  }, [lastResponse, loaded]);
+
   const onReady = useCallback(async () => {
     if (loaded) await SplashScreen.hideAsync();
   }, [loaded]);
@@ -73,10 +84,14 @@ export default function RootLayout() {
             <Stack.Screen name="live" />
             <Stack.Screen name="csg" />
             <Stack.Screen name="csg/[id]" />
+            <Stack.Screen name="csg/join" options={{ presentation: 'modal' }} />
             <Stack.Screen name="devotional" />
             <Stack.Screen name="gallery" />
             <Stack.Screen name="gallery/[id]" />
             <Stack.Screen name="settings" />
+            <Stack.Screen name="library" />
+            <Stack.Screen name="events" />
+            <Stack.Screen name="events/[id]" />
             <Stack.Screen name="prayer" options={{ presentation: 'modal' }} />
             <Stack.Screen name="contact" options={{ presentation: 'modal' }} />
             <Stack.Screen name="give/pay" options={{ presentation: 'transparentModal', animation: 'slide_from_bottom' }} />
