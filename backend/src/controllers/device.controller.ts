@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { DeviceService } from '../services/device.service';
 import { sendSuccess, sendError } from '../utils/responses';
 import { AuthenticatedUserRequest } from '../types';
+import { isPushTopic } from '../config/pushTopics';
 
 export class DeviceController {
   static async registerDevice(req: AuthenticatedUserRequest, res: Response): Promise<void> {
@@ -19,7 +20,9 @@ export class DeviceController {
           token,
           platform: typeof platform === 'string' ? platform : undefined,
           csgId: csgId !== undefined && csgId !== null ? Number(csgId) : undefined,
-          topics: Array.isArray(topics) ? topics : undefined,
+          // Unknown topics are dropped rather than stored: nothing ever sends
+          // to them, so keeping them would only hide a client bug.
+          topics: Array.isArray(topics) ? topics.filter(isPushTopic) : undefined,
         },
         req.appUser
       );

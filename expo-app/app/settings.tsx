@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, useResponsive } from '@/theme';
 import { Screen, Text, Row, Kicker } from '@/components/ui';
 import * as Application from 'expo-application';
+import { syncPushRegistration, DEFAULT_NOTIF_PREFS, NotifPrefs } from '@/services/notifications';
 import { useAuth, readGuest, writeGuest, guestKeys } from '@/services/auth';
 
 /**
@@ -21,9 +22,8 @@ const appVersion = Application.nativeApplicationVersion
   : null;
 
 // verse/live/sermons share guestKeys.notifications with onboarding/setup.tsx's
-// initial choice, so toggling here actually changes what was set there.
-type NotifPrefs = { verse: boolean; live: boolean; sermons: boolean };
-const DEFAULT_NOTIF_PREFS: NotifPrefs = { verse: true, live: true, sermons: false };
+// initial choice, and each toggle re-registers this device's topics with the
+// server - so switching one off actually stops those notifications.
 
 type RowDef = {
   label: string;
@@ -49,6 +49,7 @@ export default function Settings() {
     setPrefs((p) => {
       const next = { ...p, [k]: !p[k] };
       writeGuest(guestKeys.notifications, next).catch(() => {});
+      void syncPushRegistration({ prefs: next });
       return next;
     });
 

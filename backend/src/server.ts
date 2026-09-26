@@ -45,6 +45,7 @@ import liveScheduleRoutes from './routes/liveSchedule.routes';
 import liveRoutes from './routes/live.routes';
 import collageRoutes from './routes/collage.routes';
 import givingWebRoutes, { blockApiOnGivingHost } from './routes/givingWeb.routes';
+import { startLivePushPoller } from './services/livePush.service';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -214,6 +215,8 @@ process.on('SIGINT', () => {
 
 // Start server
 const server = app.listen(PORT, () => {
+  // Opt-in (LIVE_PUSH_ENABLED=true): tells members who asked when a stream starts.
+  startLivePushPoller();
   console.log(`
 🚀 The Beacon Centre API Server Started Successfully!
 

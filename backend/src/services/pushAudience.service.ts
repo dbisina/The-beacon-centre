@@ -44,6 +44,20 @@ export class PushAudience {
     }
   }
 
+  /** Push to every active device that opted into a topic. */
+  static async toTopic(topic: string, notification: PushNotificationInput): Promise<number> {
+    try {
+      const rows = await prisma.pushToken.findMany({
+        where: { isActive: true, topics: { has: topic } },
+        select: { token: true },
+      });
+      return await this.send(rows.map((r) => r.token), notification);
+    } catch (error) {
+      console.error('PushAudience: failed to push to topic', topic, error);
+      return 0;
+    }
+  }
+
   private static async send(tokens: string[], notification: PushNotificationInput): Promise<number> {
     if (tokens.length === 0) return 0;
     const result = await PushService.sendToTokens(tokens, notification);

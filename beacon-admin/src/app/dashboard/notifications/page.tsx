@@ -42,6 +42,13 @@ interface Csg {
   isActive?: boolean;
 }
 
+/** Topics members can opt into in the app's notification settings. */
+const PUSH_TOPICS = [
+  { value: 'verse', label: 'Verse of the day' },
+  { value: 'live', label: 'Live service starting' },
+  { value: 'sermons', label: 'New sermons & shorts' },
+] as const;
+
 type Audience = 'all' | 'topic' | 'csg';
 
 const notificationSchema = z
@@ -196,7 +203,23 @@ function NotificationComposer() {
               {watchedValues.audience === 'topic' && (
                 <div className="space-y-2">
                   <Label htmlFor="topic">Topic</Label>
-                  <Input id="topic" placeholder="e.g. announcements, live" {...register('topic')} />
+                  {/* A fixed list, mirroring backend/src/config/pushTopics.ts. It used to be
+                      free text, so a typo sent to nobody and still reported success. */}
+                  <Select
+                    value={watchedValues.topic}
+                    onValueChange={(value: string) => setValue('topic', value, { shouldValidate: true })}
+                  >
+                    <SelectTrigger id="topic">
+                      <SelectValue placeholder="Choose who opted in" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PUSH_TOPICS.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {errors.topic && <p className="text-sm text-red-600">{errors.topic.message}</p>}
                 </div>
               )}

@@ -1,9 +1,11 @@
 // backend/src/controllers/notify.controller.ts
 import { Response } from 'express';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 import { PushService } from '../services/push.service';
 import { sendSuccess, sendError } from '../utils/responses';
 import { AuthenticatedRequest } from '../types';
+import { PUSH_TOPICS, isPushTopic } from '../config/pushTopics';
 
 interface SendNotificationRequest {
   audience: 'all' | 'topic' | 'csg';
@@ -24,8 +26,8 @@ export class NotifyController {
         return;
       }
 
-      if (audience === 'topic' && !topic) {
-        sendError(res, 'topic is required when audience is "topic"', 400);
+      if (audience === 'topic' && !isPushTopic(topic)) {
+        sendError(res, `topic must be one of: ${PUSH_TOPICS.join(', ')}`, 400);
         return;
       }
 
@@ -39,11 +41,16 @@ export class NotifyController {
         return;
       }
 
-      const where: any = { isActive: true };
+      const where: Prisma.PushTokenWhereInput = { isActive: true };
       if (audience === 'topic') {
         where.topics = { has: topic };
       } else if (audience === 'csg') {
-        where.csgId = Number(csgId);
+        // A group's audience is its approved members, on every device they're
+        // signed in on. This used to filter PushToken.csgId, which the app never
+        // sets, so a "By group" notification reached nobody.
+        where.appUser = {
+          memberships: { some: { csgId: Number(csgId), status: 'APPROVED', isActive: true } },
+        };
       }
 
       const pushTokens = await prisma.pushToken.findMany({
