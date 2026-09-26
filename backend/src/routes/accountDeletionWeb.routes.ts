@@ -7,7 +7,9 @@
 // account to also give them a web link where they can have it deleted - for
 // someone who has already uninstalled the app, "open Settings -> Delete
 // account" isn't an answer. This is that link (it goes in Play Console ->
-// Data safety -> Delete account URL). Deleting in the app still works exactly
+// Data safety -> Delete account URL). Play also requires the page to name the
+// app as its store listing does - "TBC online" - so that name appears on it;
+// keep it in step with the listing. Deleting in the app still works exactly
 // as before; both paths end in AppUserAuthService.deleteAccount, so they
 // delete the same things.
 //
@@ -63,7 +65,7 @@ function send(res: Response, status: number, body: string): void {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Delete your account &middot; The Beacon Centre</title>
+<title>Delete your TBC online account &middot; The Beacon Centre</title>
 <style nonce="${nonce}">
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
@@ -100,7 +102,7 @@ function send(res: Response, status: number, body: string): void {
 </style>
 </head>
 <body><main>
-  <p class="kicker">The Beacon Centre app</p>
+  <p class="kicker">TBC online &middot; The Beacon Centre app</p>
   ${body}
   <footer>The Beacon Centre</footer>
 </main></body>
@@ -129,7 +131,7 @@ function formPage(res: Response, status: number, opts: { email?: string; error?:
     res,
     status,
     `<h1>Delete your account</h1>
-  <p class="lede">Sign in with the email and passcode you use in the app to permanently delete your
+  <p class="lede">Sign in with the email and passcode you use in the TBC online app to permanently delete your
   account and everything linked to it.</p>
   <section class="card">
     <form method="post" action="/delete-account" autocomplete="on">
