@@ -46,6 +46,7 @@ import liveRoutes from './routes/live.routes';
 import collageRoutes from './routes/collage.routes';
 import eventsRoutes from './routes/events.routes';
 import givingWebRoutes, { blockApiOnGivingHost } from './routes/givingWeb.routes';
+import accountDeletionWebRoutes from './routes/accountDeletionWeb.routes';
 import { startLivePushPoller } from './services/livePush.service';
 
 // Import middleware
@@ -90,6 +91,11 @@ app.use('/', givingWebRoutes);
 // On the dedicated giving hostname (when one is configured), the giving page
 // is the entire application. Nothing below this line is reachable there.
 app.use(blockApiOnGivingHost);
+
+// Public account-deletion page (Google Play requires a web path that doesn't
+// need the app). Also ahead of cookieParser and cors for the same reasons as
+// /give; it parses its own small form body. See accountDeletionWeb.routes.ts.
+app.use('/', accountDeletionWebRoutes);
 
 // CORS configuration - Using simple config for debugging
 app.use(cors(corsOptions));
